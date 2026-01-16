@@ -60,8 +60,14 @@ Swal.fire({
               <div class="col-md-4">
                 <div class="form-group">
                   <label>Cliente</label>
-                  <input type="text" name="cliente" class="form-control"
-                         value="<?= $venta['cliente'] ?>" required>
+                  <select name="cliente" class="form-control" required>
+                    <option value="">Seleccione cliente</option>
+                    <?php foreach($clientes_lista as $cli): ?>
+                      <option value="<?= $cli['id_cliente'] ?>" <?= $venta['cliente'] == $cli['id_cliente'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($cli['nombre_completo']) ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
                 </div>
               </div>
 
@@ -78,7 +84,7 @@ Swal.fire({
               <div class="col-md-2">
                 <div class="form-group">
                   <label>Vendedor</label>
-                  <input type="text" class="form-control" value="<?= $venta['id_usuario'] ?>" disabled>
+                  <input type="text" class="form-control" value="<?= $venta['vendedor_nombre'] ?? $venta['id_usuario'] ?>" disabled>
                 </div>
               </div>
 
@@ -110,7 +116,7 @@ Swal.fire({
                         <option value="<?= $p['id_producto'] ?>"
                                 data-precio="<?= $p['precio_venta'] ?>"
                                 <?= $p['id_producto']==$d['id_producto']?'selected':'' ?>>
-                          <?= $p['codigo'] ?> - <?= $p['nombre'] ?>
+                          <?= htmlspecialchars($p['codigo'] . ' - ' . $p['nombre']) ?>
                         </option>
                       <?php endforeach ?>
                     </select>
@@ -199,7 +205,7 @@ function agregarFila(){
         <?php foreach($datos_productos as $p){ ?>
           <option value="<?= $p['id_producto'] ?>"
                   data-precio="<?= $p['precio_venta'] ?>">
-            <?= $p['codigo'] ?> - <?= $p['nombre'] ?>
+            <?= htmlspecialchars($p['codigo'] . ' - ' . $p['nombre']) ?>
           </option>
         <?php } ?>
       </select>
