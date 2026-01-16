@@ -7,11 +7,11 @@ require_once __DIR__ . '/../vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
 $dotenv->load();
 
-$host = $_ENV['DB_HOST'] ?? "switchback.proxy.rlwy.net";       // de Railway
-$port = $_ENV['DB_PORT'] ?? "54275";       // de Railway
-$db   = $_ENV['DB_NAME'] ?? "railway";   // de Railway
-$user = $_ENV['DB_USER'] ?? "root";       // de Railway
-$pass = $_ENV['DB_PASSWORD'] ?? "***REMOVED***";   // de Railway
+$host = $_ENV['DB_HOST'] ;
+$port = $_ENV['DB_PORT'] ;
+$db   = $_ENV['DB_NAME'] ;
+$user = $_ENV['DB_USER'] ;
+$pass = $_ENV['DB_PASSWORD']; 
 
 try {
     $pdo = new PDO(
