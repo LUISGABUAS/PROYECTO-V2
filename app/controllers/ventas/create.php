@@ -59,10 +59,13 @@ try {
     /* ======================
        2️⃣ CREAR VENTA
     ====================== */
-    $stmt = $pdo->prepare("INSERT INTO tb_ventas (fecha, cliente, envio, total, id_usuario)
-        VALUES (?, ?, ?, ?, ?)
+    // Determinar estado logístico basado en tipo de envío
+    $estado_logistico = ($envio === 'foraneo') ? 'PENDIENTE GUIA' : 'SIN ENVIO';
+
+    $stmt = $pdo->prepare("INSERT INTO tb_ventas (fecha, cliente, envio, total, id_usuario, estado_logistico)
+        VALUES (?, ?, ?, ?, ?, ?)
     ");
-    $stmt->execute([$fecha, $cliente, $envio, $total, $id_usuario]);
+    $stmt->execute([$fecha, $cliente, $envio, $total, $id_usuario, $estado_logistico]);
 
     $id_venta = $pdo->lastInsertId();
 
