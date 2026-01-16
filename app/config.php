@@ -1,17 +1,24 @@
 <?php
-define('SERVIDOR', 'localhost');
-define('USUARIO', 'root');
-define('PASSWORD', '');
-define('BD', 'ventas');
 
-$servidor = "mysql:dbname=".BD.";host=".SERVIDOR;
+$host = "switchback.proxy.rlwy.net";       // de Railway
+$port = "54275";       // de Railway
+$db   = "railway";   // de Railway
+$user = "root";       // de Railway
+$pass = "***REMOVED***";   // de Railway
 
 try {
-    $pdo = new PDO($servidor, USUARIO, PASSWORD,array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
-   //echo "Conexión establecida";
+    $pdo = new PDO(
+        "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4",
+        $user,
+        $pass,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+        ]
+    );
+    // echo "Conectado a Railway";
 } catch (PDOException $e) {
-    //print "Error de conexión: " . $e->getMessage();
-    echo "Error de conexión: " ;
+    die("Error de conexión: " . $e->getMessage());
 }
 
 $URL = "http://localhost/PROYECTO";
