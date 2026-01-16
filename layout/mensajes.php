@@ -3,7 +3,7 @@ if (isset($_SESSION['mensaje'])):
 ?>
 <script>
 Swal.fire({
-    icon: '<?= $_SESSION['icono'] ?? 'success' ?>',
+    icon: '<?= json_encode($_SESSION['icono']) ?>',
     title: 'Atención',
     text: <?= json_encode($_SESSION['mensaje']) ?>,
     showConfirmButton: false,
