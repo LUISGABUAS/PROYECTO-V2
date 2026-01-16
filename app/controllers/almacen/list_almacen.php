@@ -13,6 +13,8 @@ $sql_productos = "SELECT
     cat.nombre_categoria AS categoria,
     u.nombres AS nombre_usuario,
 
+    et.nombre_proveedor AS proveedor,
+
     /* 1️⃣ STOCK EN BODEGA */
     COALESCE((
         SELECT COUNT(*)
@@ -48,6 +50,7 @@ $sql_productos = "SELECT
 
 FROM tb_almacen a
 INNER JOIN tb_categorias cat ON a.id_categoria = cat.id_categoria
+Inner JOIN tb_proveedores et ON a.id_proovedor = et.id_proovedor
 INNER JOIN tb_usuario u ON u.id = a.id_usuario
 ";
 

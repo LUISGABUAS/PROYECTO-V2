@@ -3,6 +3,7 @@ include('../../config.php');
 
 $codigo = $_POST['codigo'];
 $id_categoria = $_POST['id_categoria'];
+$id_proovedor = $_POST['id_proovedor'];
 $nombre = $_POST['nombre'];
 $id_usuario = $_POST['id_usuario'];
 $descripcion = $_POST['descripcion'];

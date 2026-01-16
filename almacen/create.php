@@ -6,6 +6,7 @@ include('../layout/parte1.php');
 
 include('../app/controllers/almacen/list_almacen.php');
 include('../app/controllers/categorias/list_categorias.php');
+include('../app/controllers/provedores/list_provedores.php');
 
 ?>
   <!-- Content Wrapper. Contains page content -->
@@ -85,10 +86,10 @@ include('../app/controllers/categorias/list_categorias.php');
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="">Categoria:</label>
-                                        <select name="id_categoria" id="" class="form-control" required>
-                                          <?php foreach ($datos_categorias as $datos_categoria) {?>
-                                    <option value="<?php echo $datos_categoria['id_categoria'] ; ?>"><?php echo $datos_categoria['nombre_categoria'] ; ?></option>
+                                        <label for="">Etiqueta:</label>
+                                        <select name="id_proovedor" id="" class="form-control" required>
+                                          <?php foreach ($proovedores_datos as $datos_proveedores) {?>
+                                    <option value="<?php echo $datos_proveedores['id_proovedor'] ; ?>"><?php echo $datos_proveedores['nombre_proveedor'] ; ?></option>
                                     <?php
                                   }?>
                                           
@@ -147,8 +148,20 @@ include('../app/controllers/categorias/list_categorias.php');
                                 </div>
                                 <div class="col-md-2">
                                     <div class="form-group">
+                                        <label for="">Categoria:</label>
+                                        <select name="id_categoria" id="" class="form-control" required>
+                                          <?php foreach ($datos_categorias as $datos_categoria) {?>
+                                    <option value="<?php echo $datos_categoria['id_categoria'] ; ?>"><?php echo $datos_categoria['nombre_categoria'] ; ?></option>
+                                    <?php
+                                  }?>
+                                          
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
                                         <label for="">Fecha Ingreso:</label>
-                                        <input type="date" name="fecha_ingreso" class="form-control" required>
+                                        <input type="date" name="fecha_ingreso" class="form-control" value="<?php echo date('Y-m-d'); ?>" required>
                                     </div>
                                 </div>
                             </div>

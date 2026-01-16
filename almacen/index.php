@@ -80,6 +80,7 @@ if (isset($_SESSION['mensaje'])) {
                         <th><center>ID</center></th>
                         <th><center>Codigo</center></th>
                         <th><center>Categoria</center></th>
+                        <th><center>Etiqueta</center></th>
                         <th><center>Imagen</center></th>
                         <th><center>Nombre</center></th>
                         <th><center>Descripcion</center></th>
@@ -109,6 +110,7 @@ if (isset($_SESSION['mensaje'])) {
                           <td><?php echo $contador = $contador + 1?></td>
                           <td><?php echo $dato['codigo'] ?></td>
                           <td><?php echo $dato['categoria'] ?></td>
+                          <td><?= $dato['proveedor'] ?>?</td>
                           <td>
                             <img src="<?php echo $URL."/almacen/img_productos/".$dato['imagen'] ?>" width="75px" alt="">
                           </td>
