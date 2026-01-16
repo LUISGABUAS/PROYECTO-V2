@@ -181,7 +181,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
           <!-- Add icons to the links using the .nav-icon class
                with font-awesome or any other icon font library -->
 
-               <?php if(in_array(1, $_SESSION['permisos']) || in_array(2, $_SESSION['permisos'])): ?>
+               <?php if(in_array(24, $_SESSION['permisos']) || in_array(2, $_SESSION['permisos'])): ?>
                     <li class="nav-item">
                         <a href="#" class="nav-link active" stylebackground-color: rgba(16, 32, 177, 1);>
                             <i class="nav-icon fas fa-chart-line"></i>
@@ -192,7 +192,17 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         </a>
                         
                         <ul class="nav nav-treeview">
-                            <?php if(in_array(1, $_SESSION['permisos'])): ?>
+                      
+                        <?php if(in_array(24, $_SESSION['permisos'])): ?>
+                            <li class="nav-item">
+                                <a href="<?php echo $URL;?>/dashboard/admin.php" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Admin</p>
+                                </a>
+                            </li>
+                            <?php endif; ?>
+
+                            <?php if(in_array(24, $_SESSION['permisos'])): ?>
                             <li class="nav-item">
                                 <a href="<?php echo $URL;?>/dashboard/foraneos.php" class="nav-link">
                                     <i class="far fa-circle nav-icon"></i>
@@ -201,7 +211,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                             </li>
                             <?php endif; ?>
 
-                            <?php if(in_array(2, $_SESSION['permisos'])): ?>
+                            <?php if(in_array(24, $_SESSION['permisos'])): ?>
                             <li class="nav-item">
                                 <a href="<?php echo $URL;?>/dashboard/locales.php" class="nav-link">
                                     <i class="far fa-circle nav-icon"></i>
