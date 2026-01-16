@@ -24,7 +24,7 @@ if (isset($_SESSION['mensaje'])) {
     unset($_SESSION['mensaje']);
      }
 
-      if (in_array(16, $_SESSION['permisos'])):
+      if (isset($_SESSION['permisos']) && is_array($_SESSION['permisos']) && in_array(16, $_SESSION['permisos'])):
 ?>
 
   <!-- Content Wrapper. Contains page content -->
@@ -35,7 +35,7 @@ if (isset($_SESSION['mensaje'])) {
         <div class="row mb-2">
           <div class="col-sm-6">
             <h1 class="m-0">Proveeders List 
-              <?php if(in_array(17, $_SESSION['permisos'])): ?>
+              <?php if(isset($_SESSION['permisos']) && in_array(17, $_SESSION['permisos'])): ?>
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-create">
                  <i class="fa fa-plus"></i> New Prooveders
                 </button>
@@ -83,7 +83,7 @@ if (isset($_SESSION['mensaje'])) {
                         <th><center>Empresa</center></th>
                         <th><center>Direccion</center></th>
                         <th><center>Email</center></th>
-                        <?php if(in_array(18, $_SESSION['permisos']) || in_array(19, $_SESSION['permisos'])): ?>
+                        <?php if(isset($_SESSION['permisos']) && (in_array(18, $_SESSION['permisos']) || in_array(19, $_SESSION['permisos']))): ?>
                         <th><center>Actions</center></th>
                         <?php endif; ?>
                     </tr>
@@ -109,11 +109,11 @@ if (isset($_SESSION['mensaje'])) {
                             <td><center><?php echo $dato['empresa']; ?></center></td>
                             <td><center><?php echo $dato['direccion']; ?></center></td>
                             <td><center><?php echo $dato['email']; ?></center></td>
-                          <?php if(in_array(18, $_SESSION['permisos']) || in_array(19, $_SESSION['permisos'])): ?>
+                          <?php if(isset($_SESSION['permisos']) && (in_array(18, $_SESSION['permisos']) || in_array(19, $_SESSION['permisos']))): ?>
                             <td>
                               <center>
                                 <div class="btn-group">
-                                  <?php if(in_array(18, $_SESSION['permisos'])): ?>
+                                  <?php if(isset($_SESSION['permisos']) && in_array(18, $_SESSION['permisos'])): ?>
                                   <button type="button" class="btn btn-success" data-toggle="modal" 
                                   data-target="#modal-update-proveedor<?php echo $id_proveedor;?>">
                                    <i class="fa fa-pencil-alt"></i> Edit
@@ -135,21 +135,21 @@ if (isset($_SESSION['mensaje'])) {
                                                     <div class="col-md-6">
 
                                                         <div class="form-group">
-                                                            <label for="">Prooveder Name <b>*</b></label>
-                                                            <input type="text" id="nombre_proovedor<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $nombre_proovedor?>" required>
-                                                            <small style="color: red; display: none; " id="lbl_nombre<?php echo $id_proveedor;?>">* Este campo es requerido</small>
+                                                            <label for="">Proovedor Name <b>*</b></label>
+                                                            <input type="text" id="update_nombre_proovedor<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $nombre_proovedor?>" required>
+                                                            <small style="color: red; display: none; " id="update_lbl_nombre<?php echo $id_proveedor;?>">* Este campo es requerido</small>
                                                         </div>
 
                                                         <div class="form-group">
                                                             <label for="">Telefono <b>*</b></label>
-                                                            <input type="number" id="telefono<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $telefono;?>">
-                                                            <small style="color: red; display: none; " id="lbl_telefono<?php echo $id_proveedor;?>">* Este campo es requerido</small>
+                                                            <input type="number" id="update_telefono<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $telefono;?>">
+                                                            <small style="color: red; display: none; " id="update_lbl_telefono<?php echo $id_proveedor;?>">* Este campo es requerido</small>
                                                         </div>
 
                                                         <div class="form-group">
                                                             <label for="">Email <b>*</b></label>
-                                                            <input type="email" id="email<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $email;?>">
-                                                            <small style="color: red; display: none; " id="lbl_email<?php echo $id_proveedor;?>">* Este campo es requerido</small>
+                                                            <input type="email" id="update_email<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $email;?>">
+                                                            <small style="color: red; display: none; " id="update_lbl_email<?php echo $id_proveedor;?>">* Este campo es requerido</small>
                                                         </div>
 
                                                       
@@ -159,20 +159,20 @@ if (isset($_SESSION['mensaje'])) {
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label for="">Celular <b>*</b></label>
-                                                            <input type="number" id="celular<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $celular;?>">
-                                                            <small style="color: red; display: none; " id="lbl_celular<?php echo $id_proveedor;?>">* Este campo es requerido</small>
+                                                            <input type="number" id="update_celular<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $celular;?>">
+                                                            <small style="color: red; display: none; " id="update_lbl_celular<?php echo $id_proveedor;?>">* Este campo es requerido</small>
                                                         </div>
 
                                                         <div class="form-group">
                                                             <label for="">Empresa <b>*</b></label>
-                                                            <input type="text" id="empresa<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $empresa;?>">
-                                                            <small style="color: red; display: none; " id="lbl_empresa<?php echo $id_proveedor;?>">* Este campo es requerido</small>
+                                                            <input type="text" id="update_empresa<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $empresa;?>">
+                                                            <small style="color: red; display: none; " id="update_lbl_empresa<?php echo $id_proveedor;?>">* Este campo es requerido</small>
                                                         </div>
 
                                                         <div class="form-group">
                                                             <label for="">Direccion <b>*</b></label>
-                                                          <textarea name="" id="direccion<?php echo $id_proveedor?>" cols="30" rows="3" class="form-control"><?php echo $direccion?></textarea>
-                                                            <small style="color: red; display: none; " id="lbl_direccion<?php echo $id_proveedor;?>">* Este campo es requerido</small>
+                                                          <textarea name="" id="update_direccion<?php echo $id_proveedor?>" cols="30" rows="3" class="form-control"><?php echo $direccion?></textarea>
+                                                            <small style="color: red; display: none; " id="update_lbl_direccion<?php echo $id_proveedor;?>">* Este campo es requerido</small>
                                                         </div>
 
 
@@ -196,40 +196,61 @@ if (isset($_SESSION['mensaje'])) {
                                         <script>
                                           $('#btn_update<?php echo $id_proveedor;?>').click(function(){
 
-
-                                              var categoryName = $('#nombre_proovedor<?php echo $id_proveedor;?>').val();
-                                              var celular = $('#celular<?php echo $id_proveedor;?>').val();
-                                              var telefono = $('#telefono<?php echo $id_proveedor;?>').val();
-                                              var email = $('#email<?php echo $id_proveedor;?>').val();
-                                              var empresa = $('#empresa<?php echo $id_proveedor;?>').val();
-                                              var direccion = $('#direccion<?php echo $id_proveedor;?>').val();
+                                              var categoryName = $('#update_nombre_proovedor<?php echo $id_proveedor;?>').val();
+                                              var celular = $('#update_celular<?php echo $id_proveedor;?>').val();
+                                              var telefono = $('#update_telefono<?php echo $id_proveedor;?>').val();
+                                              var email = $('#update_email<?php echo $id_proveedor;?>').val();
+                                              var empresa = $('#update_empresa<?php echo $id_proveedor;?>').val();
+                                              var direccion = $('#update_direccion<?php echo $id_proveedor;?>').val();
                                               var id_proveedor = '<?php echo $id_proveedor?>';
 
+                                              // Limpiar mensajes de error previos
+                                              $('#update_lbl_nombre<?php echo $id_proveedor;?>').css('display', 'none');
+                                              $('#update_lbl_celular<?php echo $id_proveedor;?>').css('display', 'none');
+                                              $('#update_lbl_telefono<?php echo $id_proveedor;?>').css('display', 'none');
+                                              $('#update_lbl_email<?php echo $id_proveedor;?>').css('display', 'none');
+                                              $('#update_lbl_empresa<?php echo $id_proveedor;?>').css('display', 'none');
+                                              $('#update_lbl_direccion<?php echo $id_proveedor;?>').css('display', 'none');
+
+                                              var esValido = true;
                                               if(categoryName == ""){
-                                              $('#nombre_proovedor<?php echo $id_proveedor;?>').focus();
-                                                $('#lbl_nombre<?php echo $id_proveedor;?>').css('display', 'block');
+                                                $('#update_nombre_proovedor<?php echo $id_proveedor;?>').focus();
+                                                $('#update_lbl_nombre<?php echo $id_proveedor;?>').css('display', 'block');
+                                                esValido = false;
                                               }else if(celular == ""){
-                                                $('#celular<?php echo $id_proveedor;?>').focus();
-                                                $('#lbl_celular<?php echo $id_proveedor;?>').css('display', 'block');
+                                                $('#update_celular<?php echo $id_proveedor;?>').focus();
+                                                $('#update_lbl_celular<?php echo $id_proveedor;?>').css('display', 'block');
+                                                esValido = false;
                                               }else if(telefono == ""){
-                                                $('#telefono<?php echo $id_proveedor;?>').focus();
-                                                $('#lbl_telefono<?php echo $id_proveedor;?>').css('display', 'block');
+                                                $('#update_telefono<?php echo $id_proveedor;?>').focus();
+                                                $('#update_lbl_telefono<?php echo $id_proveedor;?>').css('display', 'block');
+                                                esValido = false;
                                               }else if(email == ""){
-                                                    $('#email<?php echo $id_proveedor;?>').focus();
-                                                    $('#lbl_email<?php echo $id_proveedor;?>').css('display', 'block');
-                                                }else if(empresa == ""){
-                                                    $('#empresa<?php echo $id_proveedor;?>').focus();
-                                                    $('#lbl_empresa<?php echo $id_proveedor;?>').css('display', 'block');
-                                                }else if(direccion == ""){
-                                                    $('#direccion<?php echo $id_proveedor;?>').focus();
-                                                    $('#lbl_direccion<?php echo $id_proveedor;?>').css('display', 'block');
-                                            }else{
-                                            var URL = "../app/controllers/provedores/update_proveedores.php";
-                                            $.get(URL,{id_proovedor: id_proveedor, nombre_proovedor: categoryName, celular: celular, telefono: telefono, email: email, empresa: empresa, direccion: direccion },function(data){
-                                                $('#respuesta_update<?php echo $id_proveedor?>').html(data);
-                                            });
-                                          }
+                                                $('#update_email<?php echo $id_proveedor;?>').focus();
+                                                $('#update_lbl_email<?php echo $id_proveedor;?>').css('display', 'block');
+                                                esValido = false;
+                                              }else if(empresa == ""){
+                                                $('#update_empresa<?php echo $id_proveedor;?>').focus();
+                                                $('#update_lbl_empresa<?php echo $id_proveedor;?>').css('display', 'block');
+                                                esValido = false;
+                                              }else if(direccion == ""){
+                                                $('#update_direccion<?php echo $id_proveedor;?>').focus();
+                                                $('#update_lbl_direccion<?php echo $id_proveedor;?>').css('display', 'block');
+                                                esValido = false;
+                                              }
                                               
+                                              if(esValido){
+                                                var URL = "../app/controllers/provedores/update_proveedores.php";
+                                                $.get(URL,{id_proovedor: id_proveedor, nombre_proovedor: categoryName, celular: celular, telefono: telefono, email: email, empresa: empresa, direccion: direccion },function(data){
+                                                    $('#respuesta_update<?php echo $id_proveedor?>').html(data);
+                                                }).fail(function(){
+                                                    Swal.fire({
+                                                        icon: 'error',
+                                                        title: 'Error',
+                                                        text: 'Error al actualizar el proveedor'
+                                                    });
+                                                });
+                                              }
                                           });
                                         </script>
 
@@ -237,7 +258,7 @@ if (isset($_SESSION['mensaje'])) {
                               </div>
 
                               <div class="btn-group">
-                                <?php if(in_array(19, $_SESSION['permisos'])): ?>
+                                <?php if(isset($_SESSION['permisos']) && in_array(19, $_SESSION['permisos'])): ?>
                                   <button type="button" class="btn btn-danger" data-toggle="modal" 
                                   data-target="#modal-delete-proveedor<?php echo $id_proveedor;?>">
                                    <i class="fa fa-pencil-alt"></i> Delete
@@ -259,21 +280,18 @@ if (isset($_SESSION['mensaje'])) {
                                                     <div class="col-md-6">
 
                                                         <div class="form-group">
-                                                            <label for="">Prooveder Name <b>*</b></label>
-                                                            <input type="text" id="nombre_proovedor<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $nombre_proovedor?>" disabled>
-                                                            <small style="color: red; display: none; " id="lbl_nombre<?php echo $id_proveedor;?>">* Este campo es requerido</small>
+                                                            <label for="">Proovedor Name <b>*</b></label>
+                                                            <input type="text" id="delete_nombre_proovedor<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $nombre_proovedor?>" disabled>
                                                         </div>
 
                                                         <div class="form-group">
                                                             <label for="">Telefono <b>*</b></label>
-                                                            <input type="number" id="telefono<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $telefono;?>" disabled>
-                                                            <small style="color: red; display: none; " id="lbl_telefono<?php echo $id_proveedor;?>">* Este campo es requerido</small>
+                                                            <input type="number" id="delete_telefono<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $telefono;?>" disabled>
                                                         </div>
 
                                                         <div class="form-group">
                                                             <label for="">Email <b>*</b></label>
-                                                            <input type="email" id="email<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $email;?>" disabled>
-                                                            <small style="color: red; display: none; " id="lbl_email<?php echo $id_proveedor;?>">* Este campo es requerido</small>
+                                                            <input type="email" id="delete_email<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $email;?>" disabled>
                                                         </div>
 
                                                       
@@ -283,20 +301,17 @@ if (isset($_SESSION['mensaje'])) {
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label for="">Celular <b>*</b></label>
-                                                            <input type="number" id="celular<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $celular;?>" disabled>
-                                                            <small style="color: red; display: none; " id="lbl_celular<?php echo $id_proveedor;?>">* Este campo es requerido</small>
+                                                            <input type="number" id="delete_celular<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $celular;?>" disabled>
                                                         </div>
 
                                                         <div class="form-group">
                                                             <label for="">Empresa <b>*</b></label>
-                                                            <input type="text" id="empresa<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $empresa;?>" disabled>
-                                                            <small style="color: red; display: none; " id="lbl_empresa<?php echo $id_proveedor;?>">* Este campo es requerido</small>
+                                                            <input type="text" id="delete_empresa<?php echo $id_proveedor?>"  class="form-control" value="<?php echo $empresa;?>" disabled>
                                                         </div>
 
                                                         <div class="form-group">
                                                             <label for="">Direccion <b>*</b></label>
-                                                          <textarea name="" id="direccion<?php echo $id_proveedor?>" cols="30" rows="3" class="form-control" disabled><?php echo $direccion?></textarea>
-                                                            <small style="color: red; display: none; " id="lbl_direccion<?php echo $id_proveedor;?>">* Este campo es requerido</small>
+                                                          <textarea name="" id="delete_direccion<?php echo $id_proveedor?>" cols="30" rows="3" class="form-control" disabled><?php echo $direccion?></textarea>
                                                         </div>
 
 
@@ -319,14 +334,18 @@ if (isset($_SESSION['mensaje'])) {
 
                                         <script>
                                           $('#btn_delete<?php echo $id_proveedor;?>').click(function(){
-
                                               var id_proveedor = '<?php echo $id_proveedor?>';
-
+                                              var URL = "../app/controllers/provedores/delete_proveedores.php";
                                               
-                                            var URL = "../app/controllers/provedores/delete_proveedores.php";
-                                            $.get(URL,{id_proovedor: id_proveedor},function(data){
-                                                $('#respuesta_delete<?php echo $id_proveedor?>').html(data);
-                                            });
+                                              $.get(URL,{id_proovedor: id_proveedor},function(data){
+                                                  $('#respuesta_delete<?php echo $id_proveedor?>').html(data);
+                                              }).fail(function(){
+                                                  Swal.fire({
+                                                      icon: 'error',
+                                                      title: 'Error',
+                                                      text: 'Error al eliminar el proveedor'
+                                                  });
+                                              });
                                           });
                                         </script>
 
@@ -408,20 +427,20 @@ if (isset($_SESSION['mensaje'])) {
 
                         <div class="form-group">
                             <label for="">Prooveder Name <b>*</b></label>
-                            <input type="text" id="nombre_proovedor"  class="form-control">
-                            <small style="color: red; display: none; " id="lbl_nombre">* Este campo es requerido</small>
+                            <input type="text" id="nombre_proovedor_create"  class="form-control">
+                            <small style="color: red; display: none; " id="lbl_nombre_create">* Este campo es requerido</small>
                         </div>
 
                         <div class="form-group">
                             <label for="">Telefono <b>*</b></label>
-                            <input type="number" id="telefono"  class="form-control">
-                            <small style="color: red; display: none; " id="lbl_telefono">* Este campo es requerido</small>
+                            <input type="number" id="telefono_create"  class="form-control">
+                            <small style="color: red; display: none; " id="lbl_telefono_create">* Este campo es requerido</small>
                         </div>
 
                         <div class="form-group">
                             <label for="">Email <b>*</b></label>
-                            <input type="email" id="email"  class="form-control">
-                            <small style="color: red; display: none; " id="lbl_email">* Este campo es requerido</small>
+                            <input type="email" id="email_create"  class="form-control">
+                            <small style="color: red; display: none; " id="lbl_email_create">* Este campo es requerido</small>
                         </div>
 
                        
@@ -431,20 +450,20 @@ if (isset($_SESSION['mensaje'])) {
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="">Celular <b>*</b></label>
-                            <input type="number" id="celular"  class="form-control">
-                            <small style="color: red; display: none; " id="lbl_celular">* Este campo es requerido</small>
+                            <input type="number" id="celular_create"  class="form-control">
+                            <small style="color: red; display: none; " id="lbl_celular_create">* Este campo es requerido</small>
                         </div>
 
                         <div class="form-group">
                             <label for="">Empresa <b>*</b></label>
-                            <input type="text" id="empresa"  class="form-control">
-                            <small style="color: red; display: none; " id="lbl_empresa">* Este campo es requerido</small>
+                            <input type="text" id="empresa_create"  class="form-control">
+                            <small style="color: red; display: none; " id="lbl_empresa_create">* Este campo es requerido</small>
                         </div>
 
                          <div class="form-group">
                             <label for="">Direccion <b>*</b></label>
-                           <textarea name="" id="direccion" cols="30" rows="3" class="form-control" ></textarea>
-                            <small style="color: red; display: none; " id="lbl_direccion">* Este campo es requerido</small>
+                           <textarea name="" id="direccion_create" cols="30" rows="3" class="form-control" ></textarea>
+                            <small style="color: red; display: none; " id="lbl_direccion_create">* Este campo es requerido</small>
                         </div>
 
 
@@ -467,37 +486,97 @@ if (isset($_SESSION['mensaje'])) {
 
 <script>
     $('#btn_create').click(function(){
-        var categoryName = $('#nombre_proovedor').val();
-        var celular = $('#celular').val();
-        var telefono = $('#telefono').val();
-        var email = $('#email').val();
-        var empresa = $('#empresa').val();
-        var direccion = $('#direccion').val();
+        var categoryName = $('#nombre_proovedor_create').val();
+        var celular = $('#celular_create').val();
+        var telefono = $('#telefono_create').val();
+        var email = $('#email_create').val();
+        var empresa = $('#empresa_create').val();
+        var direccion = $('#direccion_create').val();
 
+        // Limpiar mensajes de error previos
+        $('#lbl_nombre_create').css('display', 'none');
+        $('#lbl_celular_create').css('display', 'none');
+        $('#lbl_telefono_create').css('display', 'none');
+        $('#lbl_email_create').css('display', 'none');
+        $('#lbl_empresa_create').css('display', 'none');
+        $('#lbl_direccion_create').css('display', 'none');
+
+        var esValido = true;
         if(categoryName == ""){
-            $('#nombre_proovedor').focus();
-            $('#lbl_nombre').css('display', 'block');
+            $('#nombre_proovedor_create').focus();
+            $('#lbl_nombre_create').css('display', 'block');
+            esValido = false;
           }else if(celular == ""){
-            $('#celular').focus();
-            $('#lbl_celular').css('display', 'block');
+            $('#celular_create').focus();
+            $('#lbl_celular_create').css('display', 'block');
+            esValido = false;
           }else if(telefono == ""){
-            $('#telefono').focus();
-            $('#lbl_telefono').css('display', 'block');
+            $('#telefono_create').focus();
+            $('#lbl_telefono_create').css('display', 'block');
+            esValido = false;
           }else if(email == ""){
-                $('#email').focus();
-                $('#lbl_email').css('display', 'block');
+                $('#email_create').focus();
+                $('#lbl_email_create').css('display', 'block');
+                esValido = false;
             }else if(empresa == ""){
-                $('#empresa').focus();
-                $('#lbl_empresa').css('display', 'block');
+                $('#empresa_create').focus();
+                $('#lbl_empresa_create').css('display', 'block');
+                esValido = false;
             }else if(direccion == ""){
-                $('#direccion').focus();
-                $('#lbl_direccion').css('display', 'block');
-        }else{
-        var URL = "../app/controllers/provedores/create.php";
-        $.get(URL,{nombre_proovedor: categoryName, celular: celular, telefono: telefono, email: email, empresa: empresa, direccion: direccion },function(data){
-            $('#respuesta').html(data);
-        });
-      }
+                $('#direccion_create').focus();
+                $('#lbl_direccion_create').css('display', 'block');
+                esValido = false;
+        }
+        
+        if(esValido){
+            var URL = "../app/controllers/provedores/create.php";
+            $.get(URL,{nombre_proovedor: categoryName, celular: celular, telefono: telefono, email: email, empresa: empresa, direccion: direccion },function(data){
+                try {
+                    var response = JSON.parse(data);
+                    if(response.success){
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: response.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(function(){
+                            // Limpiar formulario tras éxito
+                            $('#nombre_proovedor_create').val('');
+                            $('#celular_create').val('');
+                            $('#telefono_create').val('');
+                            $('#email_create').val('');
+                            $('#empresa_create').val('');
+                            $('#direccion_create').val('');
+                            $('#modal-create').modal('hide');
+                            // Recargar la página
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message,
+                            showConfirmButton: true
+                        });
+                    }
+                } catch(e) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al procesar la respuesta del servidor',
+                        showConfirmButton: true
+                    });
+                }
+            }).fail(function(){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de conexión',
+                    text: 'No se pudo conectar con el servidor',
+                    showConfirmButton: true
+                });
+            });
+        }
     });
 </script>
 
@@ -519,3 +598,4 @@ if (isset($_SESSION['mensaje'])) {
       });
     </script>';
   endif;
+?>
