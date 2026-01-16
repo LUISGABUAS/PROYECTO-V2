@@ -1,0 +1,17 @@
+{
+    "name": "luis2/proyecto",
+    "autoload": {
+        "psr-4": {
+            "Luis2\\Proyecto\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "GabuasLuis",
+            "email": "luisjeremy76@gmail.com"
+        }
+    ],
+    "require": {
+        "vlucas/phpdotenv": "^5.6"
+    }
+}
