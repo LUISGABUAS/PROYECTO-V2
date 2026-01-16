@@ -28,7 +28,7 @@ try {
     die("Error de conexión: " . $e->getMessage());
 }
 
-$URL = "http://localhost/PROYECTO-V2";
+$URL = $_ENV['APP_URL'];
 
 date_default_timezone_set("America/Mexico_City");
 $fechaHora = date("Y-m-d H:i:s");
