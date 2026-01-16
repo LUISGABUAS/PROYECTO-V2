@@ -53,7 +53,7 @@ if (isset($_SESSION['mensaje'])) {
 
           <div class="card card-outline card-primary">
             <div class="card-header">
-              <h3 class="card-title">Listado de clientes locales</h3>
+              <h3 class="card-title">Listado de clientes Locales</h3>
             </div>
 
             <div class="card-body">
@@ -67,6 +67,7 @@ if (isset($_SESSION['mensaje'])) {
                       <th>Teléfono</th>
                       <th>Dirección</th>
                       <th>Referencias</th>
+                      <th>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -90,7 +91,7 @@ if (isset($_SESSION['mensaje'])) {
                         </td>
 
                         <td>
-                           <center> <a href="edit.php?id=<?= $cliente['id_cliente'] ?>" class="btn btn-warning ">
+                           <center> <a href="../app/controllers/clientes/edit.php?id=<?= $cliente['id_cliente'] ?>" class="btn btn-warning ">
                                 <i class="fas fa-edit">Edit</i>
                             </a>
 
@@ -118,72 +119,16 @@ if (isset($_SESSION['mensaje'])) {
 </div>
 
 <?php include('../layout/parte2.php'); ?>
-<?php include('../layout/mensajes.php'); ?>
 
-<!-- Page specific script -->
 <script>
-  $(function () {
-    $("#example1").DataTable({
-      "responsive": true, "lengthChange": false, "autoWidth": false,
-      "buttons": [{ 
-        extend: 'collection',
-        text: 'Export',
-        orientation: 'landscape',
-        buttons: [{
-          text: 'Copy',
-          extend: 'copy',
-          exportOptions: {
-            columns: ':visible',
-          modifier: {
-            search: 'applied',
-            order: 'applied',
-            page: 'all'
-          }
-        } 
-        },{
-          text: 'Excel',
-          extend: 'excel',
-          exportOptions: {
-            columns: ':visible',
-          modifier: {
-            search: 'applied',
-            order: 'applied',
-            page: 'all'
-          }
-        } 
-        },{
-          text: 'PDF',
-          extend: 'pdf',
-          exportOptions: {
-            columns: ':visible',
-          modifier: {
-            search: 'applied',
-            order: 'applied',
-            page: 'all'
-          }
-        } 
-        },{
-          text: 'Print',
-          extend: 'print',
-          exportOptions: {
-            columns: ':visible',
-          modifier: {
-            search: 'applied',
-            order: 'applied',
-            page: 'all'
-          }
-        } 
-        }]
-      },
-      {
-        extend: 'colvis',
-        text: 'Columns',
-        collectionLayout: 'fixed three-column'
-        
-      }
-      ],
-    }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
-  });
+$(function () {
+  $("#example1").DataTable({
+    responsive: true,
+    lengthChange: false,
+    autoWidth: false,
+    buttons: ["copy", "excel", "pdf", "print"]
+  }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+});
 </script>
 
 <script>
@@ -204,6 +149,7 @@ function eliminarCliente(id) {
     })
 }
 </script>
+
 
 <?php else: ?>
 
