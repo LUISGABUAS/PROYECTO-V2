@@ -89,7 +89,7 @@ if(in_array(12, $_SESSION['permisos'])):
               </div>
 
               <div class="card-footer">
-                <a href="index.php" class="btn btn-outline-danger"><i class="fa a-times"></i> Cancelar</a>
+                <a href="<?= $URL ?>" class="btn btn-outline-danger"><i class="fa a-times"></i> Cancelar</a>
                 <button type="submit" class="btn btn-primary">
                   <i class="fa fa-barcode"></i> Generar códigos
                 </button>
