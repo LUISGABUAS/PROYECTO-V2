@@ -44,16 +44,16 @@ if ($ext !== 'pdf') {
 }
 
 /* 🚚 Validar venta foránea */
-$stmt = $pdo->prepare("SELECT COUNT(*) 
+$stmt = $pdo->prepare("SELECT envio
     FROM tb_ventas 
-    WHERE id_venta = :id_venta 
-      AND envio = 'foraneo'
+    WHERE id_venta = :id_venta
 ");
 $stmt->execute([':id_venta' => $id_venta]);
+$venta = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if ($stmt->fetchColumn() == 0) {
+if (!$venta || $venta['envio'] !== 'foraneo') {
     $_SESSION['icono'] = "error";
-    $_SESSION['mensaje'] = "La venta no es foránea o no existe.";
+    $_SESSION['mensaje'] = "Solo se pueden registrar guías para ventas foráneas.";
     header('Location: ' . $URL . '/dashboard/foraneos.php');
     exit;
 }
@@ -71,7 +71,8 @@ if (move_uploaded_file($guia_pdf['tmp_name'], $uploadFile)) {
 
     $stmt = $pdo->prepare("
         UPDATE tb_ventas 
-        SET guia_pdf = :guia_pdf 
+        SET guia_pdf = :guia_pdf,
+            estado_logistico = 'GUIA REGISTRADA'
         WHERE id_venta = :id_venta
     ");
     $stmt->execute([

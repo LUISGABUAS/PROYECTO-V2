@@ -53,7 +53,8 @@ if (!empty($venta['guia_pdf'])) {
    ACTUALIZAR BD
 ========================= */
 $update = "UPDATE tb_ventas 
-           SET guia_pdf = NULL 
+           SET guia_pdf = NULL,
+               estado_logistico = 'PENDIENTE GUIA'
            WHERE id_venta = :id_venta";
 
 $stmt = $pdo->prepare($update);

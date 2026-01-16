@@ -206,8 +206,13 @@ if (!in_array(20, $_SESSION['permisos'])) {
                       Agregar guía
                     </a>
                   <?php endif; ?></td>
-                  <td><?php if ($v['estado_logistico'] == 'SIN ENVIO'):   ?>
-                <span class="badge badge-warning">Sin envio</span>
+                  <td><?php if ($v['estado_logistico'] == 'PENDIENTE GUIA'):   ?>
+                <span class="badge badge-warning">Pendiente Guia</span>
+                <?php elseif ($v['estado_logistico'] == 'GUIA REGISTRADA'): ?>
+                <span class="badge badge-info">Guia Registrada</span>
+              <?php elseif ($v['estado_logistico'] == 'ENVIADA'): ?>
+                <span class="badge badge-success">Enviado</span>
+
                 <?php endif; ?></td>
                 
 
