@@ -208,6 +208,9 @@ if (!in_array(20, $_SESSION['permisos'])) {
                   <?php endif; ?></td>
                   <td><?php if ($v['estado_logistico'] == 'SIN ENVIO'):   ?>
                 <span class="badge badge-warning">Sin envio</span>
+              <?php elseif ($v['estado_logistico'] == 'ENVIADA'): ?>
+                <span class="badge badge-success">Enviado</span>
+
                 <?php endif; ?></td>
                 
 

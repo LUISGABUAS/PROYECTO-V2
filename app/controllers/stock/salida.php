@@ -128,6 +128,28 @@ try {
     ");
     $stmt->execute([$cantidad_entregada, $estado, $id_detalle]);
 
+    /**
+     * 8️⃣ Verificar si TODOS los productos de la venta han sido completados
+     */
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) as total_detalles,
+               SUM(CASE WHEN estado = 'COMPLETADO' THEN 1 ELSE 0 END) as completados
+        FROM tb_ventas_detalle
+        WHERE id_venta = ?
+    ");
+    $stmt->execute([$id_venta]);
+    $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Si todos los detalles están completados, marcar la venta como ENVIADA
+    if ($resultado['total_detalles'] == $resultado['completados']) {
+        $stmt = $pdo->prepare("
+            UPDATE tb_ventas
+            SET estado_logistico = 'ENVIADA'
+            WHERE id_venta = ?
+        ");
+        $stmt->execute([$id_venta]);
+    }
+
     $pdo->commit();
 
     $response['success'] = true;
