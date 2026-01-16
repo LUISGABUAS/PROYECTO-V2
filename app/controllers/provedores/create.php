@@ -36,7 +36,7 @@ try {
         echo json_encode(['success' => false, 'message' => 'Error al crear el proveedor. Intente nuevamente']);
     }
 } catch(PDOException $e){
-    echo json_encode(['success' => false, 'message' => 'Error en la base de datos: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error en la base de datos: ']);
 }
 
 
