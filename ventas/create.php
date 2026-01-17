@@ -52,152 +52,141 @@ Swal.fire({
               </h3>
             </div>
 
-            <form action="../app/controllers/ventas/create.php" method="POST">
+            <form action="../app/controllers/ventas/create.php" method="POST" enctype="multipart/form-data">
 
-                      <div class="row">
+              <div class="card-body">
 
-                        <!-- FECHA -->
-                        <div class="col-md-3">
-                          <label>Fecha</label>
-                          <input type="date" name="fecha" class="form-control"
-                                value="<?= date('Y-m-d') ?>" required>
-                        </div>
+                <!-- DATOS PRINCIPALES -->
+                <div class="row mb-4">
 
-                        <!-- CLIENTES -->
-                        <div class="col-md-5">
-                          <label>Cliente</label>
-
-                          <!-- BUSCADOR -->
-                          <input type="text" id="buscar_cliente"
-                                class="form-control mb-2"
-                                placeholder="🔍 Buscar por nombre o 📱 teléfono">
-
-                          <!-- FILTROS -->
-                          <div class="btn-group mb-2">
-                            <button type="button" class="btn btn-outline-primary btn-sm"
-                                    onclick="filtrarClientes('local')">Locales</button>
-
-                            <button type="button" class="btn btn-outline-warning btn-sm"
-                                    onclick="filtrarClientes('foraneo')">Foráneos</button>
-
-                            <button type="button" class="btn btn-outline-secondary btn-sm"
-                                    onclick="filtrarClientes('todos')">Todos</button>
-                          </div>
-
-                          <!-- SELECT CLIENTES -->
-                          <select name="cliente" id="select_cliente"
-                                  class="form-control" required>
-                            <option value="">Seleccione cliente</option>
-
-                            <?php foreach($clientes as $c):
-                              $telefono = preg_replace('/[^0-9]/', '', $c['telefono']); ?>
-                              <option value="<?= $c['id_cliente'] ?>"
-                                    data-envio="<?= htmlspecialchars($c['tipo_cliente']) ?>"
-                                    data-telefono="<?= $telefono ?>">
-                              <?= htmlspecialchars($c['nombre_completo']) ?> |  <?= $telefono ?>
-                            </option>
-
-                            <?php endforeach; ?>
-                          </select>
-                        </div>
-
-                        <!-- ENVÍO -->
-                        <div class="col-md-2">
-                          <label>Tipo de envío</label>
-                          <select name="envio" id="tipo_envio"
-                                  class="form-control" required>
-                            <option value="">Seleccione</option>
-                            <option value="local">Local</option>
-                            <option value="foraneo">Foráneo</option>
-                          </select>
-                        </div>
-
-                        <!-- VENDEDOR -->
-                        <div class="col-md-2">
-                          <label>Vendedor</label>
-                          <input type="text" class="form-control"
-                                value="<?= $sesion_nombres ?>" disabled>
-                          <input type="hidden" name="id_usuario"
-                                value="<?= $id_usuario_sesion ?>">
-                        </div>
-
-                      </div>
-
-
-                <hr>
-
-                <!-- ARTICULOS -->
-                <h5><i class="fa fa-box"></i> Artículos</h5>
-
-                <table class="table table-bordered table-sm">
-                  <thead class="thead-light">
-                    <tr class="text-center">
-                      <th>Producto</th>
-                      <th width="120">Cantidad</th>
-                      <th width="150">Precio  $</th>
-                      <th width="150">Subtotal $</th>
-                      <th width="50"></th>
-                      
-                    </tr>
-                  </thead>
-
-                  <tbody id="detalle_venta">
-                    <tr>
-                      <td>
-                        <select name="productos[]" class="form-control form-control-sm producto" required onchange="asignarPrecio(this)">
-                          <option value="">Seleccione</option>
-                          <?php 
-                           $dinero = "$";
-                          foreach($datos_productos as $p){
-                            ?>
-                            <option value="<?= $p['id_producto'] ?>" data-precio="<?= $p['precio_venta'] ?>">
-                              <?= $p['codigo'] ?> - <?= $p['nombre'] ?>
-                            </option>
-                          <?php } ?>
-                        </select>
-                      </td>
-
-                      <td>
-                        <input type="number" name="cantidades[]" class="form-control form-control-sm text-center cantidad" min="1" value="1" oninput="calcularFila(this)" required>
-                      </td>
-
-                      <td>
-                        <input type="number" name="precios[]" class="form-control form-control-sm text-center precio" step="0.01" readonly>
-                      </td>
-
-                      <td>
-                        <input type="number" 
-                              class="form-control form-control-sm text-center subtotal"
-                              step="0.01" readonly>
-                      </td>
-
-
-                      <td class="text-center">
-                        <button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)">
-                          <i class="fa fa-trash"></i>
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="agregarFila()">
-                  <i class="fa fa-plus"></i> Agregar artículo
-                </button>
-                
-                <div class="row justify-content-end mt-3">
-                    <div class="col-md-3">
-                      <div class="form-group">
-                        <label>Total $</label>
-                        <input type="number" 
-                              name="total" 
-                              id="total_venta"
-                              class="form-control text-center font-weight-bold"
-                              readonly>
-                      </div>
+                  <!-- FECHA -->
+                  <div class="col-md-2">
+                    <div class="form-group">
+                      <label><strong>Fecha</strong></label>
+                      <input type="date" name="fecha" class="form-control" value="<?= date('Y-m-d') ?>" required>
                     </div>
                   </div>
 
+                  <!-- CLIENTES -->
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label><strong>Cliente</strong></label>
+                      <input type="text" id="buscar_cliente" class="form-control mb-2" placeholder="🔍 Buscar por nombre o 📱 teléfono">
+                      <div class="btn-group btn-group-sm mb-2" role="group">
+                        <button type="button" class="btn btn-outline-primary" onclick="filtrarClientes('local')">Locales</button>
+                        <button type="button" class="btn btn-outline-warning" onclick="filtrarClientes('foraneo')">Foráneos</button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="filtrarClientes('todos')">Todos</button>
+                      </div>
+                      <select name="cliente" id="select_cliente" class="form-control" required>
+                        <option value="">Seleccione cliente</option>
+                        <?php foreach($clientes as $c):
+                          $telefono = preg_replace('/[^0-9]/', '', $c['telefono']); ?>
+                          <option value="<?= $c['id_cliente'] ?>" data-envio="<?= htmlspecialchars($c['tipo_cliente']) ?>" data-telefono="<?= $telefono ?>">
+                            <?= htmlspecialchars($c['nombre_completo']) ?> | <?= $telefono ?>
+                          </option>
+                        <?php endforeach; ?>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- ENVÍO -->
+                  <div class="col-md-2">
+                    <div class="form-group">
+                      <label><strong>Tipo de envío</strong></label>
+                      <select name="envio" id="tipo_envio" class="form-control" required>
+                        <option value="">Seleccione</option>
+                        <option value="local">Local</option>
+                        <option value="foraneo">Foráneo</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- VENDEDOR -->
+                  <div class="col-md-2">
+                    <div class="form-group">
+                      <label><strong>Vendedor</strong></label>
+                      <input type="text" class="form-control" value="<?= $sesion_nombres ?>" disabled>
+                      <input type="hidden" name="id_usuario" value="<?= $id_usuario_sesion ?>">
+                    </div>
+                  </div>
+
+                </div>
+
+                <hr class="my-3">
+
+                <!-- COMPROBANTE -->
+                <div class="row mb-4">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label><strong><i class="fa fa-file-pdf text-danger"></i> Comprobante <span class="text-danger">*</span></strong></label>
+                      <input type="file" name="comprobante" id="comprobante" class="form-control-file border rounded p-2" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required>
+                      <small class="form-text text-muted d-block mt-2">📋 Formatos: PDF, JPG, PNG, DOC, DOCX | 📦 Máx. 5MB</small>
+                    </div>
+                  </div>
+                </div>
+
+                <hr class="my-3">
+
+                <!-- ARTICULOS -->
+                <h5 class="mb-3"><i class="fa fa-box text-primary"></i> Artículos</h5>
+
+                <div class="table-responsive">
+                  <table class="table table-bordered table-sm">
+                    <thead class="thead-light">
+                      <tr class="text-center">
+                        <th>Producto</th>
+                        <th width="100">Cantidad</th>
+                        <th width="120">Precio $</th>
+                        <th width="120">Subtotal $</th>
+                        <th width="60">Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody id="detalle_venta">
+                      <tr>
+                        <td>
+                          <select name="productos[]" class="form-control form-control-sm producto" required onchange="asignarPrecio(this)">
+                            <option value="">Seleccione</option>
+                            <?php foreach($datos_productos as $p): ?>
+                              <option value="<?= $p['id_producto'] ?>" data-precio="<?= $p['precio_venta'] ?>">
+                                <?= $p['codigo'] ?> - <?= $p['nombre'] ?>
+                              </option>
+                            <?php endforeach; ?>
+                          </select>
+                        </td>
+                        <td>
+                          <input type="number" name="cantidades[]" class="form-control form-control-sm text-center cantidad" min="1" value="1" oninput="calcularFila(this)" required>
+                        </td>
+                        <td>
+                          <input type="number" name="precios[]" class="form-control form-control-sm text-center precio" step="0.01" readonly>
+                        </td>
+                        <td>
+                          <input type="number" class="form-control form-control-sm text-center subtotal" step="0.01" readonly>
+                        </td>
+                        <td class="text-center">
+                          <button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)">
+                            <i class="fa fa-trash"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <button type="button" class="btn btn-outline-secondary btn-sm mb-3" onclick="agregarFila()">
+                  <i class="fa fa-plus"></i> Agregar artículo
+                </button>
+
+                <hr class="my-3">
+
+                <!-- TOTAL -->
+                <div class="row justify-content-end">
+                  <div class="col-md-3">
+                    <div class="form-group">
+                      <label><strong>Total $</strong></label>
+                      <input type="number" name="total" id="total_venta" class="form-control form-control-lg text-center font-weight-bold text-success" readonly>
+                    </div>
+                  </div>
+                </div>
 
               </div>
 
@@ -205,8 +194,7 @@ Swal.fire({
                 <a href="index.php" class="btn btn-outline-danger">
                   <i class="fa fa-times"></i> Cancelar
                 </a>
-
-                <button type="submit" class="btn btn-success">
+                <button type="submit" class="btn btn-success float-right">
                   <i class="fa fa-save"></i> Guardar venta
                 </button>
               </div>
