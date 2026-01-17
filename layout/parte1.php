@@ -439,6 +439,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
               </li>
 
 
+              <li class="nav-item">
+                <a href="<?php echo $URL;?>/ventas/cotizaciones.php" class="nav-link ">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Cotizar</p>
+                </a>
+              </li>
+
+
             </ul>
             <?php endif; ?>
 
