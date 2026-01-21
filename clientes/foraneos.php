@@ -91,7 +91,7 @@ if (isset($_SESSION['mensaje'])) {
                         </td>
 
                         <td>
-                           <center> <a href="../app/controllers/clientes/edit.php?id=<?= $cliente['id_cliente'] ?>" class="btn btn-warning ">
+                           <center> <a href="edit.php?id=<?= $cliente['id_cliente'] ?>" class="btn btn-warning ">
                                 <i class="fas fa-edit">Edit</i>
                             </a>
 
