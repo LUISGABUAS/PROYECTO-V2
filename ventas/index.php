@@ -48,7 +48,17 @@ if (!in_array(20, $_SESSION['permisos'])) {
           <div class="info-box">
             <span class="info-box-icon bg-info"><i class="fa fa-shopping-cart"></i></span>
             <div class="info-box-content">
-              <span class="info-box-text">Mis Ventas</span>
+              <span class="info-box-text">Total Ventas</span>
+              <span class="info-box-number"><?= $ventas_generales['total_ventas'] ?? 0 ?></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="info-box">
+            <span class="info-box-icon bg-info"><i class="fa fa-shopping-cart"></i></span>
+            <div class="info-box-content">
+              <span class="info-box-text">Total Ventas</span>
               <span class="info-box-number"><?= $ventas_generales['total_ventas'] ?? 0 ?></span>
             </div>
           </div>

@@ -24,9 +24,16 @@ try {
     $pdo->beginTransaction();
 
     /* =========================
+       COMPROBANTE ACTUAL
+    ========================= */
+    $stmt = $pdo->prepare("SELECT comprobante FROM tb_ventas WHERE id_venta = ?");
+    $stmt->execute([$id_venta]);
+    $comprobante_actual = $stmt->fetchColumn();
+
+    /* =========================
        1️⃣ VALIDAR QUE NO HAYA ENTREGAS
     ========================= */
-    $stmt = $pdo->prepare("SELECT SUM(cantidad_entregada) 
+    $stmt = $pdo->prepare("SELECT SUM(cantidad_entregada)
         FROM tb_ventas_detalle
         WHERE id_venta = ?
     ");
@@ -41,7 +48,6 @@ try {
 
     /* =========================
        2️⃣ VALIDAR STOCK DISPONIBLE
-       (SIN TOCAR CODIGOS)
     ========================= */
     foreach ($productos as $i => $id_producto) {
 
@@ -52,7 +58,7 @@ try {
             throw new Exception('Cantidad inválida');
         }
 
-        $stmt = $pdo->prepare("SELECT COUNT(*) 
+        $stmt = $pdo->prepare("SELECT COUNT(*)
             FROM stock
             WHERE id_producto = ?
               AND estado = 'EN BODEGA'
@@ -70,10 +76,56 @@ try {
     }
 
     /* =========================
-       3️⃣ ACTUALIZAR VENTA
+       3️⃣ PROCESAR COMPROBANTE (SI VIENE NUEVO)
+    ========================= */
+    $nuevo_comprobante = $comprobante_actual;
+
+    // ✅ VALIDACIÓN CORREGIDA
+    if (isset($_FILES['comprobante']) && $_FILES['comprobante']['error'] === UPLOAD_ERR_OK) {
+
+        $archivo = $_FILES['comprobante'];
+
+        // Tamaño máximo 5MB
+        if ($archivo['size'] > 5 * 1024 * 1024) {
+            throw new Exception('El comprobante supera los 5MB');
+        }
+
+        $ext = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+        $permitidos = ['pdf','jpg','jpeg','png','doc','docx'];
+
+        if (!in_array($ext, $permitidos)) {
+            throw new Exception('Formato de comprobante no permitido');
+        }
+
+        // Crear carpeta si no existe
+        $carpeta_destino = __DIR__ . '/../../comprobantes/';
+        if (!is_dir($carpeta_destino)) {
+            mkdir($carpeta_destino, 0755, true);
+        }
+
+        // Nombre único
+        $nuevo_comprobante = 'comp_' . $id_venta . '_' . time() . '.' . $ext;
+        $ruta_destino = $carpeta_destino . $nuevo_comprobante;
+
+        if (!move_uploaded_file($archivo['tmp_name'], $ruta_destino)) {
+            throw new Exception('Error al subir el comprobante');
+        }
+
+        // Eliminar comprobante anterior
+        if (!empty($comprobante_actual)) {
+            $ruta_vieja = $carpeta_destino . $comprobante_actual;
+            if (file_exists($ruta_vieja)) {
+                unlink($ruta_vieja);
+            }
+        }
+    }
+
+    /* =========================
+       4️⃣ ACTUALIZAR VENTA
     ========================= */
     $stmt = $pdo->prepare("UPDATE tb_ventas
-        SET fecha = ?, cliente = ?, envio = ?, total = ?
+        SET fecha = ?, cliente = ?, envio = ?, total = ?, comprobante = ?,
+            updated_at = ?
         WHERE id_venta = ?
     ");
     $stmt->execute([
@@ -81,12 +133,13 @@ try {
         $cliente,
         $envio,
         $total,
+        $nuevo_comprobante,
+        $fechaHora,
         $id_venta
     ]);
 
     /* =========================
-       4️⃣ REEMPLAZAR DETALLE
-       (SOLO CANTIDADES)
+       5️⃣ REEMPLAZAR DETALLE
     ========================= */
     $stmt = $pdo->prepare("DELETE FROM tb_ventas_detalle WHERE id_venta = ?");
     $stmt->execute([$id_venta]);
@@ -124,3 +177,4 @@ try {
     header('Location: ../../../ventas/edit.php?id=' . $id_venta);
     exit;
 }
+?>

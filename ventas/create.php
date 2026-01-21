@@ -125,6 +125,16 @@ Swal.fire({
                   </div>
                 </div>
 
+                <!-- PREVISUALIZACIÓN -->
+            <div class="row">
+              <div class="col-md-6">
+                <div id="preview_comprobante" style="display:none;">
+                  <label><strong>Previsualización:</strong></label>
+                  <div class="border p-2" id="preview_contenido"></div>
+                </div>
+              </div>
+            </div>
+
                 <hr class="my-3">
 
                 <!-- ARTICULOS -->
@@ -367,6 +377,60 @@ selectCliente.addEventListener('change', function(){
 });
 
 </script>
+
+<script>
+document.getElementById('comprobante').addEventListener('change', function () {
+  const file = this.files[0];
+  const preview = document.getElementById('preview_comprobante');
+  const contenido = document.getElementById('preview_contenido');
+
+  contenido.innerHTML = '';
+  preview.style.display = 'none';
+
+  if (!file) return;
+
+  const tipo = file.type;
+
+  // 📷 IMÁGENES
+  if (tipo.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      contenido.innerHTML = `
+        <img src="${e.target.result}" 
+             class="img-responsive"
+             style="max-height:300px;">
+      `;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // 📄 PDF
+  else if (tipo === 'application/pdf') {
+    const url = URL.createObjectURL(file);
+    contenido.innerHTML = `
+      <embed src="${url}" 
+             type="application/pdf"
+             width="100%"
+             height="300px">
+    `;
+    preview.style.display = 'block';
+  }
+
+  // 📎 DOC / DOCX / otros
+  else {
+    contenido.innerHTML = `
+      <p>
+        <i class="fa fa-file"></i> 
+        <strong>${file.name}</strong><br>
+        <small>Archivo cargado correctamente</small>
+      </p>
+    `;
+    preview.style.display = 'block';
+  }
+});
+</script>
+
 
 
 <?php else: include('../layout/parte2.php'); ?>

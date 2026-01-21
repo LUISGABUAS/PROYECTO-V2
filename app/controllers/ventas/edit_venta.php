@@ -9,7 +9,7 @@ if (!$id_venta) {
 }
 
 /* =========================
-   DATOS DE LA VENTA CON INFORMACIÓN DEL CLIENTE
+   DATOS DE LA VENTA CON INFORMACIÓN DEL CLIENTE Y COMPROBANTE
 ========================= */
 $stmt = $pdo->prepare("SELECT v.*,
     c.nombre_completo AS cliente_nombre,
@@ -46,3 +46,11 @@ $stmt = $pdo->prepare("SELECT d.id_producto, d.cantidad, d.precio,
 ");
 $stmt->execute([$id_venta]);
 $detalle = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+/* =========================
+   DEBUG: Verificar si el comprobante existe
+========================= */
+// Puedes descomentar esto temporalmente para debug:
+// error_log("Comprobante en BD: " . ($venta['comprobante'] ?? 'NULL'));
+// error_log("Ruta esperada: ../../comprobantes/" . $venta['comprobante']);
+?>

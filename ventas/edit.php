@@ -40,7 +40,7 @@ Swal.fire({
           </h3>
         </div>
 
-        <form action="../app/controllers/ventas/update_venta.php" method="POST">
+       <form action="../app/controllers/ventas/update_venta.php" method="POST" enctype="multipart/form-data">
 
           <input type="hidden" name="id_venta" value="<?= $venta['id_venta'] ?>">
 
@@ -90,7 +90,68 @@ Swal.fire({
 
             </div>
 
-            <hr>
+            <hr class="my-3">
+
+            <!-- COMPROBANTE -->
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label><strong><i class="fa fa-file-pdf text-danger"></i> Comprobante</strong></label>
+                  <input type="file" name="comprobante" id="comprobante" 
+                         class="form-control-file border rounded p-2" 
+                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                         onchange="previsualizarComprobante(this)">
+                  <small class="form-text text-muted d-block mt-2">📋 Formatos: PDF, JPG, PNG, DOC, DOCX | 📦 Máx. 5MB</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- COMPROBANTE ACTUAL -->
+            <?php if (!empty($venta['comprobante'])): ?>
+            <div class="row mb-3" id="comprobante_actual">
+              <div class="col-md-6">
+                <label><strong>Comprobante actual:</strong></label>
+                <hr>
+
+                <?php
+                  $ext = pathinfo($venta['comprobante'], PATHINFO_EXTENSION);
+                  $ruta = "../app/comprobantes/" . $venta['comprobante'];
+                ?>
+
+                <?php if (in_array(strtolower($ext), ['jpg','jpeg','png'])): ?>
+                  <img src="<?= $ruta ?>" class="img-responsive border" style="max-height:300px; max-width:100%;">
+                <?php elseif ($ext === 'pdf'): ?>
+                  <embed src="<?= $ruta ?>" type="application/pdf" width="100%" height="300px">
+                <?php else: ?>
+                  <a href="<?= $ruta ?>" target="_blank" class="btn btn-sm btn-info">
+                    <i class="fa fa-file"></i> Ver comprobante
+                  </a>
+                <?php endif; ?>
+              </div>
+            </div>
+            <?php else: ?>
+            <div class="row mb-3" id="comprobante_actual">
+              <div class="col-md-6">
+                <div class="alert alert-warning">
+                  <i class="fa fa-exclamation-triangle"></i> No hay comprobante registrado
+                </div>
+              </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- PREVISUALIZACIÓN NUEVO COMPROBANTE -->
+            <div class="row mb-3" id="preview_comprobante" style="display:none;">
+              <div class="col-md-6">
+                <label><strong><i class="fa fa-eye text-success"></i> Nuevo comprobante:</strong></label>
+                <hr>
+                <div id="preview_contenido" class="border p-2 bg-light"></div>
+                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="cancelarComprobante()">
+                  <i class="fa fa-times"></i> Cancelar cambio
+                </button>
+              </div>
+            </div>
+
+            <hr class="my-3">
 
             <!-- ARTÍCULOS -->
             <h5><i class="fa fa-box"></i> Artículos</h5>
@@ -191,6 +252,93 @@ Swal.fire({
 
 
 <script>
+/* =========================
+   PREVISUALIZAR COMPROBANTE
+========================= */
+function previsualizarComprobante(input) {
+  const preview = document.getElementById('preview_comprobante');
+  const contenido = document.getElementById('preview_contenido');
+  const actual = document.getElementById('comprobante_actual');
+  
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    const fileSize = file.size / 1024 / 1024; // en MB
+    
+    // Validar tamaño
+    if (fileSize > 5) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Archivo muy grande',
+        text: 'El comprobante no puede superar los 5MB'
+      });
+      input.value = '';
+      return;
+    }
+    
+    // Obtener extensión
+    const ext = file.name.split('.').pop().toLowerCase();
+    const permitidos = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
+    
+    if (!permitidos.includes(ext)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Formato no permitido',
+        text: 'Solo se permiten: PDF, JPG, PNG, DOC, DOCX'
+      });
+      input.value = '';
+      return;
+    }
+    
+    // Ocultar comprobante actual
+    actual.style.display = 'none';
+    
+    // Mostrar preview
+    preview.style.display = 'block';
+    
+    // Leer y mostrar el archivo
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+      if (['jpg', 'jpeg', 'png'].includes(ext)) {
+        // Previsualizar imagen
+        contenido.innerHTML = `<img src="${e.target.result}" class="img-fluid" style="max-height:300px;">`;
+      } else if (ext === 'pdf') {
+        // Previsualizar PDF
+        contenido.innerHTML = `<embed src="${e.target.result}" type="application/pdf" width="100%" height="300px">`;
+      } else {
+        // Para documentos
+        contenido.innerHTML = `
+          <div class="alert alert-info">
+            <i class="fa fa-file-word"></i> <strong>${file.name}</strong><br>
+            <small>Tamaño: ${fileSize.toFixed(2)} MB</small><br>
+            <small class="text-muted">El documento se cargará al guardar</small>
+          </div>
+        `;
+      }
+    };
+    
+    reader.readAsDataURL(file);
+  }
+}
+
+/* =========================
+   CANCELAR CAMBIO DE COMPROBANTE
+========================= */
+function cancelarComprobante() {
+  const input = document.getElementById('comprobante');
+  const preview = document.getElementById('preview_comprobante');
+  const actual = document.getElementById('comprobante_actual');
+  
+  // Limpiar input
+  input.value = '';
+  
+  // Ocultar preview
+  preview.style.display = 'none';
+  
+  // Mostrar comprobante actual
+  actual.style.display = 'block';
+}
+
 /* =========================
    AGREGAR FILA
 ========================= */
