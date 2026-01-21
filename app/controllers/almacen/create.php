@@ -24,10 +24,11 @@ move_uploaded_file($_FILES['image']['tmp_name'], $location);
 
 
     $sentencia = $pdo->prepare("INSERT INTO tb_almacen
-         (codigo, nombre, descripcion, stock_minimo, stock_maximo, precio_compra, precio_venta, fecha_ingreso, imagen, id_categoria, id_usuario ,fyh_creacion, fyh_actualizacion)
-  VALUES (:codigo, :nombre, :descripcion, :stock_minimo, :stock_maximo, :precio_compra, :precio_venta, :fecha_ingreso, :imagen, :id_categoria, :id_usuario, :fyh_creacion, :fyh_actualizacion)");
+         (codigo, id_proovedor ,nombre, descripcion, stock_minimo, stock_maximo, precio_compra, precio_venta, fecha_ingreso, imagen, id_categoria, id_usuario ,fyh_creacion, fyh_actualizacion)
+  VALUES (:codigo, :id_proovedor, :nombre, :descripcion, :stock_minimo, :stock_maximo, :precio_compra, :precio_venta, :fecha_ingreso, :imagen, :id_categoria, :id_usuario, :fyh_creacion, :fyh_actualizacion)");
 
     $sentencia->bindParam(':codigo', $codigo);
+    $sentencia->bindParam(':id_proovedor', $id_proovedor);
     $sentencia->bindParam(':nombre', $nombre);
     $sentencia->bindParam(':descripcion', $descripcion);
     $sentencia->bindParam(':stock_minimo', $stock_minimo);
@@ -37,6 +38,7 @@ move_uploaded_file($_FILES['image']['tmp_name'], $location);
     $sentencia->bindParam(':fecha_ingreso', $fecha_ingreso);
     $sentencia->bindParam(':imagen', $filename);
     $sentencia->bindParam(':id_categoria', $id_categoria);
+    $sentencia->bindParam(':id_proovedor', $id_proovedor);
     $sentencia->bindParam(':id_usuario', $id_usuario);
     $sentencia->bindParam(':fyh_creacion', $fechaHora);
     $sentencia->bindParam(':fyh_actualizacion', $fechaHora);

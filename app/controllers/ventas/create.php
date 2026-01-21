@@ -13,132 +13,52 @@ try {
     /* ======================
        DATOS GENERALES
     ====================== */
-    $id_venta   = (int)$_POST['id_venta'];
-    $fecha      = $_POST['fecha'];
-    $cliente    = $_POST['cliente'];
-    $envio      = $_POST['envio'];
-    $total      = (float)$_POST['total'];
+
+    $id_usuario = $_POST['id_usuario'];
+    $fecha   = $_POST['fecha'];
+    $cliente = $_POST['cliente'];
+    $envio   = $_POST['envio'];
+    $total   = (float)$_POST['total'];
 
     $productos  = $_POST['productos'];
     $cantidades = $_POST['cantidades'];
     $precios    = $_POST['precios'];
 
-    /* ======================
-       COMPROBANTE ACTUAL
-    ====================== */
-    $stmt = $pdo->prepare("SELECT comprobante FROM tb_ventas WHERE id_venta = ?");
-    $stmt->execute([$id_venta]);
-    $comprobante_actual = $stmt->fetchColumn();
-
-    /* ======================
-       VALIDAR ENTREGAS
-    ====================== */
-    $stmt = $pdo->prepare("SELECT SUM(cantidad_entregada)
-        FROM tb_ventas_detalle
-        WHERE id_venta = ?
-    ");
-    $stmt->execute([$id_venta]);
-    $entregadas = (int)$stmt->fetchColumn();
-
-    if ($entregadas > 0) {
-        throw new Exception("❌ No se puede editar la venta porque ya tiene entregas");
+    if (empty($productos)) {
+        throw new Exception("❌ No hay productos en la venta");
     }
 
     /* ======================
-       PROCESAR COMPROBANTE
+       COMPROBANTE (OPCIONAL)
     ====================== */
-    $ruta_comprobante = $comprobante_actual;
+    $ruta_comprobante = null;
 
-    if (isset($_FILES['comprobante']) && $_FILES['comprobante']['error'] !== UPLOAD_ERR_NO_FILE) {
+    if (isset($_FILES['comprobante']) && $_FILES['comprobante']['error'] === UPLOAD_ERR_OK) {
 
-        if ($_FILES['comprobante']['error'] !== UPLOAD_ERR_OK) {
-            throw new Exception("❌ Error al cargar el comprobante");
+        $ext = strtolower(pathinfo($_FILES['comprobante']['name'], PATHINFO_EXTENSION));
+        $permitidas = ['pdf','jpg','jpeg','png'];
+
+        if (!in_array($ext, $permitidas)) {
+            throw new Exception("❌ Formato de comprobante no permitido");
         }
 
-        $comprobante = $_FILES['comprobante'];
-
-        // Tamaño máx 5MB
-        if ($comprobante['size'] > 5 * 1024 * 1024) {
-            throw new Exception("❌ El archivo no debe superar 5MB");
-        }
-
-        // Extensión
-        $extensiones_permitidas = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
-        $ext = strtolower(pathinfo($comprobante['name'], PATHINFO_EXTENSION));
-
-        if (!in_array($ext, $extensiones_permitidas)) {
-            throw new Exception("❌ Formato de archivo no permitido");
-        }
-
-        // Carpeta
         $carpeta = __DIR__ . '/../../comprobantes/';
         if (!is_dir($carpeta)) {
             mkdir($carpeta, 0755, true);
         }
 
-        // Nombre único
-        $nombre_archivo = date('Y-m-d_H-i-s') . '_' . uniqid() . '.' . $ext;
-        $ruta_fisica = $carpeta . $nombre_archivo;
+        $nombre = date('Y-m-d_H-i-s') . '_' . uniqid() . '.' . $ext;
+        move_uploaded_file($_FILES['comprobante']['tmp_name'], $carpeta.$nombre);
 
-        if (!move_uploaded_file($comprobante['tmp_name'], $ruta_fisica)) {
-            throw new Exception("❌ Error al guardar el comprobante");
-        }
-
-        // Borrar anterior
-        if (!empty($comprobante_actual)) {
-            $ruta_anterior = __DIR__ . '/../../' . $comprobante_actual;
-            if (file_exists($ruta_anterior)) {
-                unlink($ruta_anterior);
-            }
-        }
-
-        $ruta_comprobante = 'comprobantes/' . $nombre_archivo;
+        $ruta_comprobante = 'comprobantes/'.$nombre;
     }
 
     /* ======================
-       VALIDAR STOCK REAL
+       INSERTAR VENTA (PADRE)
     ====================== */
-    foreach ($productos as $i => $id_producto) {
-
-        $id_producto = (int)$id_producto;
-        $cantidad    = (int)$cantidades[$i];
-
-        // Stock en bodega
-        $stmt = $pdo->prepare("SELECT COUNT(*)
-            FROM stock
-            WHERE id_producto = ?
-              AND estado = 'EN BODEGA'
-        ");
-        $stmt->execute([$id_producto]);
-        $stock_bodega = (int)$stmt->fetchColumn();
-
-        // Pendientes globales
-        $stmt = $pdo->prepare("SELECT COALESCE(SUM(cantidad - cantidad_entregada), 0)
-            FROM tb_ventas_detalle
-            WHERE id_producto = ?
-              AND id_venta != ?
-        ");
-        $stmt->execute([$id_producto, $id_venta]);
-        $pendientes = (int)$stmt->fetchColumn();
-
-        $disponible_real = $stock_bodega - $pendientes;
-
-        if ($disponible_real < $cantidad) {
-
-            $p = $pdo->prepare("SELECT nombre FROM tb_almacen WHERE id_producto = ?");
-            $p->execute([$id_producto]);
-            $nombre_producto = $p->fetchColumn();
-
-            throw new Exception("❌ Stock insuficiente para $nombre_producto");
-        }
-    }
-
-    /* ======================
-       ACTUALIZAR VENTA
-    ====================== */
-    $stmt = $pdo->prepare("UPDATE tb_ventas
-        SET fecha = ?, cliente = ?, envio = ?, total = ?, comprobante = ?
-        WHERE id_venta = ?
+    $stmt = $pdo->prepare("
+        INSERT INTO tb_ventas (fecha, cliente, envio, total, comprobante, id_usuario)
+        VALUES (?, ?, ?, ?, ?, ?)
     ");
     $stmt->execute([
         $fecha,
@@ -146,23 +66,23 @@ try {
         $envio,
         $total,
         $ruta_comprobante,
-        $id_venta
+        $id_usuario
     ]);
 
-    /* ======================
-       REEMPLAZAR DETALLE
-    ====================== */
-    $stmt = $pdo->prepare("DELETE FROM tb_ventas_detalle WHERE id_venta = ?");
-    $stmt->execute([$id_venta]);
+    // 🔥 ID REAL DE LA VENTA
+    $id_venta = $pdo->lastInsertId();
 
+    /* ======================
+       INSERTAR DETALLE
+    ====================== */
     foreach ($productos as $i => $id_producto) {
 
-        $id_producto = (int)$id_producto;
-        $cantidad    = (int)$cantidades[$i];
-        $precio      = (float)$precios[$i];
-        $subtotal    = $cantidad * $precio;
+        $cantidad = (int)$cantidades[$i];
+        $precio   = (float)$precios[$i];
+        $subtotal = $cantidad * $precio;
 
-        $stmt = $pdo->prepare("INSERT INTO tb_ventas_detalle
+        $stmt = $pdo->prepare("
+            INSERT INTO tb_ventas_detalle
             (id_venta, id_producto, cantidad, cantidad_entregada, precio, subtotal)
             VALUES (?, ?, ?, 0, ?, ?)
         ");
@@ -175,12 +95,9 @@ try {
         ]);
     }
 
-    /* ======================
-       CONFIRMAR
-    ====================== */
     $pdo->commit();
 
-    $_SESSION['mensaje'] = "✅ Venta actualizada correctamente";
+    $_SESSION['mensaje'] = "✅ Venta creada correctamente";
     header("Location: ../../../ventas");
     exit;
 
@@ -188,6 +105,6 @@ try {
 
     $pdo->rollBack();
     $_SESSION['mensaje'] = $e->getMessage();
-    header("Location: ../../../ventas/edit.php?id=" . $id_venta);
+    header("Location: ../../../ventas/create.php");
     exit;
 }
