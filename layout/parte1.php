@@ -148,7 +148,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
     <!-- Brand Logo -->
     <a href="<?php echo $URL?>/index.php" class="brand-link">
       <img src="<?php echo $URL?>/public/templates/AdminLTE-3.2.0/dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
-      <span class="brand-text font-weight-light">Sales System</span>
+      <span class="brand-text font-weight-light">Inventory System</span>
     </a>
 
     <!-- Sidebar -->
