@@ -223,7 +223,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                             <li class="nav-item">
                                 <a href="<?php echo $URL;?>/dashboard/vendidos.php" class="nav-link">
                                     <i class="far fa-circle nav-icon"></i>
-                                    <p>Ventas</p>
+                                    <p>Vendidos Detalle</p>
                                 </a>
                             </li>
 
