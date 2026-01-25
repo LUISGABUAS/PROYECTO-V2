@@ -31,10 +31,15 @@ try {
             v.id_venta,
             v.fecha,
             v.total,
+            v.updated_at as salida_fecha,
             v.estado_logistico,
             c.nombre_completo AS cliente_nombre,
             c.telefono AS cliente_telefono,
-            c.direccion AS cliente_direccion,
+            c.calle_numero AS calle,
+            c.colonia AS colonia,
+            c.municipio AS municipio,
+            c.estado AS estado,
+            c.cp AS cp,
             u.nombres AS vendedor_nombre,
             u.email AS vendedor_email
         FROM tb_ventas v
@@ -53,17 +58,17 @@ try {
 
     // Detalle de productos de la venta
     $sqlDetalle = $pdo->prepare("SELECT 
-            dv.id_detalle_venta,
+            dv.id_detalle,
             dv.cantidad,
-            dv.precio_unitario,
+            dv.precio,
             dv.subtotal,
             p.nombre AS producto_nombre,
             p.codigo AS producto_codigo,
             p.imagen AS producto_imagen
-        FROM tb_detalle_venta dv
+        FROM tb_ventas_detalle dv
         JOIN tb_almacen p ON dv.id_producto = p.id_producto
         WHERE dv.id_venta = :id
-        ORDER BY dv.id_detalle_venta");
+        ORDER BY dv.id_detalle ASC");
     
     $sqlDetalle->execute([':id' => $id_venta]);
     $detalles = $sqlDetalle->fetchAll(PDO::FETCH_ASSOC);
@@ -124,8 +129,8 @@ try {
                                 <dt class="col-sm-5">N° Venta:</dt>
                                 <dd class="col-sm-7">#<?= htmlspecialchars($venta['id_venta']) ?></dd>
 
-                                <dt class="col-sm-5">Fecha:</dt>
-                                <dd class="col-sm-7"><?= date('d/m/Y H:i', strtotime($venta['fecha'])) ?></dd>
+                                <dt class="col-sm-5">Fecha Creada:</dt>
+                                <dd class="col-sm-7"><?= date('d/m/Y', strtotime($venta['fecha'])) ?></dd>
 
                                 <dt class="col-sm-5">Estado:</dt>
                                 <dd class="col-sm-7">
@@ -134,9 +139,9 @@ try {
                                     </span>
                                 </dd>
 
-                                <dt class="col-sm-5">Método Pago:</dt>
+                                <dt class="col-sm-5">Fecha de Salida:</dt>
                                 <dd class="col-sm-7">
-                                    <?= htmlspecialchars($venta['metodo_pago'] ?? 'No especificado') ?>
+                                    <?= date('d/m/Y H:i', strtotime($venta['salida_fecha'] ?? 'No especificado')) ?>
                                 </dd>
 
                                 <dt class="col-sm-5">Total:</dt>
@@ -190,7 +195,7 @@ try {
                                 <dt class="col-sm-4">Dirección:</dt>
                                 <dd class="col-sm-8">
                                     <i class="fas fa-map-marker-alt"></i> 
-                                    <?= htmlspecialchars($venta['cliente_direccion']) ?>
+                                    <?= htmlspecialchars($venta['calle'] . ' ' . $venta['colonia'] . ' ' . $venta['municipio'] . ' ' . $venta['estado'] . ' ' . $venta['cp']) ?>
                                 </dd>
                             </dl>
                         </div>
@@ -272,7 +277,7 @@ try {
                                                     </span>
                                                 </td>
                                                 <td class="text-right">
-                                                    $<?= number_format($detalle['precio_unitario'], 2, '.', ',') ?>
+                                                    $<?= number_format($detalle['precio'], 2, '.', ',') ?>
                                                 </td>
                                                 <td class="text-right">
                                                     <strong>$<?= number_format($detalle['subtotal'], 2, '.', ',') ?></strong>

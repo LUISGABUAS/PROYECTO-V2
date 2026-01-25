@@ -6,16 +6,12 @@ include('../layout/parte1.php');
 include('../app/controllers/almacen/list_almacen.php');
 include('../app/controllers/clientes/list_clientes.php');
 
-
-
 if(in_array(21, $_SESSION['permisos'])):
 ?>
 
 <?php if (isset($_SESSION['mensaje'])): ?>
 <script>
 let mensaje = <?= json_encode($_SESSION['mensaje']) ?>;
-
-// Determinar icono según el contenido
 let icono = mensaje.includes('❌') ? 'error' : 'success';
 
 Swal.fire({
@@ -26,9 +22,6 @@ Swal.fire({
 });
 </script>
 <?php unset($_SESSION['mensaje']); endif; ?>
-
-
-
 
 <div class="content-wrapper">
 
@@ -52,7 +45,7 @@ Swal.fire({
               </h3>
             </div>
 
-            <form action="../app/controllers/ventas/create.php" method="POST" enctype="multipart/form-data">
+            <form action="../app/controllers/ventas/create.php" method="POST" enctype="multipart/form-data" id="form_venta">
 
               <div class="card-body">
 
@@ -119,21 +112,27 @@ Swal.fire({
                   <div class="col-md-6">
                     <div class="form-group">
                       <label><strong><i class="fa fa-file-pdf text-danger"></i> Comprobante <span class="text-danger">*</span></strong></label>
-                      <input type="file" name="comprobante" id="comprobante" class="form-control-file border rounded p-2" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required>
+                      <input type="file" 
+                             name="comprobante" 
+                             id="comprobante" 
+                             class="form-control-file border rounded p-2" 
+                             accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" 
+                             required>
                       <small class="form-text text-muted d-block mt-2">📋 Formatos: PDF, JPG, PNG, DOC, DOCX | 📦 Máx. 5MB</small>
+                      <small id="file_error" class="text-danger font-weight-bold" style="display:none;"></small>
                     </div>
                   </div>
                 </div>
 
                 <!-- PREVISUALIZACIÓN -->
-            <div class="row">
-              <div class="col-md-6">
-                <div id="preview_comprobante" style="display:none;">
-                  <label><strong>Previsualización:</strong></label>
-                  <div class="border p-2" id="preview_contenido"></div>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div id="preview_comprobante" style="display:none;">
+                      <label><strong>Previsualización:</strong></label>
+                      <div class="border p-2" id="preview_contenido"></div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
                 <hr class="my-3">
 
@@ -220,7 +219,12 @@ Swal.fire({
   </div>
 </div>
 
+<!-- ========================================= -->
+<!-- SCRIPTS JAVASCRIPT -->
+<!-- ========================================= -->
+
 <script>
+// ============ GESTIÓN DE FILAS DE PRODUCTOS ============
 function agregarFila(){
   let fila = `
   <tr>
@@ -238,7 +242,6 @@ function agregarFila(){
         <?php } ?>
       </select>
     </td>
-
     <td>
       <input type="number" 
              name="cantidades[]" 
@@ -246,20 +249,17 @@ function agregarFila(){
              min="1" value="1"
              oninput="calcularFila(this)" required>
     </td>
-
     <td>
       <input type="number" 
              name="precios[]" 
              class="form-control form-control-sm text-center precio"
              step="0.01" readonly>
     </td>
-
     <td>
       <input type="number"
              class="form-control form-control-sm text-center subtotal"
              step="0.01" readonly>
     </td>
-
     <td class="text-center">
       <button type="button" class="btn btn-danger btn-sm"
               onclick="eliminarFila(this)">
@@ -268,10 +268,8 @@ function agregarFila(){
     </td>
   </tr>`;
   
-  document.getElementById('detalle_venta')
-          .insertAdjacentHTML('beforeend', fila);
+  document.getElementById('detalle_venta').insertAdjacentHTML('beforeend', fila);
 }
-
 
 function asignarPrecio(select){
   const producto = select.value;
@@ -300,14 +298,11 @@ function asignarPrecio(select){
 
 function calcularFila(elemento){
   const fila = elemento.closest('tr');
-
   const cantidad = parseFloat(fila.querySelector('.cantidad').value || 0);
-  const precio   = parseFloat(fila.querySelector('.precio').value || 0);
-
+  const precio = parseFloat(fila.querySelector('.precio').value || 0);
   const subtotal = cantidad * precio;
-
+  
   fila.querySelector('.subtotal').value = subtotal.toFixed(2);
-
   calcularTotal();
 }
 
@@ -319,7 +314,6 @@ function calcularTotal(){
   document.getElementById('total_venta').value = total.toFixed(2);
 }
 
-
 function eliminarFila(btn){
   const filas = document.querySelectorAll('#detalle_venta tr');
   if(filas.length === 1){
@@ -329,10 +323,10 @@ function eliminarFila(btn){
   btn.closest('tr').remove();
   calcularTotal();
 }
-
 </script>
 
 <script>
+// ============ GESTIÓN DE CLIENTES ============
 const selectCliente = document.getElementById('select_cliente');
 const buscador = document.getElementById('buscar_cliente');
 const tipoEnvio = document.getElementById('tipo_envio');
@@ -351,7 +345,6 @@ buscador.addEventListener('keyup', () => {
   });
 });
 
-
 // 📦 Filtrar por tipo
 function filtrarClientes(tipo){
   Array.from(selectCliente.options).forEach(opt => {
@@ -367,7 +360,6 @@ function filtrarClientes(tipo){
   selectCliente.value = '';
 }
 
-
 // 🔁 Auto asignar envío
 selectCliente.addEventListener('change', function(){
   const opt = this.options[this.selectedIndex];
@@ -375,19 +367,49 @@ selectCliente.addEventListener('change', function(){
     tipoEnvio.value = opt.dataset.envio;
   }
 });
-
 </script>
 
 <script>
+// ============ PREVISUALIZACIÓN DE COMPROBANTE ============
 document.getElementById('comprobante').addEventListener('change', function () {
   const file = this.files[0];
   const preview = document.getElementById('preview_comprobante');
   const contenido = document.getElementById('preview_contenido');
+  const errorMsg = document.getElementById('file_error');
 
+  // Limpiar
   contenido.innerHTML = '';
   preview.style.display = 'none';
+  errorMsg.style.display = 'none';
+  errorMsg.textContent = '';
 
   if (!file) return;
+
+  // ✅ VALIDAR TAMAÑO (5MB)
+  const maxSize = 5 * 1024 * 1024;
+  if (file.size > maxSize) {
+    errorMsg.textContent = '❌ El archivo excede el tamaño máximo de 5MB';
+    errorMsg.style.display = 'block';
+    this.value = '';
+    return;
+  }
+
+  // ✅ VALIDAR TIPO
+  const tiposPermitidos = [
+    'image/jpeg', 
+    'image/jpg', 
+    'image/png', 
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ];
+
+  if (!tiposPermitidos.includes(file.type)) {
+    errorMsg.textContent = '❌ Formato de archivo no permitido';
+    errorMsg.style.display = 'block';
+    this.value = '';
+    return;
+  }
 
   const tipo = file.type;
 
@@ -397,8 +419,8 @@ document.getElementById('comprobante').addEventListener('change', function () {
     reader.onload = function (e) {
       contenido.innerHTML = `
         <img src="${e.target.result}" 
-             class="img-responsive"
-             style="max-height:300px;">
+             class="img-fluid"
+             style="max-height:300px; max-width:100%;">
       `;
       preview.style.display = 'block';
     };
@@ -417,21 +439,77 @@ document.getElementById('comprobante').addEventListener('change', function () {
     preview.style.display = 'block';
   }
 
-  // 📎 DOC / DOCX / otros
+  // 📎 DOC / DOCX
   else {
     contenido.innerHTML = `
-      <p>
+      <div class="alert alert-success mb-0">
         <i class="fa fa-file"></i> 
         <strong>${file.name}</strong><br>
-        <small>Archivo cargado correctamente</small>
-      </p>
+        <small>Tamaño: ${(file.size / 1024).toFixed(2)} KB</small>
+      </div>
     `;
     preview.style.display = 'block';
   }
 });
 </script>
 
+<script>
+// ============ VALIDACIÓN FINAL ANTES DE ENVIAR ============
+document.getElementById('form_venta').addEventListener('submit', function(e) {
+  
+  // ✅ Validar comprobante
+  const comprobante = document.getElementById('comprobante');
+  if (!comprobante.files.length) {
+    e.preventDefault();
+    Swal.fire({
+      icon: 'error',
+      title: 'Falta comprobante',
+      text: 'Debe adjuntar un archivo de comprobante'
+    });
+    return false;
+  }
 
+  // ✅ Validar que haya productos seleccionados
+  const productos = document.querySelectorAll('.producto');
+  let hayProducto = false;
+  
+  productos.forEach(p => {
+    if (p.value) hayProducto = true;
+  });
+
+  if (!hayProducto) {
+    e.preventDefault();
+    Swal.fire({
+      icon: 'error',
+      title: 'Sin productos',
+      text: 'Debe agregar al menos un producto a la venta'
+    });
+    return false;
+  }
+
+  // ✅ Validar que el total sea mayor a 0
+  const total = parseFloat(document.getElementById('total_venta').value || 0);
+  if (total <= 0) {
+    e.preventDefault();
+    Swal.fire({
+      icon: 'error',
+      title: 'Total inválido',
+      text: 'El total de la venta debe ser mayor a $0'
+    });
+    return false;
+  }
+
+  // ✅ Todo correcto - mostrar loading
+  Swal.fire({
+    title: 'Guardando venta...',
+    text: 'Por favor espere',
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+});
+</script>
 
 <?php else: include('../layout/parte2.php'); ?>
 <script>
@@ -446,6 +524,5 @@ Swal.fire({
 });
 </script>
 <?php endif; ?>
-
 
 <?php include('../layout/parte2.php'); ?>

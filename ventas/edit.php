@@ -102,42 +102,61 @@ Swal.fire({
                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                          onchange="previsualizarComprobante(this)">
                   <small class="form-text text-muted d-block mt-2">📋 Formatos: PDF, JPG, PNG, DOC, DOCX | 📦 Máx. 5MB</small>
+                  <small class="form-text text-info">Deja vacío si no deseas cambiar el comprobante actual</small>
                 </div>
               </div>
             </div>
 
-            <!-- COMPROBANTE ACTUAL -->
-            <?php if (!empty($venta['comprobante'])): ?>
-            <div class="row mb-3" id="comprobante_actual">
-              <div class="col-md-6">
-                <label><strong>Comprobante actual:</strong></label>
-                <hr>
+      <!-- COMPROBANTE ACTUAL -->
+      <?php if (!empty($venta['comprobante'])): ?>
+      <div class="row mb-3" id="comprobante_actual">
+        <div class="col-md-6">
+          <label><strong>Comprobante actual:</strong></label>
+          <hr>
 
-                <?php
-                  $ext = pathinfo($venta['comprobante'], PATHINFO_EXTENSION);
-                  $ruta = "../app/comprobantes/" . $venta['comprobante'];
-                ?>
+          <?php
+            $ext = pathinfo($venta['comprobante'], PATHINFO_EXTENSION);
+            
+            // 🔥 SOLUCIÓN: Siempre construir desde la raíz del proyecto
+            // Limpiar la ruta de la BD (quitar "app/" si existe al inicio)
+            $archivo = basename($venta['comprobante']);
+            
+            // Ruta para el navegador (desde ventas/ subir a raíz y bajar a app/comprobantes/)
+            $ruta = "../app/comprobantes/" . $archivo;
+            
+            // Ruta física absoluta para verificar existencia
+            $ruta_fisica = realpath(__DIR__ . '/../app/comprobantes/' . $archivo);
+          ?>
 
-                <?php if (in_array(strtolower($ext), ['jpg','jpeg','png'])): ?>
-                  <img src="<?= $ruta ?>" class="img-responsive border" style="max-height:300px; max-width:100%;">
-                <?php elseif ($ext === 'pdf'): ?>
-                  <embed src="<?= $ruta ?>" type="application/pdf" width="100%" height="300px">
-                <?php else: ?>
-                  <a href="<?= $ruta ?>" target="_blank" class="btn btn-sm btn-info">
-                    <i class="fa fa-file"></i> Ver comprobante
-                  </a>
-                <?php endif; ?>
-              </div>
-            </div>
+          <?php if ($ruta_fisica && file_exists($ruta_fisica)): ?>
+            <?php if (in_array(strtolower($ext), ['jpg','jpeg','png'])): ?>
+              <img src="<?= $ruta ?>" class="img-responsive border" style="max-height:300px; max-width:100%;" alt="Comprobante">
+            <?php elseif (strtolower($ext) === 'pdf'): ?>
+              <embed src="<?= $ruta ?>" type="application/pdf" width="100%" height="300px">
             <?php else: ?>
-            <div class="row mb-3" id="comprobante_actual">
-              <div class="col-md-6">
-                <div class="alert alert-warning">
-                  <i class="fa fa-exclamation-triangle"></i> No hay comprobante registrado
-                </div>
-              </div>
-            </div>
+              <a href="<?= $ruta ?>" target="_blank" class="btn btn-sm btn-info">
+                <i class="fa fa-file"></i> Ver comprobante (<?= strtoupper($ext) ?>)
+              </a>
             <?php endif; ?>
+          <?php else: ?>
+            <div class="alert alert-danger">
+              <i class="fa fa-exclamation-triangle"></i> 
+              <strong>Archivo no encontrado</strong><br>
+              <small class="text-muted">Archivo: <?= htmlspecialchars($archivo) ?></small><br>
+              <small class="text-muted">Buscado en: <?= htmlspecialchars(__DIR__ . '/../app/comprobantes/' . $archivo) ?></small>
+            </div>
+          <?php endif; ?>
+        </div>
+      </div>
+      <?php else: ?>
+      <div class="row mb-3" id="comprobante_actual">
+        <div class="col-md-6">
+          <div class="alert alert-warning">
+            <i class="fa fa-exclamation-triangle"></i> No hay comprobante registrado
+          </div>
+        </div>
+      </div>
+      <?php endif; ?>
 
             <!-- PREVISUALIZACIÓN NUEVO COMPROBANTE -->
             <div class="row mb-3" id="preview_comprobante" style="display:none;">
@@ -453,6 +472,15 @@ function calcularTotal(){
    ELIMINAR FILA
 ========================= */
 function eliminarFila(btn){
+  const filas = document.querySelectorAll('#detalle_venta tr');
+  if(filas.length === 1){
+    Swal.fire({
+      icon: 'warning',
+      title: 'Atención',
+      text: 'Debe existir al menos un producto'
+    });
+    return;
+  }
   btn.closest('tr').remove();
   calcularTotal();
 }
@@ -462,11 +490,9 @@ function eliminarFila(btn){
    🔥 SINCRONIZAR AL CARGAR (CLAVE)
 ========================= */
 document.addEventListener('DOMContentLoaded', () => {
-
   document.querySelectorAll('.producto').forEach(select => {
     asignarPrecio(select); // 👈 fuerza el precio correcto
   });
-
 });
 </script>
 

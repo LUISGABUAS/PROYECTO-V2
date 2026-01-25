@@ -29,28 +29,51 @@ try {
     }
 
     /* ======================
-       COMPROBANTE (OPCIONAL)
+       COMPROBANTE 
     ====================== */
     $ruta_comprobante = null;
 
     if (isset($_FILES['comprobante']) && $_FILES['comprobante']['error'] === UPLOAD_ERR_OK) {
 
         $ext = strtolower(pathinfo($_FILES['comprobante']['name'], PATHINFO_EXTENSION));
-        $permitidas = ['pdf','jpg','jpeg','png'];
+        $permitidas = ['pdf','jpg','jpeg','png','doc','docx'];
 
         if (!in_array($ext, $permitidas)) {
             throw new Exception("❌ Formato de comprobante no permitido");
         }
 
-        $carpeta = __DIR__ . '/../../comprobantes/';
-        if (!is_dir($carpeta)) {
-            mkdir($carpeta, 0755, true);
+        // Validar tamaño (5MB)
+        if ($_FILES['comprobante']['size'] > 5 * 1024 * 1024) {
+            throw new Exception("❌ El archivo excede el tamaño máximo de 5MB");
         }
 
-        $nombre = date('Y-m-d_H-i-s') . '_' . uniqid() . '.' . $ext;
-        move_uploaded_file($_FILES['comprobante']['tmp_name'], $carpeta.$nombre);
+        // Ruta de carpeta
+        $carpeta = __DIR__ . '/../../comprobantes/';
+        
+        // Crear carpeta si no existe
+        if (!is_dir($carpeta)) {
+            if (!mkdir($carpeta, 0755, true)) {
+                throw new Exception("❌ No se pudo crear la carpeta de comprobantes");
+            }
+        }
 
-        $ruta_comprobante = 'comprobantes/'.$nombre;
+        // Verificar permisos
+        if (!is_writable($carpeta)) {
+            throw new Exception("❌ No hay permisos de escritura en la carpeta de comprobantes");
+        }
+
+        // Nombre único
+        $nombre = date('Y-m-d_H-i-s') . '_' . uniqid() . '.' . $ext;
+        
+        // Mover archivo
+        if (!move_uploaded_file($_FILES['comprobante']['tmp_name'], $carpeta . $nombre)) {
+            throw new Exception("❌ Error al subir el comprobante");
+        }
+
+        // Ruta para BD
+        $ruta_comprobante = 'app/comprobantes/' . $nombre;
+    } else {
+        throw new Exception("❌ Debe adjuntar un comprobante");
     }
 
     /* ======================
@@ -97,13 +120,19 @@ try {
 
     $pdo->commit();
 
-    $_SESSION['mensaje'] = "✅ Venta creada correctamente";
+    $_SESSION['mensaje'] = "✅ Venta #$id_venta creada correctamente";
     header("Location: ../../../ventas");
     exit;
 
 } catch (Exception $e) {
 
     $pdo->rollBack();
+    
+    // Eliminar archivo si se subió pero hubo error
+    if (isset($carpeta) && isset($nombre) && file_exists($carpeta . $nombre)) {
+        unlink($carpeta . $nombre);
+    }
+    
     $_SESSION['mensaje'] = $e->getMessage();
     header("Location: ../../../ventas/create.php");
     exit;
