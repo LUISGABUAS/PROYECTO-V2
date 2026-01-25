@@ -5,6 +5,7 @@ include('../layout/parte1.php');
 
 include('../app/controllers/almacen/list_almacen.php');
 include('../app/controllers/clientes/list_clientes.php');
+include('../app/controllers/vendedores/list_vendedores.php');
 
 if(in_array(21, $_SESSION['permisos'])):
 ?>
@@ -86,11 +87,8 @@ Swal.fire({
                   <div class="col-md-2">
                     <div class="form-group">
                       <label><strong>Tipo de envío</strong></label>
-                      <select name="envio" id="tipo_envio" class="form-control" required>
-                        <option value="">Seleccione</option>
-                        <option value="local">Local</option>
-                        <option value="foraneo">Foráneo</option>
-                      </select>
+                      <input type="text" id="tipo_envio_display" class="form-control" readonly>
+                      <input type="hidden" name="envio" id="tipo_envio" required>
                     </div>
                   </div>
 
@@ -98,8 +96,15 @@ Swal.fire({
                   <div class="col-md-2">
                     <div class="form-group">
                       <label><strong>Vendedor</strong></label>
-                      <input type="text" class="form-control" value="<?= $sesion_nombres ?>" disabled>
-                      <input type="hidden" name="id_usuario" value="<?= $id_usuario_sesion ?>">
+                      <select name="id_usuario" class="form-control" required>
+                        <option value="">Seleccione vendedor</option>
+                        <?php foreach ($vendedores as $v): ?>
+                          <option value="<?= $v['id_usuario'] ?>">
+                            <?= $v['nombres'] ?>
+                          </option>
+                        <?php endforeach; ?>
+                      </select>
+
                     </div>
                   </div>
 
@@ -364,7 +369,20 @@ function filtrarClientes(tipo){
 selectCliente.addEventListener('change', function(){
   const opt = this.options[this.selectedIndex];
   if(opt && opt.dataset.envio){
-    tipoEnvio.value = opt.dataset.envio;
+    const envio = opt.dataset.envio;
+    
+    // Asignar valor al campo oculto
+    document.getElementById('tipo_envio').value = envio;
+    
+    // Mostrar en el campo de texto (solo lectura)
+    const displayField = document.getElementById('tipo_envio_display');
+    if(envio === 'local'){
+      displayField.value = 'Local';
+      displayField.className = 'form-control bg-light';
+    } else if(envio === 'foraneo'){
+      displayField.value = 'Foráneo';
+      displayField.className = 'form-control bg-light';
+    }
   }
 });
 </script>
