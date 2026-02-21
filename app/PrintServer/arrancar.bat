@@ -1,10 +1,16 @@
 @echo off
 
-:: Copiar a startup automaticamente
-copy "%~dp0PrintServer.exe" "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\PrintServer.exe" /Y
+:: Descargar NSSM si no existe
+if not exist "%~dp0nssm.exe" (
+    powershell -Command "Invoke-WebRequest -Uri 'https://nssm.cc/release/nssm-2.24.zip' -OutFile '%~dp0nssm.zip'"
+    powershell -Command "Expand-Archive '%~dp0nssm.zip' -DestinationPath '%~dp0'"
+    copy "%~dp0nssm-2.24\win64\nssm.exe" "%~dp0nssm.exe"
+)
 
-:: Iniciar ahora mismo en segundo plano
-start /min "" "%~dp0PrintServer.exe"
+:: Instalar PrintServer como servicio
+"%~dp0nssm.exe" install PrintServer "%~dp0PrintServer.exe"
+"%~dp0nssm.exe" set PrintServer Start SERVICE_AUTO_START
+net start PrintServer
 
-echo ✅ Instalado y ejecutando
-timeout /t 2
+echo ✅ PrintServer instalado como servicio
+timeout /t 3
