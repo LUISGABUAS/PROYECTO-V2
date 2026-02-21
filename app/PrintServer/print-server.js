@@ -2,7 +2,7 @@ const net = require('net');
 const https = require('https');
 
 const CONFIG = {
-    PRINTER_IP: '192.168.1.43',
+    PRINTER_IP: '192.168.1.21',
     PRINTER_PORT: 9100,
     SERVER: 'pacasyadira.com',
     PATH: '/app/PrintServer',        // ← agrega esto
