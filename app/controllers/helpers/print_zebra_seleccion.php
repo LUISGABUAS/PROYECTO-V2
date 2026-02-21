@@ -79,7 +79,7 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, [
 
 $pdf = curl_exec($ch);
 $http = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+
 
 if ($http !== 200) {
     die('Error al generar PDF en Labelary');
