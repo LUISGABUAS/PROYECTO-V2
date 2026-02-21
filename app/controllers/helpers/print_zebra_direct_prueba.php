@@ -83,21 +83,20 @@ foreach ($stocks as $stock) {
 }
 
 // ===========================
-// ENVIAR ZPL A LA IMPRESORA
+// GUARDAR EN COLA
 // ===========================
-$printer_ip = "192.168.1.43"; // Cambiar según impresora
-$printer_port = 9100;
+try {
+    $stmt = $pdo->prepare("INSERT INTO print_queue (zpl, status, created_at) VALUES (?, 'pendiente', NOW())");
+    $stmt->execute([$zpl]);
 
-$fp = @fsockopen($printer_ip, $printer_port, $errno, $errstr, 5);
-if (!$fp) {
     ob_clean();
-    echo json_encode(['status' => 'error', 'message' => "No se pudo conectar a la impresora: $errstr ($errno)"]);
+    echo json_encode(['status' => 'success', 'message' => 'Trabajo enviado a cola de impresión']);
+    exit;
+} catch (PDOException $e) {
+    ob_clean();
+    echo json_encode(['status' => 'error', 'message' => 'Error al guardar en cola: ' . $e->getMessage()]);
     exit;
 }
-
-fwrite($fp, $zpl);
-fclose($fp);
-
 // ===========================
 // RESPUESTA EXITOSA
 // ===========================
