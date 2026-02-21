@@ -2,24 +2,44 @@ const net = require('net');
 const https = require('https');
 
 const CONFIG = {
-    PRINTER_IP: '192.168.1.43',      // Cambia por la IP de tu impresora
+    PRINTER_IP: '192.168.1.43',
     PRINTER_PORT: 9100,
-    SERVER: 'pacasyadira.com',          // Sin https://
-    SECRET: 'PacasYadira',        // La misma clave de los PHP
+    SERVER: 'pacasyadira.com',
+    PATH: '/app/PrintServer',        // ← agrega esto
+    SECRET: 'PacasYadira',
     INTERVAL: 3000
 };
 
 function request(path, callback) {
-    https.get(`https://${CONFIG.SERVER}/${path}`, {
+    const options = {
+        hostname: CONFIG.SERVER,
+        path: `${CONFIG.PATH}/${path}`,
+        method: 'GET',
         headers: { 'Authorization': `Bearer ${CONFIG.SECRET}` }
-    }, (res) => {
+    };
+
+    console.log(`🔍 Consultando: https://${CONFIG.SERVER}/${path}`);
+
+    const req = https.request(options, (res) => {
+        console.log(`📡 Status: ${res.statusCode}`);
         let data = '';
         res.on('data', chunk => data += chunk);
         res.on('end', () => {
+            console.log(`📦 Respuesta: ${data}`);
             try { callback(JSON.parse(data)); }
-            catch(e) { callback(null); }
+            catch(e) { 
+                console.log(`❌ Error parseando JSON: ${e.message}`);
+                callback(null); 
+            }
         });
-    }).on('error', () => callback(null));
+    });
+
+    req.on('error', (err) => {
+        console.log(`❌ Error de red: ${err.message} | Código: ${err.code}`);
+        callback(null);
+    });
+
+    req.end();
 }
 
 function markDone(id) {
@@ -45,7 +65,14 @@ function printJob(job) {
 
 function fetchAndPrint() {
     request('get_queue.php', (jobs) => {
-        if (!jobs || jobs.length === 0) return;
+        if (jobs === null) {
+            console.log('❌ Error conectando al servidor');
+            return;
+        }
+        if (jobs.length === 0) {
+            console.log('⏳ Sin trabajos pendientes...');
+            return;
+        }
         console.log(`📋 ${jobs.length} trabajo(s) en cola`);
         jobs.forEach(job => printJob(job));
     });

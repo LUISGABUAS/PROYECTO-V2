@@ -8,7 +8,7 @@ if ($auth !== $secret) {
     exit;
 }
 
-include('config.php');
+include($_SERVER['DOCUMENT_ROOT'] . '/app/config.php');
 $id = intval($_GET['id']);
 $pdo->prepare("UPDATE print_queue SET status = 'completado', printed_at = NOW() WHERE id = ?")->execute([$id]);
 echo json_encode(['status' => 'success']);
