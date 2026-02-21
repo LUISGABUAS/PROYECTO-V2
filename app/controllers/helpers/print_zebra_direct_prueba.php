@@ -71,7 +71,7 @@ foreach ($stocks as $stock) {
 
 ^FO300,350
 ^FB600,3,0,C
-^A0B,100,100
+^A0B,70,70
 ^FD{$producto}^FS
 
 ^FO107,492^GFA,609,3050,10,:Z64:eJzt1bFxwzAMBVAoKtiFI2iTKCOlTGd22SrHbKIRWKrQCSFA4tO2GDc5X1zE1TvZlshPACLSzxutBfQOrUc56GTybGKTh9jkITZ508CmyVQuifxdtJh22a/qUzLQZb7IjkVkShCZFtNOVWM05b1FE2+mE8enkrPLF2vO+SJZQhshta9DkgOUUzINEM2dMxqhoXOWZ2pn3uqATM/QFKBo8guemy407FYRnkNd/cyLY93niZMvyt8U5d9sk2kvGrNmExe5a61FfKV65glaoAgF0yZnmcjtuvN8fuNaFCQ8U9KEqm52ynC32r2zgu3jTKgS92OV/Fbtzu1p3bX8fUKPmum8VzmpddWsha1ziGV4ZUkj5QbI0lZJpB2qC7UJLL0gf5XxqL1a/rxS2VHAfG6KpUNZu6ypdmPq6yyhJEuXyZU7j2r39FKDbqfxAGf+KFXy/2b/f7Nf1kGbtoQKI1QdWQ9eaYHwFE2oiCOUoA3iUFbgo04mne3zSrXa9T5a7fJalR3l9b3OlsuACnPQdKy68VB/rowuuTMq0X/cs/42vPcXvK2Caas716FbazJYQjuyWjuZdrJv59HOrXO+BH0DVBCjjA==:72E2
@@ -83,21 +83,20 @@ foreach ($stocks as $stock) {
 }
 
 // ===========================
-// ENVIAR ZPL A LA IMPRESORA
+// GUARDAR EN COLA
 // ===========================
-$printer_ip = "192.168.1.43"; // Cambiar según impresora
-$printer_port = 9100;
+try {
+    $stmt = $pdo->prepare("INSERT INTO print_queue (zpl, status, created_at) VALUES (?, 'pendiente', NOW())");
+    $stmt->execute([$zpl]);
 
-$fp = @fsockopen($printer_ip, $printer_port, $errno, $errstr, 5);
-if (!$fp) {
     ob_clean();
-    echo json_encode(['status' => 'error', 'message' => "No se pudo conectar a la impresora: $errstr ($errno)"]);
+    echo json_encode(['status' => 'success', 'message' => 'Trabajo enviado a cola de impresión']);
+    exit;
+} catch (PDOException $e) {
+    ob_clean();
+    echo json_encode(['status' => 'error', 'message' => 'Error al guardar en cola: ' . $e->getMessage()]);
     exit;
 }
-
-fwrite($fp, $zpl);
-fclose($fp);
-
 // ===========================
 // RESPUESTA EXITOSA
 // ===========================
