@@ -29,6 +29,20 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 <div class="wrapper">
 
+  <!-- Navbar -->
+  <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+    <!-- Left navbar links -->
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+      </li>
+      <li class="nav-item d-none d-sm-inline-block">
+        <a href="https://wa.me/5218119058201?text=Hola,%20necesito%20ayuda%20con%20el%20sistema%20de%20ventas%20de%20Pacas%20Yadira" class="nav-link">Contact</a>
+      </li>
+    </ul>
+  </nav>
+  <!-- /.navbar -->
+
   <!-- Main Sidebar Container -->
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
