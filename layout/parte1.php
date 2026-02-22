@@ -12,7 +12,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
   <link rel="icon" type="image/png" href="<?php echo $URL; ?>/pacasyadira.png">
 
   <!-- Google Font: Source Sans Pro -->
-  <link rel="stylesheet" href="<?php echo $URL?>/https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="<?php echo $URL?>/public/templates/AdminLTE-3.2.0/plugins/fontawesome-free/css/all.min.css">
    <!-- DataTables -->
@@ -56,12 +56,18 @@ scratch. This page gets rid of all links and provides the needed markup only.
     <!-- Sidebar -->
     <div class="sidebar">
       <!-- Sidebar user panel (optional) -->
-      <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+      <div class="user-panel mt-3 pb-3 mb-3 d-flex" id="userPanelProfile" style="cursor: pointer;" title="Click para editar tu perfil">
         <div class="image">
-          <img src="<?php echo $URL?>/public/templates/AdminLTE-3.2.0/dist/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
+          <img src="<?php 
+            if (!empty($sesion_foto)) {
+              echo $URL . '/' . $sesion_foto;
+            } else {
+              echo $URL . '/public/templates/AdminLTE-3.2.0/dist/img/user2-160x160.jpg';
+            }
+          ?>" id="userProfileImage" class="img-circle elevation-2" alt="User Image">
         </div>
         <div class="info">
-          <a href="#" class="d-block"><?php echo $sesion_nombres;?></a>
+          <a href="#" class="d-block" id="userProfileName"><?php echo $sesion_nombres;?></a>
         </div>
       </div>
 
@@ -415,4 +421,221 @@ scratch. This page gets rid of all links and provides the needed markup only.
     </div>
     <!-- /.sidebar -->
   </aside>
+
+  <!-- Modal para editar perfil del usuario -->
+  <div class="modal fade" id="editProfileModal" tabindex="-1" role="dialog" aria-labelledby="editProfileLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header bg-primary">
+          <h5 class="modal-title" id="editProfileLabel">
+            <i class="fas fa-user-circle"></i> Editar Mi Perfil
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form id="editProfileForm" enctype="multipart/form-data">
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-4 text-center">
+                <div class="form-group">
+                  <img id="previewProfileImage" src="<?php echo $URL?>/public/templates/AdminLTE-3.2.0/dist/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #007bff;">
+                  <div class="mt-3">
+                    <label for="profileImage" class="btn btn-sm btn-info">
+                      <i class="fas fa-camera"></i> Cambiar Foto
+                    </label>
+                    <input type="file" id="profileImage" name="profileImage" accept="image/*" style="display: none;">
+                  </div>
+                  <div class="mt-3">
+                    <div class="form-group">
+                      <label style="font-weight: bold;">Tu Rol</label>
+                      <p id="rolDisplay" class="form-control-plaintext" style="border: 1px solid #dee2e6; padding: 0.5rem; border-radius: 0.25rem; background-color: #f8f9fa;">-</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-8">
+                <div class="form-group">
+                  <label for="nombres">Nombre Completo</label>
+                  <input type="text" class="form-control" id="nombres" name="nombres" required>
+                </div>
+                <div class="form-group">
+                  <label for="email">Email</label>
+                  <input type="email" class="form-control" id="email" name="email" autocomplete="email" required>
+                </div>
+                <div class="form-group">
+                  <label for="password_actual">Contraseña Actual</label>
+                  <input type="password" class="form-control" id="password_actual" name="password_actual" autocomplete="current-password">
+                  <small class="text-muted">Requerido solo si deseas cambiar tu contraseña</small>
+                </div>
+                <div class="form-group">
+                  <label for="password_nueva">Nueva Contraseña</label>
+                  <input type="password" class="form-control" id="password_nueva" name="password_nueva" autocomplete="new-password">
+                  <small class="text-muted">Déjalo en blanco si no deseas cambiar</small>
+                </div>
+                <div class="form-group">
+                  <label for="password_confirmacion">Confirmar Contraseña</label>
+                  <input type="password" class="form-control" id="password_confirmacion" name="password_confirmacion" autocomplete="new-password">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Hacer el panel de usuario clickeable
+    document.getElementById('userPanelProfile').addEventListener('click', function(e) {
+      e.preventDefault();
+      openEditProfileModal();
+    });
+
+    // Cargar datos del usuario en el modal
+    function openEditProfileModal() {
+      fetch('<?php echo $URL; ?>/app/controllers/usuarios/get_perfil.php')
+        .then(response => response.json())
+        .then(data => {
+          console.log('Datos recibidos del servidor:', data);
+          if (data.success) {
+            document.getElementById('nombres').value = data.nombres;
+            document.getElementById('email').value = data.email;
+            document.getElementById('rolDisplay').textContent = data.rol || 'Sin rol asignado';
+            // Limpiar campos de contraseña
+            document.getElementById('password_actual').value = '';
+            document.getElementById('password_nueva').value = '';
+            document.getElementById('password_confirmacion').value = '';
+            if (data.imagen) {
+              const urlImagen = '<?php echo $URL; ?>/' + data.imagen.replace(/^\/+/, '');
+              console.log('URL de imagen construida:', urlImagen);
+              document.getElementById('previewProfileImage').src = urlImagen;
+            } else {
+              console.log('No hay imagen guardada para este usuario');
+            }
+          }
+          // Mostrar el modal usando Bootstrap 4
+          $('#editProfileModal').modal('show');
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al cargar los datos'
+          });
+        });
+    }
+
+    // Manejar preview de imagen
+    document.getElementById('profileImage').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        // Validar que sea una imagen
+        if (!file.type.startsWith('image/')) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Por favor selecciona una imagen válida'
+          });
+          this.value = '';
+          return;
+        }
+        
+        // Validar tamaño (máximo 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'La imagen no debe superar 5MB'
+          });
+          this.value = '';
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          document.getElementById('previewProfileImage').src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Manejar envío del formulario
+    document.getElementById('editProfileForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      
+      // Validar contraseñas
+      const password_nueva = document.getElementById('password_nueva').value;
+      const password_confirmacion = document.getElementById('password_confirmacion').value;
+      
+      if (password_nueva && password_nueva !== password_confirmacion) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Las contraseñas no coinciden'
+        });
+        return;
+      }
+      
+      if (password_nueva && !document.getElementById('password_actual').value) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Debes ingresar tu contraseña actual para cambiarla'
+        });
+        return;
+      }
+
+      fetch('<?php echo $URL; ?>/app/controllers/usuarios/editar_perfil.php', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Actualizar el nombre en el panel de usuario
+          document.getElementById('userProfileName').textContent = data.nombres;
+          
+          // Actualizar la imagen en el panel si cambió
+          if (data.imagen) {
+            document.getElementById('userProfileImage').src = '<?php echo $URL; ?>/' + data.imagen.replace(/^\/+/, '') + '?t=' + new Date().getTime();
+          }
+          
+          // Cerrar el modal
+          $('#editProfileModal').modal('hide');
+          
+          Swal.fire({
+            icon: 'success',
+            title: 'Éxito',
+            text: data.mensaje
+          }).then(() => {
+            location.reload();
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: data.mensaje
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Error al procesar la solicitud'
+        });
+      });
+    });
+  </script>
 
