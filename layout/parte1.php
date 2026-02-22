@@ -56,20 +56,21 @@ scratch. This page gets rid of all links and provides the needed markup only.
     <!-- Sidebar -->
     <div class="sidebar">
       <!-- Sidebar user panel (optional) -->
-      <div class="user-panel mt-3 pb-3 mb-3 d-flex" id="userPanelProfile" style="cursor: pointer;" title="Click para editar tu perfil">
-        <div class="image">
-          <img src="<?php 
-            if (!empty($sesion_foto)) {
-              echo $URL . '/' . $sesion_foto;
-            } else {
-              echo $URL . '/public/templates/AdminLTE-3.2.0/dist/img/user2-160x160.jpg';
-            }
-          ?>" id="userProfileImage" class="img-circle elevation-2" alt="User Image">
+      <!-- Sidebar user panel (optional) -->
+        <div class="user-panel mt-3 pb-3 mb-3 d-flex" id="userPanelProfile" style="cursor: pointer;" title="Click para editar tu perfil">
+          <div class="image">
+            <img src="<?php 
+              if (!empty($sesion_foto)) {
+                echo $URL . '/' . $sesion_foto;
+              } else {
+                echo $URL . '/public/templates/AdminLTE-3.2.0/dist/img/user2-160x160.jpg';
+              }
+            ?>" id="userProfileImage" class="img-circle elevation-2" alt="User Image" style="width: 40px; height: 40px; object-fit: cover;">
+          </div>
+          <div class="info">
+            <a href="#" class="d-block" id="userProfileName"><?php echo $sesion_nombres;?></a>
+          </div>
         </div>
-        <div class="info">
-          <a href="#" class="d-block" id="userProfileName"><?php echo $sesion_nombres;?></a>
-        </div>
-      </div>
 
       <!-- SidebarSearch Form -->
       <div class="form-inline">
