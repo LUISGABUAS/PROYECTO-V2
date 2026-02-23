@@ -121,12 +121,14 @@ include('../app/controllers/almacen/cargar_producto.php');
                                         <input type="number" name="stock_maximo" class="form-control" value="<?php echo $stock_maximo?>">
                                     </div>
                                 </div>
+                                <?php if(in_array(34, $_SESSION['permisos'])):?>
                                 <div class="col-md-2">
                                     <div class="form-group">
                                         <label for="">Precio Compra</label>
                                         <input type="number" name="precio_compra" class="form-control" value="<?= $precio_compra;?>" required>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                                 <div class="col-md-2">
                                     <div class="form-group">
                                         <label for="">Precio Venta:</label>
