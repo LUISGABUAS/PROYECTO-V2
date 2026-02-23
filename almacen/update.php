@@ -125,9 +125,12 @@ include('../app/controllers/almacen/cargar_producto.php');
                                 <div class="col-md-2">
                                     <div class="form-group">
                                         <label for="">Precio Compra</label>
-                                        <input type="number" name="precio_compra" class="form-control" value="<?= $precio_compra;?>" required>
+                                        <input type="number" name="precio_compra" class="form-control" value="<?= $precio_compra;?>">
+                                        <input type="hidden" name="precio_compra_anterior" value="<?= $precio_compra;?>">
                                     </div>
                                 </div>
+                                <?php else: ?>
+                                <input type="hidden" name="precio_compra_anterior" value="<?= $precio_compra;?>">
                                 <?php endif; ?>
                                 <div class="col-md-2">
                                     <div class="form-group">
