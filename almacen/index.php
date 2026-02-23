@@ -88,8 +88,7 @@ if (isset($_SESSION['mensaje'])) {
                         <th><center>Pendiente</center></th> 
                         <th><center>Disponible</center></th>
                         <?php if(in_array(34, $_SESSION['permisos'])):?>
-                        <th>
-                          <center>Precio Compra</center></th>
+                        <th><center>Precio Compra</center></th>
                         <?php endif;  ?>
                         <th><center>Precio Venta</center></th>
                         <th><center>Fecha</center></th>
@@ -128,8 +127,8 @@ if (isset($_SESSION['mensaje'])) {
                           <?php if(in_array(34, $_SESSION['permisos'])):?>
                           <td>
                               <?php echo $dinero.$dato['precio_compra'] ?>
-                        </td><?php endif; ?>
-                          
+                        </td>
+                        <?php endif; ?>
                           <td><?php echo $dinero.$dato['precio_venta'] ?></td>
                           <td><?php echo $dato['fecha_ingreso'] ?></td>
                           <td><?php echo $dato['nombre_usuario'] ?></td>
