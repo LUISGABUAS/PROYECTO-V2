@@ -13,6 +13,7 @@ $sql = "SELECT
             us.id,
             us.nombres,
             us.email,
+            us.foto_perfil,
             rol.id_rol,
             rol.rol
         FROM tb_usuario us
@@ -36,6 +37,7 @@ $id_usuario_sesion = $usuario['id'];
 $sesion_nombres    = $usuario['nombres'];
 $rol_sesion        = $usuario['rol'];
 $id_rol_sesion     = $usuario['id_rol']; // Guardamos el id_rol
+$sesion_foto       = $usuario['foto_perfil']; // Guardamos la foto de perfil
 
 // ================================
 // Cargar permisos del rol

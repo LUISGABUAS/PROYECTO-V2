@@ -110,7 +110,7 @@ if (isset($_SESSION['mensaje'])) {
                           <td><?php echo $contador = $contador + 1?></td>
                           <td><?php echo $dato['codigo'] ?></td>
                           <td><?php echo $dato['categoria'] ?></td>
-                          <td><?= $dato['proveedor'] ?>?</td>
+                          <td><?= $dato['proveedor'] ?></td>
                           <td>
                             <img src="<?php echo $URL."/almacen/img_productos/".$dato['imagen'] ?>" width="75px" alt="">
                           </td>
