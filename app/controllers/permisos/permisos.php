@@ -20,6 +20,7 @@ $permisos = [
     'Productos' => [
         ['id_permiso' => 8, 'nombre' => 'Ver Productos'],
         ['id_permiso' => 9, 'nombre' => 'Crear Productos'],
+        ['id_permiso' => 34, 'nombre' => 'Ver Precio Compra'],
         ['id_permiso' => 10, 'nombre' => 'Editar Productos']
     ],
     'Stock' => [
