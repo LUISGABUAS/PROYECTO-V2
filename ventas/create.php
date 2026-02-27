@@ -62,7 +62,7 @@ Swal.fire({
                   </div>
 
                   <!-- CLIENTES -->
-                  <div class="col-md-6">
+                  <div class="col-md-4">
                     <div class="form-group">
                       <label><strong>Cliente</strong></label>
                       <input type="text" id="buscar_cliente" class="form-control mb-2" placeholder="🔍 Buscar por nombre o 📱 teléfono">
@@ -92,6 +92,28 @@ Swal.fire({
                     </div>
                   </div>
 
+                  <!-- TIPO DE PAGO (solo visible si es local) -->
+                  <div class="col-md-2" id="col_tipo_pago" style="display:none;">
+                    <div class="form-group">
+                      <label><strong>Tipo de pago</strong></label>
+                      <input type="hidden" name="tipo_pago" id="tipo_pago" value="efectivo">
+                      <div class="d-flex gap-2">
+                        <button type="button" id="btn_efectivo"
+                                onclick="seleccionarPago('efectivo')"
+                                class="btn btn-success flex-fill py-2"
+                                style="border-radius:10px; font-size:13px;">
+                          💵<br><small>Efectivo</small>
+                        </button>
+                        <button type="button" id="btn_comprobante"
+                                onclick="seleccionarPago('comprobante')"
+                                class="btn btn-outline-primary flex-fill py-2"
+                                style="border-radius:10px; font-size:13px;">
+                          🧾<br><small>Comprobante</small>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
                   <!-- VENDEDOR -->
                   <div class="col-md-2">
                     <div class="form-group">
@@ -104,7 +126,6 @@ Swal.fire({
                           </option>
                         <?php endforeach; ?>
                       </select>
-
                     </div>
                   </div>
 
@@ -113,15 +134,15 @@ Swal.fire({
                 <hr class="my-3">
 
                 <!-- COMPROBANTE -->
-                <div class="row mb-4">
+                <div class="row mb-4" id="fila_comprobante">
                   <div class="col-md-6">
                     <div class="form-group">
                       <label><strong><i class="fa fa-file-pdf text-danger"></i> Comprobante <span class="text-danger">*</span></strong></label>
-                      <input type="file" 
-                             name="comprobante" 
-                             id="comprobante" 
-                             class="form-control-file border rounded p-2" 
-                             accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" 
+                      <input type="file"
+                             name="comprobante"
+                             id="comprobante"
+                             class="form-control-file border rounded p-2"
+                             accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                              required>
                       <small class="form-text text-muted d-block mt-2">📋 Formatos: PDF, JPG, PNG, DOC, DOCX | 📦 Máx. 5MB</small>
                       <small id="file_error" class="text-danger font-weight-bold" style="display:none;"></small>
@@ -161,8 +182,10 @@ Swal.fire({
                           <select name="productos[]" class="form-control form-control-sm producto" required onchange="asignarPrecio(this)">
                             <option value="">Seleccione</option>
                             <?php foreach($datos_productos as $p): ?>
-                              <option value="<?= $p['id_producto'] ?>" data-precio="<?= $p['precio_venta'] ?>">
-                                <?= $p['codigo'] ?> - <?= $p['nombre'] ?>
+                              <option value="<?= $p['id_producto'] ?>"
+                                      data-precio="<?= $p['precio_venta'] ?>"
+                                      data-stock="<?= $p['stock_disponible'] ?>">
+                                <?= $p['codigo'] ?> - <?= $p['nombre'] ?> (<?= $p['stock_disponible'] ?> disp.)
                               </option>
                             <?php endforeach; ?>
                           </select>
@@ -234,29 +257,30 @@ function agregarFila(){
   let fila = `
   <tr>
     <td>
-      <select name="productos[]" 
+      <select name="productos[]"
               class="form-control form-control-sm producto"
-              required 
+              required
               onchange="asignarPrecio(this)">
         <option value="">Seleccione</option>
         <?php foreach($datos_productos as $p){ ?>
-          <option value="<?= $p['id_producto'] ?>" 
-                  data-precio="<?= $p['precio_venta'] ?>">
-            <?= $p['codigo'] ?> - <?= $p['nombre'] ?>
+          <option value="<?= $p['id_producto'] ?>"
+                  data-precio="<?= $p['precio_venta'] ?>"
+                  data-stock="<?= $p['stock_disponible'] ?>">
+            <?= $p['codigo'] ?> - <?= $p['nombre'] ?> (<?= $p['stock_disponible'] ?> disp.)
           </option>
         <?php } ?>
       </select>
     </td>
     <td>
-      <input type="number" 
-             name="cantidades[]" 
+      <input type="number"
+             name="cantidades[]"
              class="form-control form-control-sm text-center cantidad"
              min="1" value="1"
              oninput="calcularFila(this)" required>
     </td>
     <td>
-      <input type="number" 
-             name="precios[]" 
+      <input type="number"
+             name="precios[]"
              class="form-control form-control-sm text-center precio"
              step="0.01" readonly>
     </td>
@@ -272,42 +296,63 @@ function agregarFila(){
       </button>
     </td>
   </tr>`;
-  
+
   document.getElementById('detalle_venta').insertAdjacentHTML('beforeend', fila);
 }
 
 function asignarPrecio(select){
   const producto = select.value;
-  const selects = document.querySelectorAll('.producto');
+  const selects  = document.querySelectorAll('.producto');
 
   let repetidos = 0;
-  selects.forEach(s => {
-    if(s.value === producto) repetidos++;
-  });
+  selects.forEach(s => { if(s.value === producto) repetidos++; });
 
   if(repetidos > 1){
+    Swal.fire({ icon:'warning', title:'Producto duplicado', text:'Este producto ya fue agregado' });
+    select.value = '';
+    return;
+  }
+
+  const opt    = select.options[select.selectedIndex];
+  const precio = opt.dataset.precio || 0;
+  const stock  = parseInt(opt.dataset.stock ?? 0);
+  const fila   = select.closest('tr');
+
+  // ✅ Bloquear si no hay stock
+  if(stock <= 0){
     Swal.fire({
-      icon:'warning',
-      title:'Producto duplicado',
-      text:'Este producto ya fue agregado'
+      icon: 'warning',
+      title: 'Sin stock',
+      text: 'Este producto no tiene unidades disponibles en bodega'
     });
     select.value = '';
     return;
   }
 
-  const precio = select.options[select.selectedIndex].dataset.precio || 0;
-  const fila = select.closest('tr');
-  fila.querySelector('.precio').value = precio;
+  fila.querySelector('.precio').value    = precio;
+  fila.querySelector('.cantidad').max    = stock;
   calcularFila(select);
 }
 
 function calcularFila(elemento){
-  const fila = elemento.closest('tr');
-  const cantidad = parseFloat(fila.querySelector('.cantidad').value || 0);
-  const precio = parseFloat(fila.querySelector('.precio').value || 0);
-  const subtotal = cantidad * precio;
-  
-  fila.querySelector('.subtotal').value = subtotal.toFixed(2);
+  const fila          = elemento.closest('tr');
+  const inputCantidad = fila.querySelector('.cantidad');
+  const precio        = parseFloat(fila.querySelector('.precio').value || 0);
+  const maxStock      = parseInt(inputCantidad.max || 0);
+  let   cantidad      = parseFloat(inputCantidad.value || 0);
+
+  // ✅ Corregir si supera el stock
+  if(maxStock > 0 && cantidad > maxStock){
+    inputCantidad.value = maxStock;
+    cantidad = maxStock;
+    Swal.fire({
+      icon: 'warning',
+      title: 'Stock insuficiente',
+      text: `Solo hay ${maxStock} unidad(es) disponibles en bodega`
+    });
+  }
+
+  fila.querySelector('.subtotal').value = (cantidad * precio).toFixed(2);
   calcularTotal();
 }
 
@@ -321,10 +366,7 @@ function calcularTotal(){
 
 function eliminarFila(btn){
   const filas = document.querySelectorAll('#detalle_venta tr');
-  if(filas.length === 1){
-    Swal.fire('Debe existir al menos un producto');
-    return;
-  }
+  if(filas.length === 1){ Swal.fire('Debe existir al menos un producto'); return; }
   btn.closest('tr').remove();
   calcularTotal();
 }
@@ -332,20 +374,20 @@ function eliminarFila(btn){
 
 <script>
 // ============ GESTIÓN DE CLIENTES ============
-const selectCliente = document.getElementById('select_cliente');
-const buscador = document.getElementById('buscar_cliente');
-const tipoEnvio = document.getElementById('tipo_envio');
+const selectCliente    = document.getElementById('select_cliente');
+const buscador         = document.getElementById('buscar_cliente');
+const tipoEnvioHidden  = document.getElementById('tipo_envio');
+const colTipoPago      = document.getElementById('col_tipo_pago');
+const filaComprobante  = document.getElementById('fila_comprobante');
+const inputComprobante = document.getElementById('comprobante');
 
 // 🔍 Buscar por nombre o teléfono
 buscador.addEventListener('keyup', () => {
   const texto = buscador.value.toLowerCase();
-
   Array.from(selectCliente.options).forEach(opt => {
     if (!opt.value) return;
-
-    const nombre = (opt.text || '').toLowerCase();
+    const nombre   = (opt.text || '').toLowerCase();
     const telefono = (opt.dataset.telefono || '').toLowerCase();
-
     opt.hidden = !(nombre.includes(texto) || telefono.includes(texto));
   });
 });
@@ -354,118 +396,126 @@ buscador.addEventListener('keyup', () => {
 function filtrarClientes(tipo){
   Array.from(selectCliente.options).forEach(opt => {
     if (!opt.value) return;
-
-    if (tipo === 'todos') {
-      opt.hidden = false;
-    } else {
-      opt.hidden = opt.dataset.envio !== tipo;
-    }
+    opt.hidden = tipo === 'todos' ? false : opt.dataset.envio !== tipo;
   });
-
   selectCliente.value = '';
 }
 
-// 🔁 Auto asignar envío
+// 🔁 Auto asignar envío + lógica tipo de pago
 selectCliente.addEventListener('change', function(){
-  const opt = this.options[this.selectedIndex];
-  if(opt && opt.dataset.envio){
-    const envio = opt.dataset.envio;
-    
-    // Asignar valor al campo oculto
-    document.getElementById('tipo_envio').value = envio;
-    
-    // Mostrar en el campo de texto (solo lectura)
-    const displayField = document.getElementById('tipo_envio_display');
-    if(envio === 'local'){
-      displayField.value = 'Local';
-      displayField.className = 'form-control bg-light';
-    } else if(envio === 'foraneo'){
-      displayField.value = 'Foráneo';
-      displayField.className = 'form-control bg-light';
-    }
+  const opt   = this.options[this.selectedIndex];
+  const envio = opt?.dataset.envio || '';
+
+  tipoEnvioHidden.value = envio;
+
+  const displayField = document.getElementById('tipo_envio_display');
+
+  if(envio === 'local'){
+    displayField.value     = 'Local';
+    displayField.className = 'form-control bg-light';
+    colTipoPago.style.display = 'block';
+    seleccionarPago('efectivo');
+
+  } else if(envio === 'foraneo'){
+    displayField.value     = 'Foráneo';
+    displayField.className = 'form-control bg-light';
+    colTipoPago.style.display     = 'none';
+    filaComprobante.style.display = 'block';
+    inputComprobante.required     = true;
+    document.getElementById('tipo_pago').value = 'comprobante';
   }
 });
+
+// 🎨 Selector visual de tipo de pago
+function seleccionarPago(tipo){
+  document.getElementById('tipo_pago').value = tipo;
+
+  const btnEfectivo    = document.getElementById('btn_efectivo');
+  const btnComprobante = document.getElementById('btn_comprobante');
+
+  if(tipo === 'efectivo'){
+    btnEfectivo.className    = 'btn btn-success flex-fill py-2';
+    btnComprobante.className = 'btn btn-outline-primary flex-fill py-2';
+  } else {
+    btnEfectivo.className    = 'btn btn-outline-success flex-fill py-2';
+    btnComprobante.className = 'btn btn-primary flex-fill py-2';
+  }
+
+  actualizarComprobante();
+}
+
+function actualizarComprobante(){
+  const pago = document.getElementById('tipo_pago').value;
+
+  if(pago === 'efectivo'){
+    filaComprobante.style.display = 'none';
+    inputComprobante.required     = false;
+    inputComprobante.value        = '';
+    document.getElementById('preview_comprobante').style.display = 'none';
+    document.getElementById('preview_contenido').innerHTML       = '';
+  } else {
+    filaComprobante.style.display = 'block';
+    inputComprobante.required     = true;
+  }
+}
 </script>
 
 <script>
 // ============ PREVISUALIZACIÓN DE COMPROBANTE ============
 document.getElementById('comprobante').addEventListener('change', function () {
-  const file = this.files[0];
-  const preview = document.getElementById('preview_comprobante');
+  const file      = this.files[0];
+  const preview   = document.getElementById('preview_comprobante');
   const contenido = document.getElementById('preview_contenido');
-  const errorMsg = document.getElementById('file_error');
+  const errorMsg  = document.getElementById('file_error');
 
-  // Limpiar
-  contenido.innerHTML = '';
-  preview.style.display = 'none';
+  contenido.innerHTML    = '';
+  preview.style.display  = 'none';
   errorMsg.style.display = 'none';
-  errorMsg.textContent = '';
+  errorMsg.textContent   = '';
 
   if (!file) return;
 
-  // ✅ VALIDAR TAMAÑO (5MB)
   const maxSize = 5 * 1024 * 1024;
   if (file.size > maxSize) {
-    errorMsg.textContent = '❌ El archivo excede el tamaño máximo de 5MB';
+    errorMsg.textContent   = '❌ El archivo excede el tamaño máximo de 5MB';
     errorMsg.style.display = 'block';
     this.value = '';
     return;
   }
 
-  // ✅ VALIDAR TIPO
   const tiposPermitidos = [
-    'image/jpeg', 
-    'image/jpg', 
-    'image/png', 
+    'image/jpeg', 'image/jpg', 'image/png',
     'application/pdf',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
   ];
 
   if (!tiposPermitidos.includes(file.type)) {
-    errorMsg.textContent = '❌ Formato de archivo no permitido';
+    errorMsg.textContent   = '❌ Formato de archivo no permitido';
     errorMsg.style.display = 'block';
     this.value = '';
     return;
   }
 
-  const tipo = file.type;
-
-  // 📷 IMÁGENES
-  if (tipo.startsWith('image/')) {
+  if (file.type.startsWith('image/')) {
     const reader = new FileReader();
-    reader.onload = function (e) {
-      contenido.innerHTML = `
-        <img src="${e.target.result}" 
-             class="img-fluid"
-             style="max-height:300px; max-width:100%;">
-      `;
+    reader.onload = e => {
+      contenido.innerHTML   = `<img src="${e.target.result}" class="img-fluid" style="max-height:300px; max-width:100%;">`;
       preview.style.display = 'block';
     };
     reader.readAsDataURL(file);
-  }
 
-  // 📄 PDF
-  else if (tipo === 'application/pdf') {
-    const url = URL.createObjectURL(file);
-    contenido.innerHTML = `
-      <embed src="${url}" 
-             type="application/pdf"
-             width="100%"
-             height="300px">
-    `;
+  } else if (file.type === 'application/pdf') {
+    const url             = URL.createObjectURL(file);
+    contenido.innerHTML   = `<embed src="${url}" type="application/pdf" width="100%" height="300px">`;
     preview.style.display = 'block';
-  }
 
-  // 📎 DOC / DOCX
-  else {
+  } else {
     contenido.innerHTML = `
       <div class="alert alert-success mb-0">
-        <i class="fa fa-file"></i> 
-        <strong>${file.name}</strong><br>
+        <i class="fa fa-file"></i> <strong>${file.name}</strong><br>
         <small>Tamaño: ${(file.size / 1024).toFixed(2)} KB</small>
-      </div>
-    `;
+      </div>`;
     preview.style.display = 'block';
   }
 });
@@ -474,34 +524,52 @@ document.getElementById('comprobante').addEventListener('change', function () {
 <script>
 // ============ VALIDACIÓN FINAL ANTES DE ENVIAR ============
 document.getElementById('form_venta').addEventListener('submit', function(e) {
-  
-  // ✅ Validar comprobante
+
+  // ✅ Validar comprobante (solo si no es efectivo)
   const comprobante = document.getElementById('comprobante');
-  if (!comprobante.files.length) {
+  const tipoPagoVal = document.getElementById('tipo_pago')?.value || 'comprobante';
+  const esEfectivo  = tipoPagoVal === 'efectivo';
+
+  if (!esEfectivo && !comprobante.files.length) {
     e.preventDefault();
-    Swal.fire({
-      icon: 'error',
-      title: 'Falta comprobante',
-      text: 'Debe adjuntar un archivo de comprobante'
-    });
+    Swal.fire({ icon: 'error', title: 'Falta comprobante', text: 'Debe adjuntar un archivo de comprobante' });
     return false;
   }
 
   // ✅ Validar que haya productos seleccionados
   const productos = document.querySelectorAll('.producto');
-  let hayProducto = false;
-  
-  productos.forEach(p => {
-    if (p.value) hayProducto = true;
-  });
+  let hayProducto  = false;
+  productos.forEach(p => { if (p.value) hayProducto = true; });
 
   if (!hayProducto) {
     e.preventDefault();
-    Swal.fire({
-      icon: 'error',
-      title: 'Sin productos',
-      text: 'Debe agregar al menos un producto a la venta'
-    });
+    Swal.fire({ icon: 'error', title: 'Sin productos', text: 'Debe agregar al menos un producto a la venta' });
+    return false;
+  }
+
+  // ✅ Validar stock de cada producto
+  let stockOk      = true;
+  let mensajeStock = '';
+
+  document.querySelectorAll('#detalle_venta tr').forEach(fila => {
+    const selectProd = fila.querySelector('.producto');
+    const inputCant  = fila.querySelector('.cantidad');
+    if(!selectProd || !selectProd.value) return;
+
+    const opt      = selectProd.options[selectProd.selectedIndex];
+    const stock    = parseInt(opt.dataset.stock ?? 0);
+    const cantidad = parseInt(inputCant.value || 0);
+    const nombre   = opt.text.split('(')[0].trim();
+
+    if(cantidad > stock){
+      stockOk      = false;
+      mensajeStock = `"${nombre}" solo tiene ${stock} unidad(es) disponibles y se pidieron ${cantidad}`;
+    }
+  });
+
+  if(!stockOk){
+    e.preventDefault();
+    Swal.fire({ icon: 'error', title: 'Stock insuficiente', text: mensajeStock });
     return false;
   }
 
@@ -509,11 +577,7 @@ document.getElementById('form_venta').addEventListener('submit', function(e) {
   const total = parseFloat(document.getElementById('total_venta').value || 0);
   if (total <= 0) {
     e.preventDefault();
-    Swal.fire({
-      icon: 'error',
-      title: 'Total inválido',
-      text: 'El total de la venta debe ser mayor a $0'
-    });
+    Swal.fire({ icon: 'error', title: 'Total inválido', text: 'El total de la venta debe ser mayor a $0' });
     return false;
   }
 
@@ -522,9 +586,7 @@ document.getElementById('form_venta').addEventListener('submit', function(e) {
     title: 'Guardando venta...',
     text: 'Por favor espere',
     allowOutsideClick: false,
-    didOpen: () => {
-      Swal.showLoading();
-    }
+    didOpen: () => Swal.showLoading()
   });
 });
 </script>
@@ -537,9 +599,7 @@ Swal.fire({
   text: "No tienes permisos para acceder.",
   timer: 3000,
   showConfirmButton: false
-}).then(() => {
-  window.location = "<?= $URL ?>";
-});
+}).then(() => { window.location = "<?= $URL ?>"; });
 </script>
 <?php endif; ?>
 
