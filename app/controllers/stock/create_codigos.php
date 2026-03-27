@@ -68,7 +68,7 @@ try {
         $id_stock = $pdo->lastInsertId();
 
         // Generar codigo_unico usando id_stock
-        $codigo_unico = $codigo_producto . '-' . str_pad($id_stock, 5, '0', STR_PAD_LEFT);
+        $codigo_unico = $codigo_producto . str_pad($id_stock, 5, '0', STR_PAD_LEFT);
 
         // Actualizar el registro con el codigo_unico
         $update_sql = "UPDATE stock SET codigo_unico = :codigo_unico WHERE id_stock = :id_stock";

@@ -80,8 +80,8 @@ include('../app/controllers/provedores/list_provedores.php');
                         
                                           }
                                         ?>
-                                        <input type="text" class="form-control" value="<?php echo "P-".ceros($contador_id_producto) ?>" disabled>
-                                        <input type="text" name="codigo" value="<?php echo "P-".ceros($contador_id_producto) ?>" hidden >
+                                        <input type="text" class="form-control" value="<?php echo ceros($contador_id_producto) ?>" disabled>
+                                        <input type="text" name="codigo" value="<?php echo ceros($contador_id_producto) ?>" hidden >
                                     </div>
                                 </div>
                                 <div class="col-md-4">
