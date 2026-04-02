@@ -45,11 +45,11 @@ if(in_array(12, $_SESSION['permisos'])):
                     <!-- PRODUCTO -->
                     <div class="form-group">
                       <label>Producto</label>
-                      <select name="id_producto" class="form-control" required>
+                      <select name="id_producto" id="select_producto" class="form-control select2" required>
                         <option value="">Seleccione un producto</option>
                         <?php foreach ($datos_productos as $dato) { ?>
                           <option value="<?= $dato['id_producto'] ?>">
-                            <?= $dato['codigo'] ?> - <?= $dato['nombre'] ?>
+                            <?= $dato['codigo'] ?> - <?= $dato['nombre'] ?> (<?= $dato['proveedor'] ?>)
                           </option>
                         <?php } ?>
                       </select>
@@ -105,11 +105,23 @@ if(in_array(12, $_SESSION['permisos'])):
   </div>
 </div>
 
+<link rel="stylesheet" href="<?= $URL ?>/public/templates/AdminLTE-3.2.0/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="<?= $URL ?>/public/templates/AdminLTE-3.2.0/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+<script src="<?= $URL ?>/public/templates/AdminLTE-3.2.0/plugins/select2/js/select2.full.min.js"></script>
+
 <script>
 function sumar(valor) {
   const input = document.querySelector('input[name="cantidad"]');
   input.value = parseInt(input.value || 0) + valor;
 }
+
+$(document).ready(function() {
+  $('#select_producto').select2({
+    theme: 'bootstrap4',
+    placeholder: 'Buscar por nombre o código...',
+    allowClear: true
+  });
+});
 </script>
 
 <?php include('../layout/mensajes.php'); ?>
