@@ -1,5 +1,6 @@
 <?php
 include('../../config.php');
+include('../helpers/auditoria.php');
 
 $nombres = $_POST['nombres'];
 $email = $_POST['email'];
@@ -18,7 +19,11 @@ if ($password_user == $password_repeat) {
     $sentencia->bindParam(':password_user', $password_user);
     $sentencia->bindParam(':fyh_creacion', $fechaHora);
     $sentencia->execute();
+    $id_nuevo_usuario = $pdo->lastInsertId();
     session_start();
+    $id_usuario_audit = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
+    $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
+    registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'CREAR USUARIO', 'tb_usuario', $id_nuevo_usuario, $nombres);
     $_SESSION['icon'] = "success";
     $_SESSION['mensaje'] = "se ha creado el usuario correctamente";
     header("Location: " . $URL . "/usuarios");

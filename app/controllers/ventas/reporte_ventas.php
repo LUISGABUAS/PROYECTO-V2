@@ -174,37 +174,27 @@ if (in_array(24, $permisos)) {
 /* =========================
    📦 ESTADO DE STOCK
 ========================= */
-$stmt = $pdo->prepare("SELECT 
+$stmt = $pdo->prepare("SELECT
     a.id_producto,
     a.codigo,
     a.nombre,
     cat.nombre_categoria,
     a.precio_venta,
-    
-    COALESCE((
-        SELECT COUNT(*)
-        FROM stock s
-        WHERE s.id_producto = a.id_producto AND s.estado = 'EN BODEGA'
-    ), 0) as stock_bodega,
-    
-    COALESCE((
-        SELECT SUM(vd.cantidad - vd.cantidad_entregada)
-        FROM tb_ventas_detalle vd
-        WHERE vd.id_producto = a.id_producto AND vd.cantidad_entregada < vd.cantidad
-    ), 0) as stock_pendiente,
-    
-    COALESCE((
-        SELECT COUNT(*)
-        FROM stock s
-        WHERE s.id_producto = a.id_producto AND s.estado = 'EN BODEGA'
-    ), 0) - COALESCE((
-        SELECT SUM(vd.cantidad - vd.cantidad_entregada)
-        FROM tb_ventas_detalle vd
-        WHERE vd.id_producto = a.id_producto AND vd.cantidad_entregada < vd.cantidad
-    ), 0) as stock_disponible
-    
+    COALESCE(sb.stock_bodega, 0) AS stock_bodega,
+    COALESCE(sp.stock_pendiente, 0) AS stock_pendiente,
+    COALESCE(sb.stock_bodega, 0) - COALESCE(sp.stock_pendiente, 0) AS stock_disponible
     FROM tb_almacen a
     INNER JOIN tb_categorias cat ON a.id_categoria = cat.id_categoria
+    LEFT JOIN (
+        SELECT id_producto, COUNT(*) AS stock_bodega
+        FROM stock WHERE estado = 'EN BODEGA'
+        GROUP BY id_producto
+    ) sb ON sb.id_producto = a.id_producto
+    LEFT JOIN (
+        SELECT id_producto, SUM(cantidad - cantidad_entregada) AS stock_pendiente
+        FROM tb_ventas_detalle WHERE cantidad_entregada < cantidad
+        GROUP BY id_producto
+    ) sp ON sp.id_producto = a.id_producto
     ORDER BY a.nombre ASC
 ");
 $stmt->execute();

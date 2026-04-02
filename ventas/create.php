@@ -65,18 +65,14 @@ Swal.fire({
                   <div class="col-md-4">
                     <div class="form-group">
                       <label><strong>Cliente</strong></label>
-                      <input type="text" id="buscar_cliente" class="form-control mb-2" placeholder="🔍 Buscar por nombre o 📱 teléfono">
-                      <div class="btn-group btn-group-sm mb-2" role="group">
-                        <button type="button" class="btn btn-outline-primary" onclick="filtrarClientes('local')">Locales</button>
-                        <button type="button" class="btn btn-outline-warning" onclick="filtrarClientes('foraneo')">Foráneos</button>
-                        <button type="button" class="btn btn-outline-secondary" onclick="filtrarClientes('todos')">Todos</button>
-                      </div>
-                      <select name="cliente" id="select_cliente" class="form-control" required>
-                        <option value="">Seleccione cliente</option>
+                      <select name="cliente" id="select_cliente" class="form-control select2-cliente" required>
+                        <option value="">Buscar cliente por nombre o teléfono...</option>
                         <?php foreach($clientes as $c):
                           $telefono = preg_replace('/[^0-9]/', '', $c['telefono']); ?>
-                          <option value="<?= $c['id_cliente'] ?>" data-envio="<?= htmlspecialchars($c['tipo_cliente']) ?>" data-telefono="<?= $telefono ?>">
-                            <?= htmlspecialchars($c['nombre_completo']) ?> | <?= $telefono ?>
+                          <option value="<?= $c['id_cliente'] ?>"
+                                  data-envio="<?= htmlspecialchars($c['tipo_cliente']) ?>"
+                                  data-telefono="<?= $telefono ?>">
+                            <?= htmlspecialchars($c['nombre_completo']) ?> | <?= $telefono ?> | <?= ucfirst($c['tipo_cliente']) ?>
                           </option>
                         <?php endforeach; ?>
                       </select>
@@ -391,58 +387,7 @@ function eliminarFila(btn){
 </script>
 
 <script>
-// ============ GESTIÓN DE CLIENTES ============
-const selectCliente    = document.getElementById('select_cliente');
-const buscador         = document.getElementById('buscar_cliente');
-const tipoEnvioHidden  = document.getElementById('tipo_envio');
-const colTipoPago      = document.getElementById('col_tipo_pago');
-const filaComprobante  = document.getElementById('fila_comprobante');
-const inputComprobante = document.getElementById('comprobante');
-
-// 🔍 Buscar por nombre o teléfono
-buscador.addEventListener('keyup', () => {
-  const texto = buscador.value.toLowerCase();
-  Array.from(selectCliente.options).forEach(opt => {
-    if (!opt.value) return;
-    const nombre   = (opt.text || '').toLowerCase();
-    const telefono = (opt.dataset.telefono || '').toLowerCase();
-    opt.hidden = !(nombre.includes(texto) || telefono.includes(texto));
-  });
-});
-
-// 📦 Filtrar por tipo
-function filtrarClientes(tipo){
-  Array.from(selectCliente.options).forEach(opt => {
-    if (!opt.value) return;
-    opt.hidden = tipo === 'todos' ? false : opt.dataset.envio !== tipo;
-  });
-  selectCliente.value = '';
-}
-
-// 🔁 Auto asignar envío + lógica tipo de pago
-selectCliente.addEventListener('change', function(){
-  const opt   = this.options[this.selectedIndex];
-  const envio = opt?.dataset.envio || '';
-
-  tipoEnvioHidden.value = envio;
-
-  const displayField = document.getElementById('tipo_envio_display');
-
-  if(envio === 'local'){
-    displayField.value     = 'Local';
-    displayField.className = 'form-control bg-light';
-    colTipoPago.style.display = 'block';
-    seleccionarPago('efectivo');
-
-  } else if(envio === 'foraneo'){
-    displayField.value     = 'Foráneo';
-    displayField.className = 'form-control bg-light';
-    colTipoPago.style.display     = 'none';
-    filaComprobante.style.display = 'block';
-    inputComprobante.required     = true;
-    document.getElementById('tipo_pago').value = 'comprobante';
-  }
-});
+// ============ TIPO DE PAGO Y COMPROBANTE ============
 
 // 🎨 Selector visual de tipo de pago
 function seleccionarPago(tipo){
@@ -463,7 +408,9 @@ function seleccionarPago(tipo){
 }
 
 function actualizarComprobante(){
-  const pago = document.getElementById('tipo_pago').value;
+  const pago             = document.getElementById('tipo_pago').value;
+  const filaComprobante  = document.getElementById('fila_comprobante');
+  const inputComprobante = document.getElementById('comprobante');
 
   if(pago === 'efectivo'){
     filaComprobante.style.display = 'none';
@@ -683,6 +630,37 @@ $(document).ready(function(){
     placeholder: 'Buscar por nombre, código o proveedor...',
     width: '100%'
   }).on('change', function(){ asignarPrecio(this); });
+
+  $('#select_cliente').select2({
+    theme: 'bootstrap4',
+    placeholder: 'Buscar cliente por nombre o teléfono...',
+    allowClear: true,
+    width: '100%'
+  }).on('change', function(){
+    const opt = this.options[this.selectedIndex];
+    const envio = opt?.dataset?.envio || '';
+    const tipoEnvioHidden  = document.getElementById('tipo_envio');
+    const displayField     = document.getElementById('tipo_envio_display');
+    const colTipoPago      = document.getElementById('col_tipo_pago');
+    const filaComprobante  = document.getElementById('fila_comprobante');
+    const inputComprobante = document.getElementById('comprobante');
+
+    tipoEnvioHidden.value = envio;
+
+    if(envio === 'local'){
+      displayField.value     = 'Local';
+      displayField.className = 'form-control bg-light';
+      colTipoPago.style.display = 'block';
+      seleccionarPago('efectivo');
+    } else if(envio === 'foraneo'){
+      displayField.value     = 'Foráneo';
+      displayField.className = 'form-control bg-light';
+      colTipoPago.style.display     = 'none';
+      filaComprobante.style.display = 'block';
+      inputComprobante.required     = true;
+      document.getElementById('tipo_pago').value = 'comprobante';
+    }
+  });
 });
 </script>
 

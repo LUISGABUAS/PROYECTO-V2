@@ -92,7 +92,7 @@ if (isset($_SESSION['mensaje'])) {
                                 <div class="btn-group">
                                 <a href="show.php?id=<?php echo $id_usuario;?>" type="button" class="btn btn-info"><i class="fa fa-eye"></i> Show</a>
                                 <a href="update.php?id=<?php echo $id_usuario;?>" type="button" class="btn btn-success"><i class="fa fa-pencil-alt"></i> Edit</a>
-                                <a href="delete.php?id=<?php echo $id_usuario;?>" type="button" class="btn btn-danger"><i class="fa fa-trash"></i> Eliminate</a>
+                                <button type="button" class="btn btn-danger" onclick="confirmarEliminar(<?= $id_usuario ?>, '<?= addslashes($dato['nombres']) ?>')"><i class="fa fa-trash"></i> Eliminate</button>
                               </div>
                               </center>
                             </td>
@@ -124,6 +124,24 @@ if (isset($_SESSION['mensaje'])) {
   </div>
   <!-- /.content-wrapper -->
 
+<script>
+function confirmarEliminar(id, nombre) {
+  Swal.fire({
+    icon: 'warning',
+    title: '¿Eliminar usuario?',
+    html: 'Estás a punto de eliminar a <strong>' + nombre + '</strong>.<br>Esta acción no se puede deshacer.',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar'
+  }).then(result => {
+    if (result.isConfirmed) {
+      window.location = 'delete.php?id=' + id;
+    }
+  });
+}
+</script>
 
 <?php include('../layout/parte2.php'); ?>
 

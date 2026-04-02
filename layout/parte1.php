@@ -1,3 +1,35 @@
+<?php
+// ========== BADGES SIDEBAR ==========
+$badge_stock_bajo = 0;
+$badge_ventas_pendientes = 0;
+
+if (in_array(8, $_SESSION['permisos'] ?? []) || in_array(24, $_SESSION['permisos'] ?? [])) {
+    $stmt_badge = $pdo->prepare("
+        SELECT COUNT(*)
+        FROM tb_almacen a
+        LEFT JOIN (
+            SELECT id_producto, COUNT(*) AS bodega
+            FROM stock WHERE estado = 'EN BODEGA'
+            GROUP BY id_producto
+        ) sb ON sb.id_producto = a.id_producto
+        LEFT JOIN (
+            SELECT id_producto, SUM(cantidad - cantidad_entregada) AS pendiente
+            FROM tb_ventas_detalle WHERE cantidad_entregada < cantidad
+            GROUP BY id_producto
+        ) sp ON sp.id_producto = a.id_producto
+        WHERE a.stock_minimo > 0
+        AND (COALESCE(sb.bodega, 0) - COALESCE(sp.pendiente, 0)) <= a.stock_minimo
+    ");
+    $stmt_badge->execute();
+    $badge_stock_bajo = (int)$stmt_badge->fetchColumn();
+}
+
+if (in_array(24, $_SESSION['permisos'] ?? [])) {
+    $stmt_badge2 = $pdo->prepare("SELECT COUNT(*) FROM tb_ventas WHERE estado_logistico IN ('SIN ENVIO', 'PENDIENTE GUIA')");
+    $stmt_badge2->execute();
+    $badge_ventas_pendientes = (int)$stmt_badge2->fetchColumn();
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -106,6 +138,18 @@
                   <p>Ventas Locales</p>
                 </a>
               </li>
+              <li class="nav-item">
+                <a href="<?php echo $URL;?>/ventas/reportes.php" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Reportes Ampliados</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="<?php echo $URL;?>/auditoria/index.php" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Historial de Cambios</p>
+                </a>
+              </li>
               <?php endif; ?>
               <li class="nav-item">
                 <a href="<?php echo $URL;?>/dashboard/vendidos.php" class="nav-link">
@@ -194,9 +238,9 @@
           <!-- PRODUCTOS -->
           <?php if(in_array(8, $_SESSION['permisos']) || in_array(9, $_SESSION['permisos']) || in_array(10, $_SESSION['permisos'])): ?>
           <li class="nav-item">
-            <a href="#" class="nav-link active">
+            <a href="#" class="nav-link active" style="position:relative;">
               <i class="nav-icon fas fa-store"></i>
-              <p>Productos <i class="right fas fa-angle-left"></i></p>
+              <p>Productos <i class="right fas fa-angle-left"></i><?php if($badge_stock_bajo > 0): ?><span class="badge badge-danger" style="position:absolute;right:30px;top:50%;transform:translateY(-50%);"><?= $badge_stock_bajo ?></span><?php endif; ?></p>
             </a>
             <ul class="nav nav-treeview">
               <?php if(in_array(8, $_SESSION['permisos'])): ?>
@@ -212,6 +256,12 @@
                 <a href="<?php echo $URL;?>/almacen/create.php" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
                   <p>Crear Producto</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="<?php echo $URL;?>/almacen/import.php" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Importar CSV</p>
                 </a>
               </li>
               <?php endif; ?>
@@ -276,9 +326,9 @@
           <!-- VENTAS -->
           <?php if(in_array(20, $_SESSION['permisos'])): ?>
           <li class="nav-item">
-            <a href="#" class="nav-link active">
+            <a href="#" class="nav-link active" style="position:relative;">
               <i class="nav-icon fas fa-dollar-sign"></i>
-              <p>Ventas <i class="right fas fa-angle-left"></i></p>
+              <p>Ventas <i class="right fas fa-angle-left"></i><?php if($badge_ventas_pendientes > 0): ?><span class="badge badge-warning" style="position:absolute;right:30px;top:50%;transform:translateY(-50%);"><?= $badge_ventas_pendientes ?></span><?php endif; ?></p>
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">

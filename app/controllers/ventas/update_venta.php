@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../config.php';
+include('../helpers/auditoria.php');
 session_start();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -165,6 +166,10 @@ try {
     }
 
     $pdo->commit();
+
+    $id_usuario_audit = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
+    $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
+    registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'ACTUALIZAR VENTA', 'tb_ventas', $id_venta, "Venta ID: $id_venta actualizada");
 
     $_SESSION['mensaje'] = '✅ Venta actualizada correctamente';
     header('Location: ../../../ventas');

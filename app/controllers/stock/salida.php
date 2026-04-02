@@ -1,6 +1,7 @@
 <?php
 session_start();
 include('../../config.php');
+include('../helpers/auditoria.php');
 
 header('Content-Type: application/json');
 
@@ -151,6 +152,10 @@ try {
     }
 
     $pdo->commit();
+
+    $id_usuario_audit = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
+    $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
+    registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'SALIDA STOCK', 'stock', $id_stock, $codigo_unico);
 
     $response['success'] = true;
     $response['message'] = 'Producto entregado correctamente.';

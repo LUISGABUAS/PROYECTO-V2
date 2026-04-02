@@ -1,5 +1,7 @@
 <?php
 include('../../config.php');
+include('../helpers/auditoria.php');
+session_start();
 
 header('Content-Type: application/json');
 
@@ -20,6 +22,9 @@ try {
     $stmt->execute();
 
     if ($stmt->rowCount() > 0) {
+        $id_usuario_audit = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
+        $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
+        registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'ELIMINAR STOCK', 'stock', $id_stock, "Stock ID: $id_stock eliminado");
         echo json_encode([
             'success' => true,
             'message' => 'Stock eliminado correctamente'

@@ -1,5 +1,6 @@
 <?php
 include('../../config.php');
+include('../helpers/auditoria.php');
 session_start();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -83,6 +84,10 @@ try {
         ':referencias'     => $referencias,
         ':id_cliente'      => $id_cliente
     ]);
+
+    $id_usuario_audit = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
+    $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
+    registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'EDITAR CLIENTE', 'clientes', $id_cliente, $nombre_completo);
 
     $_SESSION['mensaje'] = 'Cliente actualizado correctamente';
     $_SESSION['icono'] = 'success';

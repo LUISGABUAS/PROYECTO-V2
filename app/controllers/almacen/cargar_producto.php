@@ -1,14 +1,13 @@
 <?php
 
-$id_producto_get = $_GET['id'];
-
-
+$id_producto_get = (int)$_GET['id'];
 
 $sql_productos = "SELECT *, cat.nombre_categoria as categoria , u.nombres as nombre_usuario , u.id as id_usuario
                 FROM tb_almacen as a INNER JOIN tb_categorias as cat ON a.id_categoria = cat.id_categoria
-                INNER JOIN tb_usuario as u ON u.id = a.id_usuario 
-                WHERE id_producto = $id_producto_get ";
+                INNER JOIN tb_usuario as u ON u.id = a.id_usuario
+                WHERE id_producto = :id_producto";
 $query_productos = $pdo->prepare($sql_productos);
+$query_productos->bindParam(':id_producto', $id_producto_get, PDO::PARAM_INT);
 $query_productos->execute();
 $datos_productos = $query_productos->fetchAll(PDO::FETCH_ASSOC);
 

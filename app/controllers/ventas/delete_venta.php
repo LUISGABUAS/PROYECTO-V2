@@ -96,6 +96,11 @@ try {
 
     $pdo->commit();
 
+    include('../helpers/auditoria.php');
+    $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+    $nombre_usuario_sesion = $_SESSION['nombre_usuario'] ?? null;
+    registrarAuditoria($pdo, $id_usuario_sesion, $nombre_usuario_sesion, 'ELIMINAR VENTA', 'tb_ventas', $id_venta, "Venta #$id_venta eliminada y stock restaurado");
+
     $response['success'] = true;
     $response['message'] = 'Venta pendiente eliminada y stock restaurado correctamente';
 

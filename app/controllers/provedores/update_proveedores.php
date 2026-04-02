@@ -1,6 +1,7 @@
 <?php
 
 include('../../config.php');
+include('../helpers/auditoria.php');
 
 $nombre_proveedor = $_GET['nombre_proovedor'];
 $id_proovedor = $_GET['id_proovedor'];
@@ -35,6 +36,9 @@ $sentencia->bindParam(':id_proovedor', $id_proovedor);
 
 if ($sentencia->execute()) {
     session_start();
+    $id_usuario_audit = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
+    $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
+    registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'ACTUALIZAR PROVEEDOR', 'tb_proveedores', $id_proovedor, $nombre_proveedor);
     $_SESSION['mensaje'] = "Proveedor actualizado correctamente";
     ?>
         <script>

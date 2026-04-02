@@ -1,5 +1,6 @@
 <?php
 include('../../../app/config.php');
+include('../../../app/controllers/helpers/auditoria.php');
 session_start();
 
 /* ==========================
@@ -58,6 +59,10 @@ $update->execute();
 /* ==========================
    OK
 ========================== */
+$id_usuario_audit = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
+$nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
+registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'ESCANEAR STOCK', 'stock', $stock['id_stock'], $codigo);
+
 $_SESSION['mensaje'] = "Producto ingresado correctamente a bodega";
 $_SESSION['icono'] = "success";
 

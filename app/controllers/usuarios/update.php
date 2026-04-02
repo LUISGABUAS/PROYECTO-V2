@@ -1,6 +1,7 @@
 <?php
 
 include('../../config.php');
+include('../helpers/auditoria.php');
 
 $nombres = $_POST['nombres'];
 $email = $_POST['email'];
@@ -27,6 +28,9 @@ if($password_user == ""){
         $sentencia->bindParam(':id', $id);
         $sentencia->execute();
         session_start();
+        $id_usuario_audit = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
+        $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
+        registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'ACTUALIZAR USUARIO', 'tb_usuario', $id, $nombres);
         $_SESSION['mensaje'] = "se ha actualizado el usuario correctamente";
          header("Location: " . $URL . "/usuarios");
 } else {
@@ -54,6 +58,9 @@ if($password_user == ""){
         $sentencia->bindParam(':id', $id);
         $sentencia->execute();
         session_start();
+        $id_usuario_audit = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
+        $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
+        registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'ACTUALIZAR USUARIO', 'tb_usuario', $id, $nombres);
         $_SESSION['mensaje'] = "se ha actualizado el usuario correctamente";
          header("Location: " . $URL . "/usuarios");
 } else {

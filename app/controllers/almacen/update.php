@@ -33,8 +33,16 @@ if (in_array(34, $_SESSION['permisos'])) {
 // IMAGEN
 // ===========================
 if ($_FILES['image']['name'] != null) {
-    $nombreDelArchivo = date('Y-m-d-H-i-s');
-    $image_text = $nombreDelArchivo . "__" . $_FILES['image']['name'];
+    $tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    $extensionesPermitidas = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    $mimeReal = mime_content_type($_FILES['image']['tmp_name']);
+    $extImg = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+    if (!in_array($mimeReal, $tiposPermitidos) || !in_array($extImg, $extensionesPermitidas)) {
+        $_SESSION['mensaje'] = "Solo se permiten imágenes (JPG, PNG, GIF, WEBP)";
+        header("Location: " . $URL . "/almacen/update.php?id=" . $id_producto);
+        exit;
+    }
+    $image_text = date('Y-m-d-H-i-s') . "__" . uniqid() . "." . $extImg;
     $location = "../../../almacen/img_productos/" . $image_text;
     move_uploaded_file($_FILES['image']['tmp_name'], $location);
 }
@@ -71,6 +79,8 @@ $sentencia->bindParam(':id_producto', $id_producto);
 $sentencia->bindParam(':fyh_actualizacion', $fechaHora);
 
 if ($sentencia->execute()) {
+    include('../helpers/auditoria.php');
+    registrarAuditoria($pdo, $id_usuario, null, 'ACTUALIZAR PRODUCTO', 'tb_almacen', $id_producto, "Producto ID: $id_producto actualizado");
     $_SESSION['mensaje'] = "Se ha actualizado el producto correctamente";
     header("Location: " . $URL . "/almacen");
 } else {

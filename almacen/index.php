@@ -55,7 +55,34 @@ if (isset($_SESSION['mensaje'])) {
     <!-- Main content -->
     <div class="content">
       <div class="container-fluid">
-        
+
+        <?php
+        $alertas_stock = array_filter($datos_productos, fn($p) =>
+            isset($p['stock_minimo']) && $p['stock_disponible'] <= $p['stock_minimo']
+        );
+        if (!empty($alertas_stock)):
+        ?>
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <div class="alert alert-warning alert-dismissible fade show">
+              <button type="button" class="close" data-dismiss="alert">&times;</button>
+              <h5><i class="fa fa-exclamation-triangle"></i> <strong>Alerta de Stock Bajo</strong></h5>
+              <p>Los siguientes productos están en o por debajo del stock mínimo:</p>
+              <ul class="mb-0">
+                <?php foreach($alertas_stock as $alerta): ?>
+                  <li>
+                    <strong><?= htmlspecialchars($alerta['nombre']) ?></strong>
+                    (<?= htmlspecialchars($alerta['codigo']) ?>) —
+                    Disponible: <strong class="text-danger"><?= $alerta['stock_disponible'] ?></strong>,
+                    Mínimo: <?= $alerta['stock_minimo'] ?>
+                  </li>
+                <?php endforeach; ?>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <?php endif; ?>
+
       <div class="row">
         <div class="col-md-12">
             <div class="card card-outline card-primary">
@@ -140,7 +167,7 @@ if (isset($_SESSION['mensaje'])) {
                                 <a href="update.php?id=<?php echo $id_producto;?>" type="button" class="btn btn-success btn-sm"><i class="fa fa-pencil-alt"></i> Edit</a>
                                 <?php endif; ?>
                                 <?php if(in_array(13, $_SESSION['permisos'])):?>
-                                <a href="delete.php?id=<?php echo $id_producto;?>" type="button" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i> Eliminate</a>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="confirmarEliminar(<?= $id_producto ?>, '<?= addslashes($dato['nombre']) ?>')"><i class="fa fa-trash"></i> Eliminate</button>
                                 <?php endif; ?>
                                 <?php if(in_array(11, $_SESSION['permisos'])):?>
                                 <a href="../stock/index.php?id=<?php echo $id_producto; ?>" type="button" class="btn btn-primary btn-sm"><i class="fa fa-box"></i> Stock</a>
@@ -228,6 +255,26 @@ if (isset($_SESSION['mensaje'])) {
   <!-- /.content-wrapper -->
 
 <?php include('../layout/mensajes.php')?>
+
+<script>
+function confirmarEliminar(id, nombre) {
+  Swal.fire({
+    icon: 'warning',
+    title: '¿Eliminar producto?',
+    html: 'Estás a punto de eliminar <strong>' + nombre + '</strong>.<br>Esta acción no se puede deshacer.',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar'
+  }).then(result => {
+    if (result.isConfirmed) {
+      window.location = 'delete.php?id=' + id;
+    }
+  });
+}
+</script>
+
 <?php include('../layout/parte2.php'); ?>
 
 <!-- Page specific script -->

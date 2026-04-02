@@ -52,37 +52,27 @@ $ventas_ultimos_7 = $stmt->fetchAll(PDO::FETCH_ASSOC);
 /* =========================
    STOCK DISPONIBLE
 ========================= */
-$stmt = $pdo->prepare("SELECT 
+$stmt = $pdo->prepare("SELECT
     a.id_producto,
     a.codigo,
     a.nombre,
     cat.nombre_categoria,
     a.precio_venta,
-    
-    COALESCE((
-        SELECT COUNT(*)
-        FROM stock s
-        WHERE s.id_producto = a.id_producto AND s.estado = 'EN BODEGA'
-    ), 0) as stock_bodega,
-    
-    COALESCE((
-        SELECT SUM(vd.cantidad - vd.cantidad_entregada)
-        FROM tb_ventas_detalle vd
-        WHERE vd.id_producto = a.id_producto AND vd.cantidad_entregada < vd.cantidad
-    ), 0) as stock_pendiente,
-    
-    COALESCE((
-        SELECT COUNT(*)
-        FROM stock s
-        WHERE s.id_producto = a.id_producto AND s.estado = 'EN BODEGA'
-    ), 0) - COALESCE((
-        SELECT SUM(vd.cantidad - vd.cantidad_entregada)
-        FROM tb_ventas_detalle vd
-        WHERE vd.id_producto = a.id_producto AND vd.cantidad_entregada < vd.cantidad
-    ), 0) as stock_disponible
-    
+    COALESCE(sb.stock_bodega, 0) AS stock_bodega,
+    COALESCE(sp.stock_pendiente, 0) AS stock_pendiente,
+    COALESCE(sb.stock_bodega, 0) - COALESCE(sp.stock_pendiente, 0) AS stock_disponible
     FROM tb_almacen a
     INNER JOIN tb_categorias cat ON a.id_categoria = cat.id_categoria
+    LEFT JOIN (
+        SELECT id_producto, COUNT(*) AS stock_bodega
+        FROM stock WHERE estado = 'EN BODEGA'
+        GROUP BY id_producto
+    ) sb ON sb.id_producto = a.id_producto
+    LEFT JOIN (
+        SELECT id_producto, SUM(cantidad - cantidad_entregada) AS stock_pendiente
+        FROM tb_ventas_detalle WHERE cantidad_entregada < cantidad
+        GROUP BY id_producto
+    ) sp ON sp.id_producto = a.id_producto
     ORDER BY a.nombre ASC
 ");
 $stmt->execute();
@@ -170,6 +160,63 @@ foreach ($ventas_por_tipo as $vt) {
 $tipos_json = json_encode($tipos_envio);
 $cantidades_json = json_encode($cantidades_envio);
 $montos_json_tipos = json_encode($montos_envio);
+
+/* =========================
+   TOP 5 PRODUCTOS MÁS VENDIDOS (permiso 24)
+========================= */
+$top_productos = [];
+if (in_array(24, $_SESSION['permisos'] ?? [])) {
+    $stmt = $pdo->prepare("SELECT
+        a.codigo, a.nombre,
+        SUM(vd.cantidad) as total_vendido,
+        SUM(vd.cantidad * vd.precio) as monto_total
+        FROM tb_ventas_detalle vd
+        INNER JOIN tb_almacen a ON vd.id_producto = a.id_producto
+        INNER JOIN tb_ventas v ON vd.id_venta = v.id_venta
+        WHERE DATE(v.fecha) BETWEEN :desde AND :hasta
+        GROUP BY vd.id_producto
+        ORDER BY total_vendido DESC
+        LIMIT 5
+    ");
+    $stmt->execute([':desde' => $fecha_inicio, ':hasta' => $fecha_fin]);
+    $top_productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/* =========================
+   TOP 5 VENDEDORES (permiso 24)
+========================= */
+$top_vendedores = [];
+if (in_array(24, $_SESSION['permisos'] ?? [])) {
+    $stmt = $pdo->prepare("SELECT
+        u.nombres,
+        COUNT(DISTINCT v.id_venta) as total_ventas,
+        SUM(v.total) as monto_total
+        FROM tb_ventas v
+        INNER JOIN tb_usuario u ON v.id_usuario = u.id
+        WHERE DATE(v.fecha) BETWEEN :desde AND :hasta
+        GROUP BY v.id_usuario
+        ORDER BY monto_total DESC
+        LIMIT 5
+    ");
+    $stmt->execute([':desde' => $fecha_inicio, ':hasta' => $fecha_fin]);
+    $top_vendedores = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/* =========================
+   STOCK BAJO (productos bajo mínimo)
+========================= */
+$stock_bajo = [];
+$stmt = $pdo->prepare("SELECT
+    a.codigo, a.nombre, a.stock_minimo,
+    COALESCE((SELECT COUNT(*) FROM stock s WHERE s.id_producto = a.id_producto AND s.estado = 'EN BODEGA'), 0)
+    - COALESCE((SELECT SUM(vd.cantidad - vd.cantidad_entregada) FROM tb_ventas_detalle vd WHERE vd.id_producto = a.id_producto AND vd.cantidad_entregada < vd.cantidad), 0) as stock_disponible
+    FROM tb_almacen a
+    WHERE a.stock_minimo > 0
+    HAVING stock_disponible <= a.stock_minimo
+    ORDER BY stock_disponible ASC
+");
+$stmt->execute();
+$stock_bajo = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <div class="content-wrapper">
@@ -389,6 +436,67 @@ $montos_json_tipos = json_encode($montos_envio);
           </div>
         </div>
       </div>
+
+      <!-- ALERTAS DE STOCK BAJO -->
+      <?php if (!empty($stock_bajo)): ?>
+      <div class="row mt-4">
+        <div class="col-md-12">
+          <div class="alert alert-warning alert-dismissible fade show">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            <strong><i class="fa fa-exclamation-triangle"></i> Stock bajo en <?= count($stock_bajo) ?> producto(s):</strong>
+            <?php foreach($stock_bajo as $sb): ?>
+              <span class="badge badge-danger ml-1"><?= htmlspecialchars($sb['nombre']) ?>: <?= $sb['stock_disponible'] ?>/<?= $sb['stock_minimo'] ?></span>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      </div>
+      <?php endif; ?>
+
+      <!-- TOP PRODUCTOS Y VENDEDORES -->
+      <?php if (in_array(24, $_SESSION['permisos'] ?? [])): ?>
+      <div class="row mt-4">
+        <div class="col-md-6">
+          <div class="card card-primary">
+            <div class="card-header"><h3 class="card-title">Top 5 Productos Más Vendidos</h3></div>
+            <div class="card-body p-0">
+              <table class="table table-sm table-striped mb-0">
+                <thead><tr><th>Producto</th><th class="text-center">Uds Vendidas</th><th class="text-right">Monto</th></tr></thead>
+                <tbody>
+                  <?php foreach($top_productos as $tp): ?>
+                  <tr>
+                    <td><?= htmlspecialchars($tp['nombre']) ?><br><small class="text-muted"><?= htmlspecialchars($tp['codigo']) ?></small></td>
+                    <td class="text-center"><span class="badge badge-info"><?= $tp['total_vendido'] ?></span></td>
+                    <td class="text-right">$<?= number_format($tp['monto_total'], 2) ?></td>
+                  </tr>
+                  <?php endforeach; ?>
+                  <?php if(empty($top_productos)): ?><tr><td colspan="3" class="text-center text-muted">Sin datos</td></tr><?php endif; ?>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card card-success">
+            <div class="card-header"><h3 class="card-title">Top 5 Vendedores</h3></div>
+            <div class="card-body p-0">
+              <table class="table table-sm table-striped mb-0">
+                <thead><tr><th>Vendedor</th><th class="text-center">Ventas</th><th class="text-right">Total</th></tr></thead>
+                <tbody>
+                  <?php foreach($top_vendedores as $tv): ?>
+                  <tr>
+                    <td><?= htmlspecialchars($tv['nombres']) ?></td>
+                    <td class="text-center"><span class="badge badge-success"><?= $tv['total_ventas'] ?></span></td>
+                    <td class="text-right font-weight-bold">$<?= number_format($tv['monto_total'], 2) ?></td>
+                  </tr>
+                  <?php endforeach; ?>
+                  <?php if(empty($top_vendedores)): ?><tr><td colspan="3" class="text-center text-muted">Sin datos</td></tr><?php endif; ?>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <?php endif; ?>
 
       <!-- TABLA DE STOCK -->
       <div class="row mt-4">

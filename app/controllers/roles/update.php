@@ -1,5 +1,6 @@
 <?php
 include('../../config.php');
+include('../helpers/auditoria.php');
 session_start();
 
 // Recibir datos del formulario
@@ -42,6 +43,10 @@ try {
     }
 
     $pdo->commit();
+
+    $id_usuario_audit = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
+    $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
+    registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'ACTUALIZAR ROL', 'tb_roles', $id_rol, $rol_nombre);
 
     $_SESSION['mensaje'] = "Rol actualizado correctamente";
     $_SESSION['icono'] = "success";

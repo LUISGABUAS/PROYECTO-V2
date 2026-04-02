@@ -118,6 +118,9 @@ try {
 
     $pdo->commit();
 
+    include('../helpers/auditoria.php');
+    registrarAuditoria($pdo, $id_usuario, null, 'CREAR VENTA', 'tb_ventas', $id_venta, "Venta #$id_venta — Cliente: $cliente — Total: $total");
+
     $_SESSION['mensaje'] = "✅ Venta #$id_venta creada correctamente";
     header("Location: ../../../ventas");
     exit;

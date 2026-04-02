@@ -1,5 +1,6 @@
 <?php
 include('../../config.php');
+include('../helpers/auditoria.php');
 
 $id = $_GET['id'] ?? null;
 
@@ -16,6 +17,10 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute([$id]);
 
 session_start();
+$id_usuario_audit = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
+$nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
+registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'ELIMINAR CLIENTE FORÁNEO', 'clientes', $id, "Cliente ID: $id eliminado");
+
 $_SESSION['mensaje'] = '✅ Cliente eliminado correctamente';
 $_SESSION['icono'] = 'success';
 

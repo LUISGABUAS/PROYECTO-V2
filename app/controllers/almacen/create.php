@@ -16,8 +16,28 @@ $fecha_ingreso = $_POST['fecha_ingreso'];
 
 $image = $_POST['image'];
 
+$tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+$extensionesPermitidas = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+$mimeReal = mime_content_type($_FILES['image']['tmp_name']);
+$ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+
+if (!in_array($mimeReal, $tiposPermitidos) || !in_array($ext, $extensionesPermitidas)) {
+    session_start();
+    $_SESSION['mensaje'] = "Solo se permiten imágenes (JPG, PNG, GIF, WEBP)";
+    header("Location: " . $URL . "/almacen/create.php");
+    exit;
+}
+
+$maxSize = 5 * 1024 * 1024;
+if ($_FILES['image']['size'] > $maxSize) {
+    session_start();
+    $_SESSION['mensaje'] = "La imagen no puede superar 5MB";
+    header("Location: " . $URL . "/almacen/create.php");
+    exit;
+}
+
 $nombreDelArchivo = date('Y-m-d-H-i-s');
-$filename = $nombreDelArchivo . "__" . $_FILES['image']['name'];
+$filename = $nombreDelArchivo . "__" . uniqid() . "." . $ext;
 $location = "../../../almacen/img_productos/" . $filename;
 
 move_uploaded_file($_FILES['image']['tmp_name'], $location);
@@ -46,6 +66,8 @@ move_uploaded_file($_FILES['image']['tmp_name'], $location);
     if($sentencia ->execute()){
         session_start();
     $_SESSION['mensaje'] = "se ha creado el producto correctamente";
+    include('../helpers/auditoria.php');
+    registrarAuditoria($pdo, $id_usuario, null, 'CREAR PRODUCTO', 'tb_almacen', $pdo->lastInsertId(), "Producto: $nombre (Código: $codigo)");
     header("Location: " . $URL . "/almacen");
     }else{
         session_start();

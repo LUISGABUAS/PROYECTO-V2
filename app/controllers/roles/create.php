@@ -1,5 +1,6 @@
 <?php
 include('../../config.php');
+include('../helpers/auditoria.php');
 session_start();
 
 
@@ -53,6 +54,9 @@ try {
 
 
     $pdo->commit();
+    $id_usuario_audit = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
+    $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
+    registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'CREAR ROL', 'tb_roles', $id_rol, $rol);
     $_SESSION['icon'] = "success";
     $_SESSION['mensaje'] = "Rol creado correctamente";
     header("Location: ../../../roles/index.php");

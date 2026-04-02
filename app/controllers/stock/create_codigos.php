@@ -1,13 +1,7 @@
 <?php
 include('../../config.php');
+include('../helpers/auditoria.php');
 session_start();
-
-/* ==========================
-   MUESTRA ERRORES PARA DEPURAR
-========================== */
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
 /* ==========================
    DATOS DEL FORMULARIO
@@ -79,6 +73,9 @@ try {
     }
 
     $pdo->commit();
+    $id_usuario_audit = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
+    $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
+    registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'GENERAR STOCK', 'stock', $id_producto, "Se generaron $cantidad piezas para $codigo_producto");
     $_SESSION['mensaje'] = "Se generaron $cantidad piezas para $codigo_producto correctamente";
     header("Location: ".$URL."/stock/index.php?id=".$id_producto);
     exit;

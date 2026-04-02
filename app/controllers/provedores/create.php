@@ -2,6 +2,7 @@
 
 session_start();
 include('../../config.php');
+include('../helpers/auditoria.php');
 
 // Validar que los datos existan
 if(!isset($_GET['nombre_proovedor']) || empty($_GET['nombre_proovedor'])){
@@ -30,6 +31,10 @@ try {
     $sentencia->bindParam(':fyh_creacion', $fechaHora);
     
     if($sentencia->execute()){
+        $id_nuevo_proveedor = $pdo->lastInsertId();
+        $id_usuario_audit = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
+        $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
+        registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'CREAR PROVEEDOR', 'tb_proveedores', $id_nuevo_proveedor, $nombre_proveedor);
         $_SESSION['mensaje'] = "Se ha creado el proveedor correctamente";
         echo json_encode(['success' => true, 'message' => 'Proveedor creado exitosamente']);
     } else {
