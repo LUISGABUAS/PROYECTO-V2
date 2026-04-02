@@ -81,14 +81,14 @@ Swal.fire({
                   <tbody id="detalle_venta">
                     <tr>
                       <td>
-                        <select name="productos[]" class="form-control form-control-sm producto" required onchange="asignarPrecio(this)">
+                        <select name="productos[]" class="form-control form-control-sm producto select2-producto" required onchange="asignarPrecio(this)">
                           <option value="">Seleccione</option>
-                          <?php 
+                          <?php
                            $dinero = "$";
                           foreach($datos_productos as $p){
                             ?>
                             <option value="<?= $p['id_producto'] ?>" data-precio="<?= $p['precio_venta'] ?>">
-                              <?= $p['codigo'] ?> - <?= $p['nombre'] ?>
+                              <?= $p['codigo'] ?> - <?= $p['nombre'] ?> (<?= $p['proveedor'] ?>)
                             </option>
                           <?php } ?>
                         </select>
@@ -191,15 +191,15 @@ function agregarFila(){
   let fila = `
   <tr>
     <td>
-      <select name="productos[]" 
-              class="form-control form-control-sm producto"
-              required 
+      <select name="productos[]"
+              class="form-control form-control-sm producto select2-producto"
+              required
               onchange="asignarPrecio(this)">
         <option value="">Seleccione</option>
         <?php foreach($datos_productos as $p){ ?>
-          <option value="<?= $p['id_producto'] ?>" 
+          <option value="<?= $p['id_producto'] ?>"
                   data-precio="<?= $p['precio_venta'] ?>">
-            <?= $p['codigo'] ?> - <?= $p['nombre'] ?>
+            <?= $p['codigo'] ?> - <?= $p['nombre'] ?> (<?= $p['proveedor'] ?>)
           </option>
         <?php } ?>
       </select>
@@ -234,8 +234,13 @@ function agregarFila(){
     </td>
   </tr>`;
   
-  document.getElementById('detalle_venta')
-          .insertAdjacentHTML('beforeend', fila);
+  document.getElementById('detalle_venta').insertAdjacentHTML('beforeend', fila);
+  const nuevaFila = document.querySelector('#detalle_venta tr:last-child');
+  $(nuevaFila.querySelector('.select2-producto')).select2({
+    theme: 'bootstrap4',
+    placeholder: 'Buscar por nombre, código o proveedor...',
+    width: '100%'
+  }).on('change', function(){ asignarPrecio(this); });
 }
 
 
@@ -442,5 +447,18 @@ Swal.fire({
 </script>
 <?php endif; ?>
 
+
+<link rel="stylesheet" href="<?= $URL ?>/public/templates/AdminLTE-3.2.0/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="<?= $URL ?>/public/templates/AdminLTE-3.2.0/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+<script src="<?= $URL ?>/public/templates/AdminLTE-3.2.0/plugins/select2/js/select2.full.min.js"></script>
+<script>
+$(document).ready(function(){
+  $('.select2-producto').select2({
+    theme: 'bootstrap4',
+    placeholder: 'Buscar por nombre, código o proveedor...',
+    width: '100%'
+  }).on('change', function(){ asignarPrecio(this); });
+});
+</script>
 
 <?php include('../layout/parte2.php'); ?>
