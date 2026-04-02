@@ -138,24 +138,35 @@ Swal.fire({
                   <div class="col-md-6">
                     <div class="form-group">
                       <label><strong><i class="fa fa-file-pdf text-danger"></i> Comprobante <span class="text-danger">*</span></strong></label>
+
+                      <!-- ZONA DE ARRASTRE -->
+                      <div id="drop_zone"
+                           onclick="document.getElementById('comprobante').click()"
+                           style="border: 2px dashed #aaa; border-radius: 10px; padding: 30px; text-align: center; cursor: pointer; background: #f9f9f9; transition: background 0.2s;">
+                        <i class="fa fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                        <p class="mb-1 text-muted">Arrastra el archivo aquí o <strong>haz clic para buscar</strong></p>
+                        <small class="text-muted">PDF, JPG, PNG, DOC, DOCX | Máx. 5MB</small>
+                      </div>
+
                       <input type="file"
                              name="comprobante"
                              id="comprobante"
-                             class="form-control-file border rounded p-2"
                              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                             style="display:none;"
                              required>
-                      <small class="form-text text-muted d-block mt-2">📋 Formatos: PDF, JPG, PNG, DOC, DOCX | 📦 Máx. 5MB</small>
+
                       <small id="file_error" class="text-danger font-weight-bold" style="display:none;"></small>
                     </div>
-                  </div>
-                </div>
 
-                <!-- PREVISUALIZACIÓN -->
-                <div class="row">
-                  <div class="col-md-6">
+                    <!-- PREVISUALIZACIÓN -->
                     <div id="preview_comprobante" style="display:none;">
-                      <label><strong>Previsualización:</strong></label>
-                      <div class="border p-2" id="preview_contenido"></div>
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <strong>Previsualización:</strong>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="limpiarComprobante()">
+                          <i class="fa fa-times"></i> Quitar
+                        </button>
+                      </div>
+                      <div class="border rounded p-2" id="preview_contenido"></div>
                     </div>
                   </div>
                 </div>
@@ -468,9 +479,45 @@ function actualizarComprobante(){
 </script>
 
 <script>
-// ============ PREVISUALIZACIÓN DE COMPROBANTE ============
-document.getElementById('comprobante').addEventListener('change', function () {
-  const file      = this.files[0];
+// ============ DRAG & DROP + PREVISUALIZACIÓN DE COMPROBANTE ============
+const dropZone    = document.getElementById('drop_zone');
+const inputFile   = document.getElementById('comprobante');
+
+// Arrastrar encima
+dropZone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropZone.style.background   = '#e8f4ff';
+  dropZone.style.borderColor  = '#007bff';
+});
+
+// Sale del área
+dropZone.addEventListener('dragleave', () => {
+  dropZone.style.background  = '#f9f9f9';
+  dropZone.style.borderColor = '#aaa';
+});
+
+// Soltar archivo
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.style.background  = '#f9f9f9';
+  dropZone.style.borderColor = '#aaa';
+
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    // Asignar el archivo al input real
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    inputFile.files = dt.files;
+    mostrarPreview(file);
+  }
+});
+
+// Selección manual
+inputFile.addEventListener('change', function () {
+  if (this.files[0]) mostrarPreview(this.files[0]);
+});
+
+function mostrarPreview(file) {
   const preview   = document.getElementById('preview_comprobante');
   const contenido = document.getElementById('preview_contenido');
   const errorMsg  = document.getElementById('file_error');
@@ -478,15 +525,12 @@ document.getElementById('comprobante').addEventListener('change', function () {
   contenido.innerHTML    = '';
   preview.style.display  = 'none';
   errorMsg.style.display = 'none';
-  errorMsg.textContent   = '';
-
-  if (!file) return;
 
   const maxSize = 5 * 1024 * 1024;
   if (file.size > maxSize) {
     errorMsg.textContent   = '❌ El archivo excede el tamaño máximo de 5MB';
     errorMsg.style.display = 'block';
-    this.value = '';
+    inputFile.value = '';
     return;
   }
 
@@ -500,14 +544,21 @@ document.getElementById('comprobante').addEventListener('change', function () {
   if (!tiposPermitidos.includes(file.type)) {
     errorMsg.textContent   = '❌ Formato de archivo no permitido';
     errorMsg.style.display = 'block';
-    this.value = '';
+    inputFile.value = '';
     return;
   }
+
+  // Actualizar zona con nombre del archivo
+  dropZone.innerHTML = `
+    <i class="fa fa-check-circle fa-2x text-success mb-2"></i>
+    <p class="mb-0 text-success font-weight-bold">${file.name}</p>
+    <small class="text-muted">${(file.size / 1024).toFixed(2)} KB — haz clic para cambiar</small>
+  `;
 
   if (file.type.startsWith('image/')) {
     const reader = new FileReader();
     reader.onload = e => {
-      contenido.innerHTML   = `<img src="${e.target.result}" class="img-fluid" style="max-height:300px; max-width:100%;">`;
+      contenido.innerHTML   = `<img src="${e.target.result}" class="img-fluid rounded" style="max-height:300px;">`;
       preview.style.display = 'block';
     };
     reader.readAsDataURL(file);
@@ -518,14 +569,26 @@ document.getElementById('comprobante').addEventListener('change', function () {
     preview.style.display = 'block';
 
   } else {
-    contenido.innerHTML = `
+    contenido.innerHTML   = `
       <div class="alert alert-success mb-0">
         <i class="fa fa-file"></i> <strong>${file.name}</strong><br>
-        <small>Tamaño: ${(file.size / 1024).toFixed(2)} KB</small>
+        <small>${(file.size / 1024).toFixed(2)} KB</small>
       </div>`;
     preview.style.display = 'block';
   }
-});
+}
+
+function limpiarComprobante() {
+  inputFile.value = '';
+  document.getElementById('preview_comprobante').style.display = 'none';
+  document.getElementById('preview_contenido').innerHTML       = '';
+  document.getElementById('file_error').style.display         = 'none';
+  dropZone.innerHTML = `
+    <i class="fa fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+    <p class="mb-1 text-muted">Arrastra el archivo aquí o <strong>haz clic para buscar</strong></p>
+    <small class="text-muted">PDF, JPG, PNG, DOC, DOCX | Máx. 5MB</small>
+  `;
+}
 </script>
 
 <script>
