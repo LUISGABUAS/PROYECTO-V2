@@ -1,5 +1,7 @@
 <?php
 include('../../config.php');
+include(__DIR__ . '/../helpers/csrf.php');
+csrf_verify();
 
 $codigo = $_POST['codigo'];
 $id_categoria = $_POST['id_categoria'];

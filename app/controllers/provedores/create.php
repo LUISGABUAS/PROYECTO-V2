@@ -3,19 +3,22 @@
 session_start();
 include('../../config.php');
 include('../helpers/auditoria.php');
+include('../helpers/csrf.php');
+
+csrf_verify();
 
 // Validar que los datos existan
-if(!isset($_GET['nombre_proovedor']) || empty($_GET['nombre_proovedor'])){
+if(!isset($_POST['nombre_proovedor']) || empty($_POST['nombre_proovedor'])){
     echo json_encode(['success' => false, 'message' => 'El nombre del proveedor es requerido']);
     exit;
 }
 
-$nombre_proveedor = $_GET['nombre_proovedor'];
-$celular = $_GET['celular'] ?? '';
-$telefono = $_GET['telefono'] ?? '';
-$empresa = $_GET['empresa'] ?? '';
-$email = $_GET['email'] ?? '';
-$direccion = $_GET['direccion'] ?? '';
+$nombre_proveedor = $_POST['nombre_proovedor'];
+$celular = $_POST['celular'] ?? '';
+$telefono = $_POST['telefono'] ?? '';
+$empresa = $_POST['empresa'] ?? '';
+$email = $_POST['email'] ?? '';
+$direccion = $_POST['direccion'] ?? '';
 
 try {
     $sentencia = $pdo->prepare("INSERT INTO tb_proveedores

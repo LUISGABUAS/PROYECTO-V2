@@ -14,7 +14,7 @@ if (isset($_SESSION['mensaje'])) {
     Swal.fire({
         position: 'top-end',
         icon: 'success',
-        title: '<?= $respuesta ?>',
+        title: <?= json_encode($respuesta) ?>,
         showConfirmButton: false,
         timer: 2000
     });
@@ -143,8 +143,12 @@ function eliminarCliente(id) {
         confirmButtonText: 'Sí, eliminar'
     }).then((result) => {
         if (result.isConfirmed) {
-            window.location.href =
-                '../app/controllers/clientes/delete_locales.php?id=' + id;
+            var form = $('<form method="POST" action="../app/controllers/clientes/delete_locales.php">' +
+                '<input type="hidden" name="id" value="' + id + '">' +
+                '<input type="hidden" name="csrf_token" value="' + $('meta[name="csrf-token"]').attr('content') + '">' +
+                '</form>');
+            $('body').append(form);
+            form.submit();
         }
     })
 }

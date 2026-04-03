@@ -1,6 +1,8 @@
 <?php
 session_start();
 include('../../config.php');
+include(__DIR__ . '/../helpers/csrf.php');
+csrf_verify();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header("Location: ../../../ventas");

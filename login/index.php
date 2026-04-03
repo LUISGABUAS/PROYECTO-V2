@@ -28,7 +28,7 @@
    <script>Swal.fire({
      icon: 'error',
      title: 'Oops...',
-     text: '<?php echo $respuesta ?>',
+     text: <?php echo json_encode($respuesta); ?>,
    })</script>
   <?php
   }

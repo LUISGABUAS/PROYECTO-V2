@@ -1,8 +1,10 @@
 <?php
 include('../../config.php');
+include(__DIR__ . '/../helpers/csrf.php');
+csrf_verify();
 include('../helpers/auditoria.php');
 
-$id = $_GET['id'] ?? null;
+$id = $_POST['id'] ?? null;
 
 if (!$id) {
     session_start();

@@ -1,6 +1,8 @@
 <?php
 
 include('../../config.php');
+include(__DIR__ . '/../helpers/csrf.php');
+csrf_verify();
 
 $id = $_POST['id'];
 

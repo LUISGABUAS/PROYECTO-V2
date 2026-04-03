@@ -1,5 +1,7 @@
 <?php
 include('../../config.php');
+include(__DIR__ . '/../helpers/csrf.php');
+csrf_verify();
 
 $id_rol = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 

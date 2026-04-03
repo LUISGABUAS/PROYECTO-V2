@@ -1,5 +1,6 @@
 <?php
-$secret = 'PacasYadira';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/PROYECTO-V2/app/config.php';
+$secret = $_ENV['PRINT_SERVER_SECRET'] ?? '';
 
 // Hostinger a veces manda el header diferente
 $auth = '';
@@ -20,6 +21,5 @@ if ($auth !== $secret) {
     exit;
 }
 
-include($_SERVER['DOCUMENT_ROOT'] . '/app/config.php');
 $stmt = $pdo->query("SELECT id, zpl FROM print_queue WHERE status = 'pendiente' ORDER BY created_at ASC");
 echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));

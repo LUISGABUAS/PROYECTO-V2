@@ -18,7 +18,7 @@ if (isset($_SESSION['mensaje'])) {
     Swal.fire({
             position: 'top-end',
             icon: 'success',
-            title: '<?php echo $respuesta ?>',
+            title: <?php echo json_encode($respuesta); ?>,
             showConfirmButton: false,
             timer: 2000
    })
@@ -134,31 +134,31 @@ if (isset($_SESSION['mensaje'])) {
 
                         <tr>
                           <td><?php echo $contador = $contador + 1?></td>
-                          <td><?php echo $dato['codigo'] ?></td>
-                          <td><?php echo $dato['categoria'] ?></td>
-                          <td><?= $dato['proveedor'] ?></td>
+                          <td><?php echo htmlspecialchars($dato['codigo'], ENT_QUOTES, 'UTF-8') ?></td>
+                          <td><?php echo htmlspecialchars($dato['categoria'], ENT_QUOTES, 'UTF-8') ?></td>
+                          <td><?php echo htmlspecialchars($dato['proveedor'], ENT_QUOTES, 'UTF-8') ?></td>
                           <td>
-                            <img src="<?php echo $URL."/almacen/img_productos/".$dato['imagen'] ?>" width="75px" alt="">
+                            <img src="<?php echo $URL."/almacen/img_productos/".htmlspecialchars($dato['imagen'], ENT_QUOTES, 'UTF-8') ?>" width="75px" alt="">
                           </td>
-                          <td><?php echo $dato['nombre'] ?></td>
-                          <td><?php echo $dato['descripcion'] ?></td>
-                          <td><?= $dato['stock_bodega'] ?></td>
-                          <td><?= $dato['stock_pendiente'] ?></td>
+                          <td><?php echo htmlspecialchars($dato['nombre'], ENT_QUOTES, 'UTF-8') ?></td>
+                          <td><?php echo htmlspecialchars($dato['descripcion'], ENT_QUOTES, 'UTF-8') ?></td>
+                          <td><?= (int)$dato['stock_bodega'] ?></td>
+                          <td><?= (int)$dato['stock_pendiente'] ?></td>
                           <td>
                             <span class="<?= $dato['stock_disponible'] <= 0 ? 'text-danger' : 'text-success' ?>">
-                              <?= $dato['stock_disponible'] ?>
+                              <?= (int)$dato['stock_disponible'] ?>
                             </span>
                           </td>
 
-                          
+
                           <?php if(in_array(34, $_SESSION['permisos'])):?>
                           <td>
-                              <?php echo $dinero.$dato['precio_compra'] ?>
+                              <?php echo $dinero.htmlspecialchars($dato['precio_compra'], ENT_QUOTES, 'UTF-8') ?>
                         </td>
                         <?php endif; ?>
-                          <td><?php echo $dinero.$dato['precio_venta'] ?></td>
-                          <td><?php echo $dato['fecha_ingreso'] ?></td>
-                          <td><?php echo $dato['nombre_usuario'] ?></td>
+                          <td><?php echo $dinero.htmlspecialchars($dato['precio_venta'], ENT_QUOTES, 'UTF-8') ?></td>
+                          <td><?php echo htmlspecialchars($dato['fecha_ingreso'], ENT_QUOTES, 'UTF-8') ?></td>
+                          <td><?php echo htmlspecialchars($dato['nombre_usuario'], ENT_QUOTES, 'UTF-8') ?></td>
                           <td>
                               <center>
                                 <div class="btn-group">

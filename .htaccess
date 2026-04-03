@@ -1,0 +1,41 @@
+# ================================================
+# PROTECCIÓN DE ARCHIVOS SENSIBLES
+# ================================================
+
+# Bloquear acceso directo a archivos .env (todos los entornos)
+<FilesMatch "^\.env">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Bloquear script de cambio de entorno
+<Files "switch-env.sh">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Bloquear acceso a archivos de composer
+<Files "composer.json">
+    Order allow,deny
+    Deny from all
+</Files>
+<Files "composer.lock">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Bloquear acceso a carpeta vendor
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^vendor/ - [F,L]
+    RewriteRule ^database/ - [F,L]
+</IfModule>
+
+# Desactivar listado de directorios
+Options -Indexes
+
+# Bloquear acceso a archivos de backup/log
+<FilesMatch "\.(log|bak|sql|sh|old)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>

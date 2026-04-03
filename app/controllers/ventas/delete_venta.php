@@ -1,5 +1,7 @@
 <?php
 include('../../config.php');
+include(__DIR__ . '/../helpers/csrf.php');
+csrf_verify();
 session_start();
 
 header('Content-Type: application/json');

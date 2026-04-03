@@ -13,7 +13,7 @@ if (isset($_SESSION['mensaje'])) {
     Swal.fire({
             position: 'top-end',
             icon: 'success',
-            title: '<?php echo $respuesta ?>',
+            title: <?php echo json_encode($respuesta); ?>,
             showConfirmButton: false,
             timer: 2000
    })

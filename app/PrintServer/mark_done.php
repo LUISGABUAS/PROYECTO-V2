@@ -1,5 +1,6 @@
 <?php
-$secret = 'PacasYadira';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/PROYECTO-V2/app/config.php';
+$secret = $_ENV['PRINT_SERVER_SECRET'] ?? '';
 $auth = str_replace('Bearer ', '', $_SERVER['HTTP_AUTHORIZATION'] ?? '');
 
 if ($auth !== $secret) {
@@ -8,7 +9,6 @@ if ($auth !== $secret) {
     exit;
 }
 
-include($_SERVER['DOCUMENT_ROOT'] . '/app/config.php');
 $id = intval($_GET['id']);
 $pdo->prepare("UPDATE print_queue SET status = 'completado', printed_at = NOW() WHERE id = ?")->execute([$id]);
 echo json_encode(['status' => 'success']);

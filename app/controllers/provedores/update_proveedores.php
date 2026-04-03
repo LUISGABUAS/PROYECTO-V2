@@ -1,17 +1,19 @@
 <?php
 
+session_start();
 include('../../config.php');
 include('../helpers/auditoria.php');
+include('../helpers/csrf.php');
 
-$nombre_proveedor = $_GET['nombre_proovedor'];
-$id_proovedor = $_GET['id_proovedor'];
-$celular = $_GET['celular'];
-$telefono = $_GET['telefono'];
-$empresa = $_GET['empresa'];
-$email = $_GET['email'];
-$direccion = $_GET['direccion'];
-$id_proovedor = $_GET['id_proovedor'];
+csrf_verify();
 
+$nombre_proveedor = $_POST['nombre_proovedor'];
+$id_proovedor = $_POST['id_proovedor'];
+$celular = $_POST['celular'];
+$telefono = $_POST['telefono'];
+$empresa = $_POST['empresa'];
+$email = $_POST['email'];
+$direccion = $_POST['direccion'];
 
 $sentencia = $pdo->prepare("
     UPDATE tb_proveedores SET
@@ -35,7 +37,6 @@ $sentencia->bindParam(':fyh_actualizacion', $fechaHora);
 $sentencia->bindParam(':id_proovedor', $id_proovedor);
 
 if ($sentencia->execute()) {
-    session_start();
     $id_usuario_audit = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
     $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
     registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'ACTUALIZAR PROVEEDOR', 'tb_proveedores', $id_proovedor, $nombre_proveedor);
@@ -46,7 +47,6 @@ if ($sentencia->execute()) {
         </script>
     <?php
 } else {
-    session_start();
     $_SESSION['mensaje'] = "Error: no se pudo actualizar el proveedor";
     ?>
         <script>
@@ -54,4 +54,3 @@ if ($sentencia->execute()) {
         </script>
     <?php
 }
-

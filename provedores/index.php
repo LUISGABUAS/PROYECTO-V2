@@ -14,7 +14,7 @@ if (isset($_SESSION['mensaje'])) {
     Swal.fire({
             position: 'top-end',
             icon: 'success',
-            title: '<?php echo $respuesta ?>',
+            title: <?php echo json_encode($respuesta); ?>,
             showConfirmButton: false,
             timer: 2000
    })
@@ -103,12 +103,12 @@ if (isset($_SESSION['mensaje'])) {
                         ?>
                         <tr>
                             <td><center><?php echo $contador= $contador +1 ; ?></center></td>
-                            <td><center><?php echo $dato['nombre_proveedor']; ?></center></td>
-                            <td><center><?php echo $dato['celular']; ?></center></td>
-                            <td><center><?php echo $dato['telefono']; ?></center></td>
-                            <td><center><?php echo $dato['empresa']; ?></center></td>
-                            <td><center><?php echo $dato['direccion']; ?></center></td>
-                            <td><center><?php echo $dato['email']; ?></center></td>
+                            <td><center><?php echo htmlspecialchars($dato['nombre_proveedor'], ENT_QUOTES, 'UTF-8'); ?></center></td>
+                            <td><center><?php echo htmlspecialchars($dato['celular'], ENT_QUOTES, 'UTF-8'); ?></center></td>
+                            <td><center><?php echo htmlspecialchars($dato['telefono'], ENT_QUOTES, 'UTF-8'); ?></center></td>
+                            <td><center><?php echo htmlspecialchars($dato['empresa'], ENT_QUOTES, 'UTF-8'); ?></center></td>
+                            <td><center><?php echo htmlspecialchars($dato['direccion'], ENT_QUOTES, 'UTF-8'); ?></center></td>
+                            <td><center><?php echo htmlspecialchars($dato['email'], ENT_QUOTES, 'UTF-8'); ?></center></td>
                           <?php if(isset($_SESSION['permisos']) && (in_array(18, $_SESSION['permisos']) || in_array(19, $_SESSION['permisos']))): ?>
                             <td>
                               <center>
@@ -241,7 +241,7 @@ if (isset($_SESSION['mensaje'])) {
                                               
                                               if(esValido){
                                                 var URL = "../app/controllers/provedores/update_proveedores.php";
-                                                $.get(URL,{id_proovedor: id_proveedor, nombre_proovedor: categoryName, celular: celular, telefono: telefono, email: email, empresa: empresa, direccion: direccion },function(data){
+                                                $.post(URL,{id_proovedor: id_proveedor, nombre_proovedor: categoryName, celular: celular, telefono: telefono, email: email, empresa: empresa, direccion: direccion },function(data){
                                                     $('#respuesta_update<?php echo $id_proveedor?>').html(data);
                                                 }).fail(function(){
                                                     Swal.fire({
@@ -336,8 +336,8 @@ if (isset($_SESSION['mensaje'])) {
                                           $('#btn_delete<?php echo $id_proveedor;?>').click(function(){
                                               var id_proveedor = '<?php echo $id_proveedor?>';
                                               var URL = "../app/controllers/provedores/delete_proveedores.php";
-                                              
-                                              $.get(URL,{id_proovedor: id_proveedor},function(data){
+
+                                              $.post(URL,{id_proovedor: id_proveedor},function(data){
                                                   $('#respuesta_delete<?php echo $id_proveedor?>').html(data);
                                               }).fail(function(){
                                                   Swal.fire({
@@ -530,7 +530,7 @@ if (isset($_SESSION['mensaje'])) {
         
         if(esValido){
             var URL = "../app/controllers/provedores/create.php";
-            $.get(URL,{nombre_proovedor: categoryName, celular: celular, telefono: telefono, email: email, empresa: empresa, direccion: direccion },function(data){
+            $.post(URL,{nombre_proovedor: categoryName, celular: celular, telefono: telefono, email: email, empresa: empresa, direccion: direccion },function(data){
                 try {
                     var response = JSON.parse(data);
                     if(response.success){

@@ -53,6 +53,16 @@ if (in_array(24, $_SESSION['permisos'] ?? [])) {
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <!-- jQuery -->
   <script src="<?php echo $URL?>/public/templates/AdminLTE-3.2.0/plugins/jquery/jquery.min.js"></script>
+  <!-- CSRF Token -->
+  <meta name="csrf-token" content="<?php echo csrf_token(); ?>">
+  <script>
+    $(function() {
+      var csrfToken = $('meta[name="csrf-token"]').attr('content');
+      $.ajaxSetup({
+        headers: { 'X-CSRF-Token': csrfToken }
+      });
+    });
+  </script>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
 

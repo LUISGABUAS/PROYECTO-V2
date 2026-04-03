@@ -1,5 +1,7 @@
 <?php
 include('../../config.php');
+include(__DIR__ . '/../helpers/csrf.php');
+csrf_verify();
 include('../helpers/auditoria.php');
 session_start();
 

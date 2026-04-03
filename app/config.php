@@ -32,3 +32,19 @@ $URL = $_ENV['APP_URL'];
 
 date_default_timezone_set("America/Mexico_City");
 $fechaHora = date("Y-m-d H:i:s");
+
+// ================================================
+// LOGGING DE ERRORES (según entorno)
+// ================================================
+$app_env   = $_ENV['APP_ENV']   ?? 'production';
+$app_debug = filter_var($_ENV['APP_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/../logs/error.log');
+error_reporting(E_ALL);
+
+if ($app_debug) {
+    ini_set('display_errors', 1);
+} else {
+    ini_set('display_errors', 0);
+}

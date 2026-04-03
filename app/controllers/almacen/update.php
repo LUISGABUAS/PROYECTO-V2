@@ -1,6 +1,8 @@
 <?php
 
 include('../../config.php');
+include(__DIR__ . '/../helpers/csrf.php');
+csrf_verify();
 session_start();
 
 $codigo = $_POST['codigo'];
