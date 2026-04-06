@@ -25,7 +25,7 @@ if ($cache_valido) {
     $sesion_nombres    = $_SESSION['sesion_nombres'];
     $rol_sesion        = $_SESSION['rol_sesion'];
     $id_rol_sesion     = $_SESSION['id_rol_sesion'];
-    $sesion_foto       = $_SESSION['sesion_foto'];
+    $sesion_foto       = $_SESSION['sesion_foto'] ?? null;
 } else {
     $sql = "SELECT
                 us.id,
@@ -64,7 +64,7 @@ if ($cache_valido) {
     $sesion_nombres    = $usuario['nombres'];
     $rol_sesion        = $usuario['rol'];
     $id_rol_sesion     = $usuario['id_rol'];
-    $sesion_foto       = $usuario['foto_perfil'];
+    $sesion_foto       = $usuario['foto_perfil'] ?? null;
 
     // Cargar permisos del rol
     $sentencia = $pdo->prepare("SELECT p.id_permiso

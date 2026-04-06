@@ -1,6 +1,7 @@
 <?php
 
 include('../../config.php');
+include(__DIR__ . '/../helpers/validador.php');
 
 session_start();
 
@@ -17,12 +18,20 @@ if (time() - $_SESSION[$key]['time'] > 300) {
 if ($_SESSION[$key]['count'] >= 5) {
     $restante = 300 - (time() - $_SESSION[$key]['time']);
     $_SESSION['mensaje'] = "Demasiados intentos fallidos. Espera " . ceil($restante/60) . " minuto(s) para intentar nuevamente.";
+    Logger::auth('RATE_LIMITED', $_POST['email'] ?? 'unknown', false, 'Demasiados intentos');
     header("Location: " . $URL . "/login/index.php");
     exit;
 }
 
-$email = $_POST['email'];
-$password_user = $_POST['password_user'];
+$email = $_POST['email'] ?? null;
+$password_user = $_POST['password_user'] ?? null;
+
+if (empty($email) || empty($password_user)) {
+    error400('Email y contraseña son obligatorios');
+    Logger::auth('LOGIN_ATTEMPT', $email ?? 'unknown', false, 'Datos incompletos');
+    header("Location: " . $URL . "/login/index.php");
+    exit;
+}
 
 
 
@@ -40,17 +49,17 @@ foreach ($usuarios as $usuario) {
 }
 
 if(($contador > 0) && (password_verify($password_user, $password_user_tabla)))  {
-    echo "Bienvenido $nombres";
     session_regenerate_id(true);
     unset($_SESSION[$key]); // limpiar intentos
     $_SESSION['sesion_email'] = $email_tabla;
     include('../../controllers/helpers/auditoria.php');
     registrarAuditoria($pdo, $usuario['id'] ?? null, $nombres, 'LOGIN', 'tb_usuario', null, 'Inicio de sesión exitoso');
+    Logger::auth('LOGIN', $email_tabla, true);
     header("Location: " .$URL. "/index.php");
 }else{
-    echo "datos incorrectos, intente nuevamente";
     $_SESSION[$key]['count']++;
-    $_SESSION['mensaje'] = "Error datos incorrectos, intente nuevamente";
+    $_SESSION['mensaje'] = "❌ Datos incorrectos";
+    Logger::auth('LOGIN', $email ?? 'unknown', false, 'Credenciales inválidas');
     header("Location: " .$URL. "/login/index.php");
 
 }

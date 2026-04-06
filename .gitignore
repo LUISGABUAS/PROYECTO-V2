@@ -2,3 +2,4 @@
 /vendor/
 .env
 .env.simulation
+.env.production

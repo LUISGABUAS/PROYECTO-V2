@@ -1,9 +1,9 @@
 <?php
 include('../../config.php');
 include(__DIR__ . '/../helpers/csrf.php');
+include(__DIR__ . '/../helpers/validador.php');
 csrf_verify();
 include('../helpers/auditoria.php');
-session_start();
 
 // Recibir datos del formulario
 $id_rol = isset($_POST['id_rol']) ? (int)$_POST['id_rol'] : 0;
@@ -12,9 +12,18 @@ $permisos_seleccionados = isset($_POST['permisos']) ? $_POST['permisos'] : [];
 
 // Validar
 if ($id_rol <= 0 || empty($rol_nombre)) {
-    $_SESSION['mensaje'] = "Datos inválidos";
+    error400('Datos inválidos', ['id_rol' => $id_rol, 'rol_nombre' => $rol_nombre]);
+    $_SESSION['mensaje'] = "❌ Datos inválidos";
     $_SESSION['icono'] = "error";
     header("Location: ../../../roles/index.php");
+    exit;
+}
+
+if (empty($permisos_seleccionados)) {
+    error400('Debe asignar al menos un permiso');
+    $_SESSION['mensaje'] = "❌ Debe asignar al menos un permiso";
+    $_SESSION['icono'] = "error";
+    header("Location: ../../../roles/update.php?id=" . $id_rol);
     exit;
 }
 
@@ -34,14 +43,12 @@ try {
     $stmt->execute([':id_rol' => $id_rol]);
 
     // Insertar permisos nuevos
-    if (!empty($permisos_seleccionados)) {
-        $stmt = $pdo->prepare("INSERT INTO tb_roles_permisos (id_rol, id_permiso) VALUES (:id_rol, :id_permiso)");
-        foreach ($permisos_seleccionados as $permiso_id) {
-            $stmt->execute([
-                ':id_rol' => $id_rol,
-                ':id_permiso' => (int)$permiso_id
-            ]);
-        }
+    $stmt = $pdo->prepare("INSERT INTO tb_roles_permisos (id_rol, id_permiso) VALUES (:id_rol, :id_permiso)");
+    foreach ($permisos_seleccionados as $permiso_id) {
+        $stmt->execute([
+            ':id_rol' => $id_rol,
+            ':id_permiso' => (int)$permiso_id
+        ]);
     }
 
     $pdo->commit();
@@ -50,12 +57,13 @@ try {
     $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
     registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'ACTUALIZAR ROL', 'tb_roles', $id_rol, $rol_nombre);
 
-    $_SESSION['mensaje'] = "Rol actualizado correctamente";
+    $_SESSION['mensaje'] = "✅ Rol actualizado correctamente";
     $_SESSION['icono'] = "success";
 
-} catch (PDOException $e) {
+} catch (Exception $e) {
     $pdo->rollBack();
-    $_SESSION['mensaje'] = "Error al actualizar el rol";
+    error500('Error actualizando rol', ['error' => $e->getMessage()]);
+    $_SESSION['mensaje'] = "❌ Error al actualizar el rol";
     $_SESSION['icono'] = "error";
 }
 

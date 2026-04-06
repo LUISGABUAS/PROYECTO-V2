@@ -1,11 +1,23 @@
 <?php
 include('../../config.php');
 include(__DIR__ . '/../helpers/csrf.php');
+include(__DIR__ . '/../helpers/validador.php');
+
 csrf_verify();
 include('../helpers/auditoria.php');
 session_start();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header("Location: ".$URL."/clientes/create.php");
+    exit;
+}
+
+// Validar datos obligatorios
+$errores = validarDatos(['tipo_cliente', 'nombre_completo', 'telefono', 'calle_numero', 'colonia', 'municipio', 'estado', 'cp']);
+if (!empty($errores)) {
+    error400('Faltan datos obligatorios', $errores);
+    $_SESSION['mensaje'] = "❌ Faltan datos obligatorios";
+    $_SESSION['icono'] = "error";
     header("Location: ".$URL."/clientes/create.php");
     exit;
 }
@@ -19,16 +31,6 @@ $municipio    = $_POST['municipio'] ?? null;
 $estado       = $_POST['estado'] ?? null;
 $cp           = $_POST['cp'] ?? null;
 $referencias  = trim($_POST['referencias'] ?? null);
-
-if (
-    !$tipo_cliente || !$nombre || !$telefono ||
-    !$calle || !$colonia || !$municipio || !$estado || !$cp
-) {
-    $_SESSION['mensaje'] = "❌ Faltan datos obligatorios";
-    $_SESSION['icono']   = "error";
-    header("Location: ".$URL."/clientes/create.php");
-    exit;
-}
 
 try {
     $sql = "INSERT INTO clientes 
@@ -59,6 +61,7 @@ try {
     exit;
 
 } catch (Exception $e) {
+    error500('Error guardando cliente en BD', ['error' => $e->getMessage()]);
     $_SESSION['mensaje'] = "❌ Error al guardar el cliente";
     $_SESSION['icono']   = "error";
     header("Location: ".$URL."/clientes/create.php");
