@@ -8,7 +8,9 @@ define('PROJECT_ROOT', realpath(__DIR__ . '/../../..'));
 define('UPLOADS_DIR', PROJECT_ROOT . '/public/uploads/perfiles/');
 
 // Verificar si el usuario está autenticado
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 if (!isset($_SESSION['sesion_email'])) {
     echo json_encode(['success' => false, 'mensaje' => 'No autenticado']);

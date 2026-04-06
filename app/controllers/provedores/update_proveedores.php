@@ -1,6 +1,8 @@
 <?php
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 include('../../config.php');
 include('../helpers/auditoria.php');
 include('../helpers/csrf.php');

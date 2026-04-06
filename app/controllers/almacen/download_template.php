@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 include('../../config.php');
 
 if (!in_array(9, $_SESSION['permisos'] ?? [])) {

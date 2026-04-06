@@ -3,7 +3,9 @@
 include('../../config.php');
 include(__DIR__ . '/../helpers/validador.php');
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Rate limiting: máx 5 intentos en 5 minutos
 $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';

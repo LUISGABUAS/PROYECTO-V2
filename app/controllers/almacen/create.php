@@ -3,7 +3,9 @@ include('../../config.php');
 include(__DIR__ . '/../helpers/csrf.php');
 include(__DIR__ . '/../helpers/validador.php');
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 csrf_verify();
 

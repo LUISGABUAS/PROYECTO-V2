@@ -1,7 +1,9 @@
 <?php
 include('../../../app/config.php');
 include('../../../app/controllers/helpers/auditoria.php');
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 /* ==========================
    VALIDAR CÓDIGO

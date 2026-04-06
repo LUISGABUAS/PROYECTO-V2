@@ -4,7 +4,9 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 include('../../config.php');
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 /* 🔒 Validar método */
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

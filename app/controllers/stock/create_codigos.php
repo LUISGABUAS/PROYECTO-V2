@@ -1,7 +1,9 @@
 <?php
 include('../../config.php');
 include('../helpers/auditoria.php');
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 /* ==========================
    DATOS DEL FORMULARIO
