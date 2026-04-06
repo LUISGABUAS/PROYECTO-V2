@@ -163,7 +163,7 @@ if (in_array(24, $_SESSION['permisos'] ?? [])) {
               <li class="nav-item">
                 <a href="<?php echo $URL;?>/dashboard/logs.php" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>📊(Logs)</p>
+                  <p>Logs</p>
                 </a>
               </li>
               <?php endif; ?>
