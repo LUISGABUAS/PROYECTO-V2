@@ -28,7 +28,10 @@ endif;
         <h3 class="card-title">Registrar Cliente</h3>
     </div>
 
+
+    <?php include_once('../app/controllers/helpers/csrf.php'); ?>
     <form action="<?= $URL ?>/app/controllers/clientes/create.php" method="POST">
+        <?= csrf_field() ?>
 
 
     <div class="card-body">
