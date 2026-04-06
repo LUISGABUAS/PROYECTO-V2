@@ -51,7 +51,9 @@ include('../app/controllers/roles/list_rules.php');
                 
                 <div class="row">
                     <div class="col-md-12">
+                            <?php include_once('../app/controllers/helpers/csrf.php'); ?>
                             <form action="../app/controllers/usuarios/update.php" method="post">
+                              <?= csrf_field() ?>
                             <input type="text" name="id" value="<?php echo $id_usuario_get;?>" hidden>
                             <div class="form-group">
                                 <label for="">Nombres</label>

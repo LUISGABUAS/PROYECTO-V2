@@ -46,7 +46,9 @@ Swal.fire({
               </h3>
             </div>
 
+            <?php include_once('../app/controllers/helpers/csrf.php'); ?>
             <form action="../app/controllers/ventas/create.php" method="POST" enctype="multipart/form-data" id="form_venta">
+              <?= csrf_field() ?>
 
               <div class="card-body">
 

@@ -64,7 +64,9 @@ endif;
                 
                 <div class="row">
                     <div class="col-md-12">
+                        <?php include_once('../app/controllers/helpers/csrf.php'); ?>
                         <form action="../app/controllers/roles/create.php" method="post">
+                          <?= csrf_field() ?>
                                 <div class="form-group">
                                     <label for="">Name Rule</label>
                                     <input type="text" name="rol" class="form-control" placeholder="Write a New Rule..." required>

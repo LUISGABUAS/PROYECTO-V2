@@ -83,7 +83,9 @@ include('../layout/parte1.php');
               <h3 class="card-title"><i class="fa fa-upload"></i> Subir archivo CSV</h3>
             </div>
             <div class="card-body">
+              <?php include_once('../app/controllers/helpers/csrf.php'); ?>
               <form action="<?= $URL ?>/app/controllers/almacen/import_csv.php" method="POST" enctype="multipart/form-data">
+                <?= csrf_field() ?>
 
                 <div class="form-group">
                   <div id="drop_csv"

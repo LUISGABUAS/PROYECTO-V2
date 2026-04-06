@@ -36,7 +36,9 @@ if(in_array(14, $_SESSION['permisos'])):
               </div>
 
               <!-- FORM SCAN -->
+              <?php include_once('../app/controllers/helpers/csrf.php'); ?>
               <form action="../app/controllers/stock/scan.php" method="post" autocomplete="off">
+                <?= csrf_field() ?>
                 <div class="form-group">
                   <input 
                     type="text" 

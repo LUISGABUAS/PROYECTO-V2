@@ -49,7 +49,9 @@ include('../app/controllers/roles/list_rules.php');
                 
                 <div class="row">
                     <div class="col-md-12">
+                        <?php include_once('../app/controllers/helpers/csrf.php'); ?>
                         <form action="../app/controllers/usuarios/create.php" method="post">
+                          <?= csrf_field() ?>
                             <div class="form-group">
                                 <label for="">Nombres</label>
                                 <input type="text" name="nombres" class="form-control" placeholder="Write a Username..." required>

@@ -218,7 +218,9 @@ if(in_array(15, $_SESSION['permisos'])):
               <?php endif; ?>
 
               <!-- Escaneo de productos -->
+              <?php include_once('../app/controllers/helpers/csrf.php'); ?>
               <form id="form-salida" action="../app/controllers/stock/salida.php" method="post" autocomplete="off">
+                <?= csrf_field() ?>
                 <input type="hidden" name="id_venta" value="<?= $id_venta ?>">
                 <input type="hidden" name="tipo" value="<?= isset($_GET['tipo']) ? htmlspecialchars($_GET['tipo']) : '' ?>">
                 <input type="text" name="codigo_unico" class="form-control form-control-lg text-center" placeholder="Escanea aquí..." autofocus required>

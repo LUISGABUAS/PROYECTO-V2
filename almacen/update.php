@@ -52,7 +52,9 @@ include('../app/controllers/almacen/cargar_producto.php');
                 
                 <div class="row">
                     <div class="col-md-12">
+                        <?php include_once('../app/controllers/helpers/csrf.php'); ?>
                         <form action="../app/controllers/almacen/update.php" method="post" enctype="multipart/form-data">
+                          <?= csrf_field() ?>
                         <input type="text" name="id_producto" value="<?php echo $id_producto_get;?>" hidden>
 
                         <div class="row">

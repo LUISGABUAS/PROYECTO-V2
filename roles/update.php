@@ -38,7 +38,9 @@ include('../app/controllers/roles/update_roles.php');
             </div>
 
             <div class="card-body">
+              <?php include_once('../app/controllers/helpers/csrf.php'); ?>
               <form action="../app/controllers/roles/update.php" method="post">
+                <?= csrf_field() ?>
 
                 <!-- ID del rol -->
                 <input type="hidden" name="id_rol" value="<?= $id_rol_get ?? '' ?>">

@@ -40,7 +40,9 @@ Swal.fire({
           </h3>
         </div>
 
+       <?php include_once('../app/controllers/helpers/csrf.php'); ?>
        <form action="../app/controllers/ventas/update_venta.php" method="POST" enctype="multipart/form-data">
+         <?= csrf_field() ?>
 
           <input type="hidden" name="id_venta" value="<?= $venta['id_venta'] ?>">
 

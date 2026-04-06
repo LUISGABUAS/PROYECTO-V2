@@ -47,7 +47,10 @@ endif;
         <h3 class="card-title">Editar Cliente</h3>
     </div>
 
+
+    <?php include_once('../app/controllers/helpers/csrf.php'); ?>
     <form action="<?= $URL ?>/app/controllers/clientes/edit.php" method="POST">
+        <?= csrf_field() ?>
 
     <input type="hidden" name="id_cliente" value="<?= $cliente['id_cliente'] ?>">
 

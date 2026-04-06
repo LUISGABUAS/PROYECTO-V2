@@ -1,3 +1,12 @@
+<?php
+session_start();
+include_once('../app/controllers/helpers/csrf.php');
+
+$mensaje = $_SESSION['mensaje'] ?? null;
+if (isset($_SESSION['mensaje'])) {
+    unset($_SESSION['mensaje']);
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,19 +30,15 @@
 <div class="login-box">
   <!-- /.login-logo -->
 
-  <?php
-  session_start();
-  if(isset($_SESSION['mensaje']) ){
-    $respuesta = $_SESSION['mensaje']; ?>
-   <script>Swal.fire({
-     icon: 'error',
-     title: 'Oops...',
-     text: <?php echo json_encode($respuesta); ?>,
-   })</script>
-  <?php
-  }
-  
-  ?>
+  <?php if ($mensaje): ?>
+   <script>
+     Swal.fire({
+       icon: 'error',
+       title: 'Oops...',
+       text: <?= json_encode($mensaje) ?>,
+     });
+   </script>
+  <?php endif; ?>
   <div class="card card-outline card-primary">
     <div class="card-header text-center">
       <a href="../public/templates/AdminLTE-3.2.0/index2.html" class="h1"><b>System of </b>Market</a>
@@ -42,8 +47,9 @@
       <p class="login-box-msg">Sign in to start your session</p>
 
       <form action="../app/controllers/login/ingreso.php" method="post">
+        <?= csrf_field() ?>
         <div class="input-group mb-3">
-          <input type="email" name="email" class="form-control" placeholder="Email">
+          <input type="email" name="email" class="form-control" placeholder="Email" required autofocus>
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-envelope"></span>
@@ -51,7 +57,7 @@
           </div>
         </div>
         <div class="input-group mb-3">
-          <input type="password" name="password_user" class="form-control" placeholder="Password">
+          <input type="password" name="password_user" class="form-control" placeholder="Password" required>
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-lock"></span>

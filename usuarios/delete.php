@@ -50,7 +50,9 @@ include('../app/controllers/usuarios/show_usuario.php');
                 <div class="row">
                     <div class="col-md-12">
                         
+                            <?php include_once('../app/controllers/helpers/csrf.php'); ?>
                             <form action="../app/controllers/usuarios/delete.php" method="post">
+                              <?= csrf_field() ?>
                                 <input type="text" value="<?php echo $id_usuario_get?>" hidden name="id">
                                 <div class="form-group">
                                 <label for="">Nombres</label>

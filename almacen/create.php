@@ -51,7 +51,9 @@ include('../app/controllers/provedores/list_provedores.php');
                 
                 <div class="row">
                     <div class="col-md-12">
+                        <?php include_once('../app/controllers/helpers/csrf.php'); ?>
                         <form action="../app/controllers/almacen/create.php" method="post" enctype="multipart/form-data">
+                          <?= csrf_field() ?>
 
                         <div class="row">
                           <div class="col-md-9">

@@ -50,7 +50,9 @@ include('../app/controllers/almacen/cargar_producto.php');
                 
                 <div class="row">
                     <div class="col-md-12">
-                       <form action="../app/controllers/almacen/delete.php" method="post">
+                         <?php include_once('../app/controllers/helpers/csrf.php'); ?>
+                         <form action="../app/controllers/almacen/delete.php" method="post">
+                           <?= csrf_field() ?>
                         <input type="text" name="id_producto" value="<?php echo $id_producto_get;?>" hidden>
                         <div class="row">
                           <div class="col-md-9">
