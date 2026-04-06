@@ -160,6 +160,12 @@ if (in_array(24, $_SESSION['permisos'] ?? [])) {
                   <p>Historial de Cambios</p>
                 </a>
               </li>
+              <li class="nav-item">
+                <a href="<?php echo $URL;?>/dashboard/logs.php" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>📊(Logs)</p>
+                </a>
+              </li>
               <?php endif; ?>
               <li class="nav-item">
                 <a href="<?php echo $URL;?>/dashboard/vendidos.php" class="nav-link">
