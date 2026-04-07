@@ -1,6 +1,14 @@
 const net = require('net');
 const https = require('https');
 
+// Evitar que errores no capturados maten el proceso
+process.on('uncaughtException', (err) => {
+    console.log(`[${new Date().toISOString()}] ❌ Error no capturado: ${err.message}`);
+});
+process.on('unhandledRejection', (reason) => {
+    console.log(`[${new Date().toISOString()}] ❌ Promesa rechazada: ${reason}`);
+});
+
 const CONFIG = {
     PRINTER_IP: '192.168.1.107',
     PRINTER_PORT: 9100,
@@ -18,24 +26,24 @@ function request(path, callback) {
         headers: { 'Authorization': `Bearer ${CONFIG.SECRET}` }
     };
 
-    console.log(`🔍 Consultando: https://${CONFIG.SERVER}/${path}`);
+    log(`Consultando: https://${CONFIG.SERVER}${CONFIG.PATH}/${path}`);
 
     const req = https.request(options, (res) => {
-        console.log(`📡 Status: ${res.statusCode}`);
+        log(`Status: ${res.statusCode}`);
         let data = '';
         res.on('data', chunk => data += chunk);
         res.on('end', () => {
-            console.log(`📦 Respuesta: ${data}`);
+            log(`Respuesta: ${data}`);
             try { callback(JSON.parse(data)); }
             catch(e) { 
-                console.log(`❌ Error parseando JSON: ${e.message}`);
+                log(`Error parseando JSON: ${e.message}`);
                 callback(null); 
             }
         });
     });
 
     req.on('error', (err) => {
-        console.log(`❌ Error de red: ${err.message} | Código: ${err.code}`);
+        log(`Error de red: ${err.message} | Codigo: ${err.code}`);
         callback(null);
     });
 
@@ -44,7 +52,7 @@ function request(path, callback) {
 
 function markDone(id) {
     request(`mark_done.php?id=${id}`, () => {
-        console.log(`✅ Job #${id} completado`);
+        log(`Job #${id} completado`);
     });
 }
 
@@ -52,33 +60,37 @@ function printJob(job) {
     const client = new net.Socket();
 
     client.connect(CONFIG.PRINTER_PORT, CONFIG.PRINTER_IP, () => {
-        console.log(`🖨️  Imprimiendo job #${job.id}...`);
+        log(`Imprimiendo job #${job.id}...`);
         client.write(job.zpl);
         client.destroy();
         markDone(job.id);
     });
 
     client.on('error', (err) => {
-        console.log(`❌ Error en impresora: ${err.message}`);
+        log(`Error en impresora: ${err.message}`);
     });
 }
 
 function fetchAndPrint() {
     request('get_queue.php', (jobs) => {
         if (jobs === null) {
-            console.log('❌ Error conectando al servidor');
+            log('Error conectando al servidor');
             return;
         }
         if (jobs.length === 0) {
-            console.log('⏳ Sin trabajos pendientes...');
+            // sin trabajos, silencioso para no llenar el log
             return;
         }
-        console.log(`📋 ${jobs.length} trabajo(s) en cola`);
+        log(`${jobs.length} trabajo(s) en cola`);
         jobs.forEach(job => printJob(job));
     });
 }
 
-console.log('🚀 Print Server iniciado');
-console.log(`🖨️  Impresora: ${CONFIG.PRINTER_IP}:${CONFIG.PRINTER_PORT}`);
-console.log(`🌐 Servidor: ${CONFIG.SERVER}`);
+function log(msg) {
+    console.log(`[${new Date().toISOString()}] ${msg}`);
+}
+
+log('Print Server iniciado');
+log(`Impresora: ${CONFIG.PRINTER_IP}:${CONFIG.PRINTER_PORT}`);
+log(`Servidor: ${CONFIG.SERVER}`);
 setInterval(fetchAndPrint, CONFIG.INTERVAL);
