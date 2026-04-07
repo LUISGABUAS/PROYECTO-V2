@@ -77,6 +77,10 @@ function fetchAndPrint() {
             log('Error conectando al servidor');
             return;
         }
+        if (!Array.isArray(jobs)) {
+            log(`Respuesta inesperada del servidor: ${JSON.stringify(jobs)}`);
+            return;
+        }
         if (jobs.length === 0) {
             // sin trabajos, silencioso para no llenar el log
             return;
