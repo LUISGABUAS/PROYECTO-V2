@@ -1,5 +1,5 @@
 <?php
-require_once $_SERVER['DOCUMENT_ROOT'] . '/PROYECTO-V2/app/config.php';
+require_once __DIR__ . '/../config.php';
 $secret = $_ENV['PRINT_SERVER_SECRET'] ?? '';
 $auth = str_replace('Bearer ', '', $_SERVER['HTTP_AUTHORIZATION'] ?? '');
 
