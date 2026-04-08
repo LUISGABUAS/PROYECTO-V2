@@ -57,33 +57,50 @@ if (isset($_SESSION['mensaje'])) {
             </div>
 
             <!-- FILTRO DE VENDEDORES (solo para admins) -->
-            <?php if ($_SESSION['id_rol_sesion'] == 3): ?>
-            <div class="card-body">
-              <div class="form-group" style="max-width: 300px;">
-                <label><strong>Filtrar por Vendedor:</strong></label>
-                <form method="GET" style="display: flex; gap: 5px;">
-                  <select name="id_vendedor" class="form-control" onchange="this.form.submit()">
-                    <option value="">Ver todos los clientes</option>
-                    <?php
-                    // Obtener lista de vendedores
-                    $sql_vendedores = "SELECT us.id, us.nombres FROM tb_usuario us
-                                       INNER JOIN tb_roles rol ON us.id_rol = rol.id_rol
-                                       WHERE rol.id_rol = 21
-                                       ORDER BY us.nombres ASC";
-                    $stmt_vendedores = $pdo->prepare($sql_vendedores);
-                    $stmt_vendedores->execute();
-                    $vendedores = $stmt_vendedores->fetchAll(PDO::FETCH_ASSOC);
-                    
-                    $filtro_actual = $_GET['id_vendedor'] ?? '';
-                    foreach ($vendedores as $vendedor):
-                        $selected = ($filtro_actual == $vendedor['id']) ? 'selected' : '';
-                    ?>
-                        <option value="<?= $vendedor['id'] ?>" <?= $selected ?>>
-                            <?= htmlspecialchars($vendedor['nombres']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                  </select>
-                </form>
+            <?php if ($_SESSION['id_rol_sesion'] == 1): ?>
+            <div class="card-header bg-light border-bottom">
+              <div class="row align-items-center">
+                <div class="col">
+                  <div class="d-flex align-items-center gap-3">
+                    <div>
+                      <i class="fas fa-filter" style="font-size: 1.2rem; color: #007bff;"></i>
+                    </div>
+                    <form method="GET" class="d-flex gap-2 align-items-center" style="flex: 1; max-width: 500px;">
+                      <label class="mb-0" style="font-weight: 600; min-width: 120px;">Filtrar Clientes:</label>
+                      <select name="id_vendedor" class="form-control form-control-sm" onchange="this.form.submit()" style="flex: 1;">
+                        <option value="">📋 Todos los vendedores</option>
+                        <?php
+                        // Obtener lista de vendedores
+                        $sql_vendedores = "SELECT us.id, us.nombres FROM tb_usuario us
+                                          INNER JOIN tb_roles_permisos rol ON us.id_rol = rol.id_rol
+                                          WHERE rol.id_permiso = 21
+                                           ORDER BY us.nombres ASC";
+                        $stmt_vendedores = $pdo->prepare($sql_vendedores);
+                        $stmt_vendedores->execute();
+                        $vendedores = $stmt_vendedores->fetchAll(PDO::FETCH_ASSOC);
+                        
+                        $filtro_actual = $_GET['id_vendedor'] ?? '';
+                        foreach ($vendedores as $vendedor):
+                            $selected = ($filtro_actual == $vendedor['id']) ? 'selected' : '';
+                        ?>
+                            <option value="<?= $vendedor['id'] ?>" <?= $selected ?>>
+                                👤 <?= htmlspecialchars($vendedor['nombres']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                      </select>
+                      <?php if (!empty($filtro_actual)): ?>
+                        <a href="?" class="btn btn-sm btn-outline-secondary" title="Limpiar filtro">
+                          <i class="fas fa-times"></i>
+                        </a>
+                      <?php endif; ?>
+                    </form>
+                    <?php if (!empty($filtro_actual)): ?>
+                      <span class="badge bg-success">
+                        Filtro activo
+                      </span>
+                    <?php endif; ?>
+                  </div>
+                </div>
               </div>
             </div>
             <?php endif; ?>

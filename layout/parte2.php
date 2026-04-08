@@ -15,7 +15,7 @@
       Anything you want
     </div>
     <!-- Default to the left -->
-    <strong>Copyright &copy; 2025 <a href="">GabuasLuis</a>.</strong> All rights reserved.
+    <strong>Copyright &copy; 2025 <a href="https://nesb.com.mx">NESB</a>.</strong> All rights reserved.
   </footer>
 </div>
 <!-- ./wrapper -->
