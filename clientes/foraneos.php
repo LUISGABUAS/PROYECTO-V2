@@ -56,8 +56,7 @@ if (isset($_SESSION['mensaje'])) {
               <h3 class="card-title">Listado de clientes Foraneos</h3>
             </div>
 
-            <!-- FILTRO DE VENDEDORES (solo para admins) -->
-            <?php if ($_SESSION['id_rol_sesion'] == 1): ?>
+
             <div class="card-header bg-light border-bottom">
               <div class="row align-items-center">
                 <div class="col">
@@ -103,7 +102,6 @@ if (isset($_SESSION['mensaje'])) {
                 </div>
               </div>
             </div>
-            <?php endif; ?>
 
             <div class="card-body">
 

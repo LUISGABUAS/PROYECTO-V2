@@ -57,7 +57,7 @@ if (isset($_SESSION['mensaje'])) {
             </div>
 
             <!-- FILTRO DE VENDEDORES (solo para admins) -->
-            <?php if ($_SESSION['id_rol_sesion'] == 3): ?>
+
             <div class="card-header bg-light border-bottom">
               <div class="row align-items-center">
                 <div class="col">
@@ -103,7 +103,6 @@ if (isset($_SESSION['mensaje'])) {
                 </div>
               </div>
             </div>
-            <?php endif; ?>
 
             <div class="card-body">
 
