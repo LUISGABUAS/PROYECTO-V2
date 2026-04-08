@@ -109,41 +109,84 @@ include('../app/controllers/almacen/cargar_producto.php');
                               </div>
                             </div>
 
+                            <?php
+                            $calidades = [
+                                'Calidad 1',
+                                'Calidad 2',
+                                'Calidad 3 - económico',
+                                'Calidad premium',
+                                'Calidad 1 y 2',
+                                'Calidad premium con 1',
+                                'Calidad Mixtas',
+                            ];
+                            ?>
                             <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Calidad:</label>
+                                        <select name="calidad" class="form-control" required>
+                                            <option value="">— Selecciona —</option>
+                                            <?php foreach ($calidades as $c): ?>
+                                                <option value="<?= $c ?>" <?= $calidad === $c ? 'selected' : '' ?>>
+                                                    <?= $c ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Piezas: <small class="text-muted">(por paca)</small></label>
+                                        <input type="number" name="piezas" class="form-control" min="1"
+                                               value="<?= htmlspecialchars($piezas) ?>" placeholder="Ej: 12">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Fecha Ingreso:</label>
+                                        <input type="date" name="fecha_ingreso" class="form-control" value="<?= $fecha_ingreso ?>" required>
+                                    </div>
+                                </div>
+                            </div>
 
+                            <div class="row">
                                 <div class="col-md-2">
                                     <div class="form-group">
-                                        <label for="">Stock Minimo:</label>
-                                        <input type="number" name="stock_minimo" class="form-control" value="<?php echo $stock_minimo?>">
+                                        <label>Stock Mínimo:</label>
+                                        <input type="number" name="stock_minimo" class="form-control" value="<?= $stock_minimo ?>" min="0">
                                     </div>
                                 </div>
                                 <div class="col-md-2">
                                     <div class="form-group">
-                                        <label for="">Stock Maximo</label>
-                                        <input type="number" name="stock_maximo" class="form-control" value="<?php echo $stock_maximo?>">
+                                        <label>Stock Máximo:</label>
+                                        <input type="number" name="stock_maximo" class="form-control" value="<?= $stock_maximo ?>" min="0">
                                     </div>
                                 </div>
-                                <?php if(in_array(34, $_SESSION['permisos'])):?>
-                                <div class="col-md-2">
+                                <?php if (in_array(34, $_SESSION['permisos'])): ?>
+                                <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="">Precio Compra</label>
-                                        <input type="number" name="precio_compra" class="form-control" value="<?= $precio_compra;?>">
-                                        <input type="hidden" name="precio_compra_anterior" value="<?= $precio_compra;?>">
+                                        <label>Precio Compra:</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">$</span>
+                                            </div>
+                                            <input type="number" name="precio_compra" class="form-control" step="0.01" min="0" value="<?= $precio_compra ?>">
+                                        </div>
+                                        <input type="hidden" name="precio_compra_anterior" value="<?= $precio_compra ?>">
                                     </div>
                                 </div>
                                 <?php else: ?>
-                                <input type="hidden" name="precio_compra_anterior" value="<?= $precio_compra;?>">
+                                <input type="hidden" name="precio_compra_anterior" value="<?= $precio_compra ?>">
                                 <?php endif; ?>
-                                <div class="col-md-2">
+                                <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="">Precio Venta:</label>
-                                        <input type="number" name="precio_venta" class="form-control" value="<?= $precio_venta?>" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="">Fecha Ingreso:</label>
-                                        <input type="date" name="fecha_ingreso" class="form-control" value="<?= $fecha_ingreso;?>" required>
+                                        <label>Precio Venta:</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">$</span>
+                                            </div>
+                                            <input type="number" name="precio_venta" class="form-control" step="0.01" min="0" value="<?= $precio_venta ?>" required>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

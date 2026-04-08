@@ -65,7 +65,10 @@ if ($check->rowCount() === 0) {
    ACTUALIZAR CLIENTE
 ========================= */
 try {
+    // Iniciar transacción
+    $pdo->beginTransaction();
 
+    // 1. Actualizar cliente
     $sql = "UPDATE clientes SET
                 tipo_cliente     = :tipo_cliente,
                 nombre_completo  = :nombre_completo,
@@ -95,14 +98,66 @@ try {
         ':id_cliente'      => $id_cliente
     ]);
 
+    // 2. Actualizar dirección principal en clientes_direcciones
+    $sql_dir = "UPDATE clientes_direcciones SET
+                    calle_numero = :calle_numero,
+                    colonia = :colonia,
+                    municipio = :municipio,
+                    estado = :estado,
+                    cp = :cp,
+                    referencias = :referencias,
+                    actualizada_en = NOW()
+                WHERE id_cliente = :id_cliente AND es_principal = 1";
+
+    $stmt_dir = $pdo->prepare($sql_dir);
+    $stmt_dir->execute([
+        ':calle_numero'  => $calle_numero,
+        ':colonia'       => $colonia,
+        ':municipio'     => $municipio,
+        ':estado'        => $estado,
+        ':cp'            => $cp,
+        ':referencias'   => $referencias,
+        ':id_cliente'    => $id_cliente
+    ]);
+    
+    // Si no hay dirección principal, crearla
+    if ($stmt_dir->rowCount() === 0) {
+        $sql_insert = "INSERT INTO clientes_direcciones 
+                      (id_cliente, calle_numero, colonia, municipio, estado, cp, referencias, es_principal, activa)
+                      VALUES (:id_cliente, :calle_numero, :colonia, :municipio, :estado, :cp, :referencias, 1, 1)";
+        $stmt_insert = $pdo->prepare($sql_insert);
+        $stmt_insert->execute([
+            ':id_cliente'    => $id_cliente,
+            ':calle_numero'  => $calle_numero,
+            ':colonia'       => $colonia,
+            ':municipio'     => $municipio,
+            ':estado'        => $estado,
+            ':cp'            => $cp,
+            ':referencias'   => $referencias
+        ]);
+    }
+
+    // Confirmar transacción
+    $pdo->commit();
+
     registrarAuditoria($pdo, $id_usuario, $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null, 'EDITAR CLIENTE', 'clientes', $id_cliente, $nombre_completo);
 
     $_SESSION['mensaje'] = '✅ Cliente actualizado correctamente';
     $_SESSION['icono'] = 'success';
-    header('Location: ' . $URL . '/clientes/index.php');
+    
+    // Redirigir a la página anterior según el tipo de cliente
+    $redirect = ($tipo_cliente === 'foraneo') 
+        ? $URL . '/clientes/foraneos.php'
+        : $URL . '/clientes/locales.php';
+    
+    header('Location: ' . $redirect);
     exit;
 
 } catch (Exception $e) {
+    // Revertir si hay error
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
 
     error500('Error actualizando cliente', ['error' => $e->getMessage()]);
     $_SESSION['mensaje'] = '❌ Error al actualizar el cliente';

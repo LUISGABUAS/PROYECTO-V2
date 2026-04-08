@@ -9,7 +9,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 csrf_verify();
 
-$errores = validarDatos(['codigo', 'id_categoria', 'id_proovedor', 'nombre', 'descripcion', 'stock_minimo', 'stock_maximo', 'precio_compra', 'precio_venta', 'fecha_ingreso']);
+$errores = validarDatos(['codigo', 'id_categoria', 'id_proovedor', 'nombre', 'descripcion', 'stock_minimo', 'stock_maximo', 'precio_compra', 'precio_venta', 'fecha_ingreso', 'calidad']);
 if (!empty($errores)) {
     error400('Faltan datos obligatorios', $errores);
     $_SESSION['mensaje'] = "❌ Faltan datos obligatorios";
@@ -18,16 +18,18 @@ if (!empty($errores)) {
     exit;
 }
 
-$codigo = $_POST['codigo'];
+$codigo       = $_POST['codigo'];
 $id_categoria = $_POST['id_categoria'];
 $id_proovedor = $_POST['id_proovedor'];
-$nombre = $_POST['nombre'];
-$id_usuario = $_POST['id_usuario'];
-$descripcion = $_POST['descripcion'];
+$nombre       = $_POST['nombre'];
+$id_usuario   = $_POST['id_usuario'];
+$descripcion  = $_POST['descripcion'];
+$calidad      = $_POST['calidad'];
+$piezas       = !empty($_POST['piezas']) ? (int)$_POST['piezas'] : null;
 $stock_minimo = $_POST['stock_minimo'];
 $stock_maximo = $_POST['stock_maximo'];
 $precio_compra = $_POST['precio_compra'];
-$precio_venta = $_POST['precio_venta'];
+$precio_venta  = $_POST['precio_venta'];
 $fecha_ingreso = $_POST['fecha_ingreso'];
 
 $tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
@@ -59,14 +61,16 @@ $location = "../../../almacen/img_productos/" . $filename;
 move_uploaded_file($_FILES['image']['tmp_name'], $location);
 
 try {
-    $sentencia = $pdo->prepare("INSERT INTO tb_almacen 
-        (codigo, id_proovedor, nombre, descripcion, stock_minimo, stock_maximo, precio_compra, precio_venta, fecha_ingreso, imagen, id_categoria, id_usuario, fyh_creacion, fyh_actualizacion) 
-        VALUES (:codigo, :id_proovedor, :nombre, :descripcion, :stock_minimo, :stock_maximo, :precio_compra, :precio_venta, :fecha_ingreso, :imagen, :id_categoria, :id_usuario, :fyh_creacion, :fyh_actualizacion)");
+    $sentencia = $pdo->prepare("INSERT INTO tb_almacen
+        (codigo, id_proovedor, nombre, descripcion, calidad, piezas, stock_minimo, stock_maximo, precio_compra, precio_venta, fecha_ingreso, imagen, id_categoria, id_usuario, fyh_creacion, fyh_actualizacion)
+        VALUES (:codigo, :id_proovedor, :nombre, :descripcion, :calidad, :piezas, :stock_minimo, :stock_maximo, :precio_compra, :precio_venta, :fecha_ingreso, :imagen, :id_categoria, :id_usuario, :fyh_creacion, :fyh_actualizacion)");
 
     $sentencia->bindParam(':codigo', $codigo);
     $sentencia->bindParam(':id_proovedor', $id_proovedor);
     $sentencia->bindParam(':nombre', $nombre);
     $sentencia->bindParam(':descripcion', $descripcion);
+    $sentencia->bindParam(':calidad', $calidad);
+    $sentencia->bindParam(':piezas', $piezas);
     $sentencia->bindParam(':stock_minimo', $stock_minimo);
     $sentencia->bindParam(':stock_maximo', $stock_maximo);
     $sentencia->bindParam(':precio_compra', $precio_compra);

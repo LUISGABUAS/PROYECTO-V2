@@ -48,6 +48,10 @@ if ($id_rol_sesion == 21) {
 }
 
 try {
+    // Iniciar transacción
+    $pdo->beginTransaction();
+
+    // 1. Insertar cliente
     $sql = "INSERT INTO clientes 
     (tipo_cliente, nombre_completo, telefono, calle_numero, colonia, municipio, estado, cp, referencias, id_vendedor)
     VALUES (?,?,?,?,?,?,?,?,?,?)";
@@ -66,9 +70,30 @@ try {
         $id_vendedor
     ]);
 
+    $id_cliente_nuevo = $pdo->lastInsertId();
+
+    // 2. Insertar dirección principal en clientes_direcciones
+    $sql_direccion = "INSERT INTO clientes_direcciones 
+    (id_cliente, calle_numero, colonia, municipio, estado, cp, referencias, es_principal, activa)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1)";
+
+    $stmt_direccion = $pdo->prepare($sql_direccion);
+    $stmt_direccion->execute([
+        $id_cliente_nuevo,
+        $calle,
+        $colonia,
+        $municipio,
+        $estado,
+        $cp,
+        $referencias
+    ]);
+
+    // Confirmar transacción
+    $pdo->commit();
+
     $id_usuario_audit = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
     $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
-    registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'CREAR CLIENTE', 'clientes', $pdo->lastInsertId(), $nombre);
+    registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'CREAR CLIENTE', 'clientes', $id_cliente_nuevo, $nombre);
 
     $_SESSION['mensaje'] = "✅ Cliente registrado correctamente";
     $_SESSION['icono']   = "success";
@@ -77,6 +102,11 @@ try {
     exit;
 
 } catch (Exception $e) {
+    // Revertir si hay error
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    
     error500('Error guardando cliente en BD', ['error' => $e->getMessage()]);
     $_SESSION['mensaje'] = "❌ Error al guardar el cliente";
     $_SESSION['icono']   = "error";
