@@ -57,51 +57,41 @@ if (isset($_SESSION['mensaje'])) {
             </div>
 
 
-            <div class="card-header bg-light border-bottom">
-              <div class="row align-items-center">
-                <div class="col">
-                  <div class="d-flex align-items-center gap-3">
-                    <div>
-                      <i class="fas fa-filter" style="font-size: 1.2rem; color: #007bff;"></i>
-                    </div>
-                    <form method="GET" class="d-flex gap-2 align-items-center" style="flex: 1; max-width: 500px;">
-                      <label class="mb-0" style="font-weight: 600; min-width: 120px;">Filtrar Clientes:</label>
-                      <select name="id_vendedor" class="form-control form-control-sm" onchange="this.form.submit()" style="flex: 1;">
-                        <option value="">📋 Todos los vendedores</option>
-                        <?php
-                        // Obtener lista de vendedores
-                        $sql_vendedores = "SELECT us.id, us.nombres FROM tb_usuario us
-                                          INNER JOIN tb_roles_permisos rol ON us.id_rol = rol.id_rol
-                                          WHERE rol.id_permiso = 21
-                                           ORDER BY us.nombres ASC";
-                        $stmt_vendedores = $pdo->prepare($sql_vendedores);
-                        $stmt_vendedores->execute();
-                        $vendedores = $stmt_vendedores->fetchAll(PDO::FETCH_ASSOC);
-                        
-                        $filtro_actual = $_GET['id_vendedor'] ?? '';
-                        foreach ($vendedores as $vendedor):
-                            $selected = ($filtro_actual == $vendedor['id']) ? 'selected' : '';
-                        ?>
-                            <option value="<?= $vendedor['id'] ?>" <?= $selected ?>>
-                                👤 <?= htmlspecialchars($vendedor['nombres']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                      </select>
-                      <?php if (!empty($filtro_actual)): ?>
-                        <a href="?" class="btn btn-sm btn-outline-secondary" title="Limpiar filtro">
-                          <i class="fas fa-times"></i>
-                        </a>
-                      <?php endif; ?>
-                    </form>
-                    <?php if (!empty($filtro_actual)): ?>
-                      <span class="badge bg-success">
-                        Filtro activo
-                      </span>
-                    <?php endif; ?>
-                  </div>
-                </div>
+            <!-- FILTRO DE VENDEDORES (solo para no-vendedores) -->
+            <?php if ($_SESSION['id_rol_sesion'] != 21): ?>
+            <?php
+            $sql_vendedores = "SELECT us.id, us.nombres FROM tb_usuario us
+                               INNER JOIN tb_roles_permisos rol ON us.id_rol = rol.id_rol
+                               WHERE rol.id_permiso = 21
+                               ORDER BY us.nombres ASC";
+            $stmt_vendedores = $pdo->prepare($sql_vendedores);
+            $stmt_vendedores->execute();
+            $vendedores_filtro = $stmt_vendedores->fetchAll(PDO::FETCH_ASSOC);
+            $filtro_actual = $_GET['id_vendedor'] ?? '';
+            ?>
+            <div class="card-header bg-light border-bottom py-2">
+              <div class="d-flex align-items-center gap-3 flex-wrap">
+                <i class="fas fa-filter text-primary"></i>
+                <form method="GET" class="d-flex align-items-center gap-2 mb-0">
+                  <label class="mb-0 font-weight-bold text-nowrap">Filtrar por vendedor:</label>
+                  <select name="id_vendedor" class="form-control form-control-sm" onchange="this.form.submit()" style="min-width:200px;">
+                    <option value="">Todos los vendedores</option>
+                    <?php foreach ($vendedores_filtro as $v): ?>
+                      <option value="<?= $v['id'] ?>" <?= $filtro_actual == $v['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($v['nombres']) ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
+                  <?php if (!empty($filtro_actual)): ?>
+                    <a href="?" class="btn btn-sm btn-outline-secondary" title="Quitar filtro">
+                      <i class="fas fa-times"></i> Limpiar
+                    </a>
+                    <span class="badge badge-success ml-1">Filtro activo</span>
+                  <?php endif; ?>
+                </form>
               </div>
             </div>
+            <?php endif; ?>
 
             <div class="card-body">
 
