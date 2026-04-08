@@ -1,6 +1,6 @@
 <?php
 
-include('../../config.php');
+require_once(dirname(__DIR__, 2) . '/config.php');
 
 $nombre_categoria = $_GET['nombre_categoria'];
 

@@ -56,6 +56,38 @@ if (isset($_SESSION['mensaje'])) {
               <h3 class="card-title">Listado de clientes Locales</h3>
             </div>
 
+            <!-- FILTRO DE VENDEDORES (solo para admins) -->
+            <?php if ($_SESSION['id_rol_sesion'] == 3): ?>
+            <div class="card-body">
+              <div class="form-group" style="max-width: 300px;">
+                <label><strong>Filtrar por Vendedor:</strong></label>
+                <form method="GET" style="display: flex; gap: 5px;">
+                  <select name="id_vendedor" class="form-control" onchange="this.form.submit()">
+                    <option value="">Ver todos los clientes</option>
+                    <?php
+                    // Obtener lista de vendedores
+                    $sql_vendedores = "SELECT us.id, us.nombres FROM tb_usuario us
+                                       INNER JOIN tb_roles rol ON us.id_rol = rol.id_rol
+                                       WHERE rol.id_rol = 21
+                                       ORDER BY us.nombres ASC";
+                    $stmt_vendedores = $pdo->prepare($sql_vendedores);
+                    $stmt_vendedores->execute();
+                    $vendedores = $stmt_vendedores->fetchAll(PDO::FETCH_ASSOC);
+                    
+                    $filtro_actual = $_GET['id_vendedor'] ?? '';
+                    foreach ($vendedores as $vendedor):
+                        $selected = ($filtro_actual == $vendedor['id']) ? 'selected' : '';
+                    ?>
+                        <option value="<?= $vendedor['id'] ?>" <?= $selected ?>>
+                            <?= htmlspecialchars($vendedor['nombres']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                  </select>
+                </form>
+              </div>
+            </div>
+            <?php endif; ?>
+
             <div class="card-body">
 
               <div class="table-responsive">

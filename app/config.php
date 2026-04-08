@@ -37,6 +37,7 @@ $fechaHora = date("Y-m-d H:i:s");
 // MIGRACIONES DE BASE DE DATOS
 // ================================================
 require_once __DIR__ . '/database/migrations/add_foto_perfil_column.php';
+require_once __DIR__ . '/database/migrations/add_id_vendedor_to_clientes.php';
 
 // ================================================
 // LOGGING CENTRALIZADO

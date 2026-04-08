@@ -1,6 +1,6 @@
 <?php
 // Script para verificar y agregar columna foto_perfil a tb_usuario
-include('../../config.php');
+require_once(dirname(__DIR__, 2) . '/config.php');
 
 try {
     // Verificar si la columna existe

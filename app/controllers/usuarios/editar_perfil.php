@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
 
-include('../../config.php');
+require_once(dirname(__DIR__, 2) . '/config.php');
 
 // Definir ruta base del proyecto una sola vez
 define('PROJECT_ROOT', realpath(__DIR__ . '/../../..'));

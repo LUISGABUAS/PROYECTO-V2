@@ -8,7 +8,7 @@ error_reporting(0);
 ob_start();
 
 // Configuración
-include('../../config.php');
+require_once(dirname(__DIR__, 2) . '/config.php');
 
 // ===========================
 // RECIBIR IDS

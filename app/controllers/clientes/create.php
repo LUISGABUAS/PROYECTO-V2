@@ -1,5 +1,5 @@
 <?php
-include('../../config.php');
+require_once(dirname(__DIR__, 2) . '/config.php');
 include(__DIR__ . '/../helpers/csrf.php');
 include(__DIR__ . '/../helpers/validador.php');
 
@@ -34,10 +34,23 @@ $estado       = $_POST['estado'] ?? null;
 $cp           = $_POST['cp'] ?? null;
 $referencias  = trim($_POST['referencias'] ?? null);
 
+// Determinar el id_vendedor
+$id_rol_sesion = $_SESSION['id_rol_sesion'] ?? null;
+$id_usuario_sesion = $_SESSION['id_usuario_sesion'] ?? null;
+
+if ($id_rol_sesion == 21) {
+    // Si es vendedor, asignar su propio ID
+    $id_vendedor = $id_usuario_sesion;
+} else {
+    // Si es admin, usar el valor seleccionado o null
+    $id_vendedor = $_POST['id_vendedor'] ?? null;
+    $id_vendedor = ($id_vendedor === '' || $id_vendedor === null) ? null : $id_vendedor;
+}
+
 try {
     $sql = "INSERT INTO clientes 
-    (tipo_cliente, nombre_completo, telefono, calle_numero, colonia, municipio, estado, cp, referencias)
-    VALUES (?,?,?,?,?,?,?,?,?)";
+    (tipo_cliente, nombre_completo, telefono, calle_numero, colonia, municipio, estado, cp, referencias, id_vendedor)
+    VALUES (?,?,?,?,?,?,?,?,?,?)";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
@@ -49,7 +62,8 @@ try {
         $municipio,
         $estado,
         $cp,
-        $referencias
+        $referencias,
+        $id_vendedor
     ]);
 
     $id_usuario_audit = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;

@@ -1,5 +1,5 @@
 <?php
-include('../../config.php');
+require_once(dirname(__DIR__, 2) . '/config.php');
 include('../helpers/auditoria.php');
 if (session_status() === PHP_SESSION_NONE) {
     session_start();

@@ -46,6 +46,32 @@ endif;
             </select>
         </div>
 
+        <!-- VENDEDOR (solo para admin) -->
+        <?php if ($_SESSION['id_rol_sesion'] != 21): // No mostrar si es vendedor ?>
+        <div class="form-group">
+            <label>Vendedor <span class="text-muted">(Opcional - dejar vacío si no pertenece a ninguno)</span></label>
+            <select name="id_vendedor" class="form-control">
+                <option value="">-- Sin vendedor asignado --</option>
+                <?php
+                // Obtener lista de vendedores
+                $sql_vendedores = "SELECT us.id, us.nombres FROM tb_usuario us
+                                   INNER JOIN tb_roles_permisos rol ON us.id_rol = rol.id_rol
+                                   WHERE rol.id_permiso = 21
+                                   ORDER BY us.nombres ASC";
+                $stmt_vendedores = $pdo->prepare($sql_vendedores);
+                $stmt_vendedores->execute();
+                $vendedores = $stmt_vendedores->fetchAll(PDO::FETCH_ASSOC);
+                
+                foreach ($vendedores as $vendedor):
+                ?>
+                    <option value="<?= $vendedor['id'] ?>">
+                        <?= htmlspecialchars($vendedor['nombres']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <?php endif; ?>
+
         <!-- NOMBRE -->
         <div class="form-group">
             <label>Nombre completo</label>

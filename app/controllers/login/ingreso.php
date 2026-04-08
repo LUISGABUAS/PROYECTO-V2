@@ -1,6 +1,6 @@
 <?php
 
-include('../../config.php');
+require_once(dirname(__DIR__, 2) . '/config.php');
 include(__DIR__ . '/../helpers/validador.php');
 
 if (session_status() === PHP_SESSION_NONE) {

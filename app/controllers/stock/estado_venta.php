@@ -1,5 +1,5 @@
 <?php
-include('../../config.php');
+require_once(dirname(__DIR__, 2) . '/config.php');
 
 if (!isset($_GET['id_venta'])) {
     echo '<div class="text-danger">Venta no válida.</div>';

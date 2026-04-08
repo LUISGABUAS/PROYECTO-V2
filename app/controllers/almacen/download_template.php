@@ -2,7 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-include('../../config.php');
+require_once(dirname(__DIR__, 2) . '/config.php');
 
 if (!in_array(9, $_SESSION['permisos'] ?? [])) {
     header('Location: ' . $URL);

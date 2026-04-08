@@ -1,6 +1,6 @@
 <?php
 
-include('../../config.php');
+require_once(dirname(__DIR__, 2) . '/config.php');
 include(__DIR__ . '/../helpers/csrf.php');
 include(__DIR__ . '/../helpers/validador.php');
 csrf_verify();

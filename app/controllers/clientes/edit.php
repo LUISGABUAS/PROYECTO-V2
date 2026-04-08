@@ -1,5 +1,5 @@
 <?php
-include('../../config.php');
+require_once(dirname(__DIR__, 2) . '/config.php');
 include(__DIR__ . '/../helpers/csrf.php');
 include(__DIR__ . '/../helpers/validador.php');
 csrf_verify();
@@ -35,6 +35,17 @@ $estado           = trim($_POST['estado'] ?? '');
 $telefono         = trim($_POST['telefono'] ?? '');
 $referencias      = trim($_POST['referencias'] ?? '');
 $id_usuario       = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
+$id_rol_sesion    = $_SESSION['id_rol_sesion'] ?? null;
+
+// Determinar id_vendedor según el rol
+if ($id_rol_sesion == 21) {
+    // Si es vendedor, mantener su propio ID
+    $id_vendedor = $id_usuario;
+} else {
+    // Si es admin, permitir cambiar el vendedor
+    $id_vendedor = $_POST['id_vendedor'] ?? null;
+    $id_vendedor = ($id_vendedor === '' || $id_vendedor === null) ? null : $id_vendedor;
+}
 
 /* =========================
    VERIFICAR CLIENTE EXISTE
@@ -65,6 +76,7 @@ try {
                 estado           = :estado,
                 telefono         = :telefono,
                 referencias      = :referencias,
+                id_vendedor      = :id_vendedor,
                 updated_at       = NOW()
             WHERE id_cliente = :id_cliente";
 
@@ -79,6 +91,7 @@ try {
         ':estado'          => $estado,
         ':telefono'        => $telefono,
         ':referencias'     => $referencias,
+        ':id_vendedor'     => $id_vendedor,
         ':id_cliente'      => $id_cliente
     ]);
 
