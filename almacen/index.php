@@ -56,33 +56,6 @@ if (isset($_SESSION['mensaje'])) {
     <div class="content">
       <div class="container-fluid">
 
-        <?php
-        $alertas_stock = array_filter($datos_productos, fn($p) =>
-            isset($p['stock_minimo']) && $p['stock_disponible'] <= $p['stock_minimo']
-        );
-        if (!empty($alertas_stock)):
-        ?>
-        <div class="row mb-3">
-          <div class="col-md-12">
-            <div class="alert alert-warning alert-dismissible fade show">
-              <button type="button" class="close" data-dismiss="alert">&times;</button>
-              <h5><i class="fa fa-exclamation-triangle"></i> <strong>Alerta de Stock Bajo</strong></h5>
-              <p>Los siguientes productos están en o por debajo del stock mínimo:</p>
-              <ul class="mb-0">
-                <?php foreach($alertas_stock as $alerta): ?>
-                  <li>
-                    <strong><?= htmlspecialchars($alerta['nombre']) ?></strong>
-                    (<?= htmlspecialchars($alerta['codigo']) ?>) —
-                    Disponible: <strong class="text-danger"><?= $alerta['stock_disponible'] ?></strong>,
-                    Mínimo: <?= $alerta['stock_minimo'] ?>
-                  </li>
-                <?php endforeach; ?>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <?php endif; ?>
-
       <div class="row">
         <div class="col-md-12">
             <div class="card card-outline card-primary">
