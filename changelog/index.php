@@ -8,47 +8,94 @@ if (!in_array(39, $_SESSION['permisos'])) {
 }
 
 // ============================================================
-// Leer commits de git automáticamente
+// Funciones helper
+// ============================================================
+function clasificarCommit($mensaje) {
+    if (preg_match('/fix|correg|arregl|solucio|error|bug/i',           $mensaje)) return 'fix';
+    if (preg_match('/agrega|añad|nuevo|nueva|crear|add/i',              $mensaje)) return 'feat';
+    if (preg_match('/mejora|optim|refactor|actualiz|mejor/i',           $mensaje)) return 'mejora';
+    if (preg_match('/quita|elimina|borr|remov|quite/i',                 $mensaje)) return 'remove';
+    if (preg_match('/security|seguridad|csrf|token|pass/i',             $mensaje)) return 'security';
+    return 'chore';
+}
+
+function parsearLineaLog($linea) {
+    $linea = trim($linea, "' \t\r");
+    if (empty($linea)) return null;
+    $p = explode('|', $linea, 4);
+    if (count($p) < 4) return null;
+    [$hash, $fecha, $autor, $mensaje] = $p;
+    return ['hash'=>$hash,'short'=>substr($hash,0,7),'fecha'=>$fecha,'autor'=>$autor,'mensaje'=>$mensaje,'tipo'=>clasificarCommit($mensaje)];
+}
+
+// Método 2: leer .git/logs/HEAD directamente (sin shell — funciona en hosting compartido)
+function leerReflog($repo, $limite) {
+    $logFile = $repo . '/.git/logs/HEAD';
+    if (!file_exists($logFile) || !is_readable($logFile)) return [];
+
+    $lineas = @file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (!$lineas) return [];
+
+    $lineas  = array_reverse($lineas); // más reciente primero
+    $commits = [];
+    $vistos  = [];
+
+    foreach ($lineas as $linea) {
+        // Formato: <old-sha> <new-sha> Nombre <email> timestamp tz\tcommit: mensaje
+        if (!preg_match(
+            '/^\w+ (\w+) (.+?) <[^>]+> (\d+) [+-]\d{4}\tcommit(?:\s+\([^)]+\))?: (.+)$/',
+            $linea, $m
+        )) continue;
+
+        [, $sha, $autor, $ts, $mensaje] = $m;
+        if (isset($vistos[$sha])) continue;
+        $vistos[$sha] = true;
+
+        $commits[] = [
+            'hash'    => $sha,
+            'short'   => substr($sha, 0, 7),
+            'fecha'   => date('Y-m-d', (int)$ts),
+            'autor'   => trim($autor),
+            'mensaje' => trim($mensaje),
+            'tipo'    => clasificarCommit($mensaje),
+        ];
+
+        if (count($commits) >= $limite) break;
+    }
+    return $commits;
+}
+
+// Método 1: shell_exec / exec (localhost con git nativo)
+function leerShellGit($repo, $limite) {
+    $fmt  = '%H|%ad|%an|%s';
+    $flag = "-c safe.directory='*'";
+    $cmd  = "HOME=/tmp /usr/bin/git $flag -C " . escapeshellarg($repo) .
+            " log --pretty=format:'$fmt' --date=short -n $limite 2>/dev/null";
+
+    $raw = null;
+    if (function_exists('shell_exec'))  $raw = @shell_exec($cmd);
+    if (empty($raw) && function_exists('exec')) {
+        $out = []; @exec($cmd, $out); $raw = implode("\n", $out);
+    }
+    if (empty(trim((string)$raw))) return [];
+
+    $commits = [];
+    foreach (explode("\n", trim($raw)) as $linea) {
+        $c = parsearLineaLog($linea);
+        if ($c) $commits[] = $c;
+    }
+    return $commits;
+}
+
+// ============================================================
+// Obtener commits (prueba shell primero, cae al reflog si falla)
 // ============================================================
 $repo   = dirname(__DIR__);
 $limite = 200;
 
-// Git 2.35+ bloquea repos de otro usuario (safe.directory).
-// Se pasa -c safe.directory=* para permitir cualquier repo bajo Apache (daemon).
-$raw = shell_exec(
-    "HOME=/tmp /usr/bin/git -c safe.directory='*' -C " . escapeshellarg($repo) .
-    " log --pretty=format:'%H|%ad|%an|%s' --date=short -n $limite 2>/dev/null"
-);
-
-$raw = $raw ?? ''; // Evita trim(null) si shell_exec devuelve null
-
-$commits = [];
-if (!empty(trim($raw))) {
-    foreach (explode("\n", trim($raw)) as $linea) {
-        $linea = trim($linea, "' \t\r");
-        if (empty($linea)) continue;
-        $partes = explode('|', $linea, 4);
-        if (count($partes) < 4) continue;
-        [$hash, $fecha, $autor, $mensaje] = $partes;
-
-        // Clasificar el commit por palabras clave en el mensaje
-        $msg_lower = strtolower($mensaje);
-        if      (preg_match('/fix|correg|arregl|solucio|error|bug/i', $mensaje))    $tipo = 'fix';
-        elseif  (preg_match('/agrega|añad|nuevo|nueva|crear|add/i', $mensaje))       $tipo = 'feat';
-        elseif  (preg_match('/mejora|optim|refactor|actualiz|mejor/i', $mensaje))    $tipo = 'mejora';
-        elseif  (preg_match('/quita|elimina|borr|remov|quite/i', $mensaje))          $tipo = 'remove';
-        elseif  (preg_match('/security|seguridad|csrf|token|pass/i', $mensaje))      $tipo = 'security';
-        else                                                                          $tipo = 'chore';
-
-        $commits[] = [
-            'hash'    => $hash,
-            'short'   => substr($hash, 0, 7),
-            'fecha'   => $fecha,
-            'autor'   => $autor,
-            'mensaje' => $mensaje,
-            'tipo'    => $tipo,
-        ];
-    }
+$commits = leerShellGit($repo, $limite);
+if (empty($commits)) {
+    $commits = leerReflog($repo, $limite);
 }
 
 // Agrupar por fecha
@@ -57,20 +104,17 @@ foreach ($commits as $c) {
     $por_fecha[$c['fecha']][] = $c;
 }
 
-// Configuración visual por tipo
 $tipo_cfg = [
-    'feat'     => ['color'=>'success',   'icon'=>'fa-plus-circle',    'label'=>'Nueva función'],
-    'fix'      => ['color'=>'danger',    'icon'=>'fa-bug',            'label'=>'Corrección'],
-    'mejora'   => ['color'=>'info',      'icon'=>'fa-arrow-up',       'label'=>'Mejora'],
-    'remove'   => ['color'=>'secondary', 'icon'=>'fa-minus-circle',   'label'=>'Eliminado'],
-    'security' => ['color'=>'warning',   'icon'=>'fa-shield-alt',     'label'=>'Seguridad'],
-    'chore'    => ['color'=>'dark',      'icon'=>'fa-wrench',         'label'=>'Ajuste'],
+    'feat'     => ['color'=>'success',   'icon'=>'fa-plus-circle',  'label'=>'Nueva función'],
+    'fix'      => ['color'=>'danger',    'icon'=>'fa-bug',          'label'=>'Corrección'],
+    'mejora'   => ['color'=>'info',      'icon'=>'fa-arrow-up',     'label'=>'Mejora'],
+    'remove'   => ['color'=>'secondary', 'icon'=>'fa-minus-circle', 'label'=>'Eliminado'],
+    'security' => ['color'=>'warning',   'icon'=>'fa-shield-alt',   'label'=>'Seguridad'],
+    'chore'    => ['color'=>'dark',      'icon'=>'fa-wrench',       'label'=>'Ajuste'],
 ];
 
-// Estadísticas
 $total_commits = count($commits);
 $conteo_tipos  = array_count_values(array_column($commits, 'tipo'));
-$autores       = array_unique(array_column($commits, 'autor'));
 ?>
 
 <div class="content-wrapper">
@@ -90,19 +134,21 @@ $autores       = array_unique(array_column($commits, 'autor'));
       <div class="card">
         <div class="card-body text-center py-5">
           <i class="fab fa-git-alt fa-4x text-muted mb-3"></i>
-          <h4 class="text-muted">No se pudo leer el historial de git</h4>
-          <p class="text-muted">Asegúrate de que el proyecto esté en un repositorio git</p>
+          <h4 class="text-muted">No se encontró historial de git</h4>
+          <p class="text-muted">
+            Asegúrate de que el proyecto esté desplegado desde un repositorio git<br>
+            y que la carpeta <code>.git/</code> exista en el servidor.
+          </p>
         </div>
       </div>
       <?php else: ?>
 
-      <!-- Estadísticas -->
       <div class="row mb-4">
         <div class="col-md-3">
           <div class="info-box">
             <span class="info-box-icon bg-dark"><i class="fab fa-git-alt"></i></span>
             <div class="info-box-content">
-              <span class="info-box-text">Total de commits</span>
+              <span class="info-box-text">Total commits</span>
               <span class="info-box-number"><?= $total_commits ?></span>
             </div>
           </div>
@@ -136,7 +182,6 @@ $autores       = array_unique(array_column($commits, 'autor'));
         </div>
       </div>
 
-      <!-- Leyenda de tipos -->
       <div class="mb-3">
         <?php foreach ($tipo_cfg as $tipo => $cfg): ?>
         <span class="badge badge-<?= $cfg['color'] ?> mr-1 p-2">
@@ -145,14 +190,11 @@ $autores       = array_unique(array_column($commits, 'autor'));
         <?php endforeach; ?>
       </div>
 
-      <!-- Timeline de commits agrupados por fecha -->
       <div class="timeline">
         <?php foreach ($por_fecha as $fecha => $commits_dia):
           $dt = DateTime::createFromFormat('Y-m-d', $fecha);
           $fecha_display = $dt ? $dt->format('d \d\e F, Y') : $fecha;
         ?>
-
-        <!-- Separador de fecha -->
         <div class="time-label">
           <span class="bg-dark">
             <i class="fas fa-calendar-day mr-1"></i>
@@ -171,9 +213,7 @@ $autores       = array_unique(array_column($commits, 'autor'));
               <code class="text-muted" style="font-size:.8em;"><?= $c['short'] ?></code>
               <span class="badge badge-<?= $cfg['color'] ?> ml-1"><?= $cfg['label'] ?></span>
             </span>
-            <h3 class="timeline-header">
-              <?= htmlspecialchars($c['mensaje']) ?>
-            </h3>
+            <h3 class="timeline-header"><?= htmlspecialchars($c['mensaje']) ?></h3>
             <div class="timeline-footer">
               <small class="text-muted">
                 <i class="fas fa-user-circle mr-1"></i><?= htmlspecialchars($c['autor']) ?>
@@ -182,12 +222,9 @@ $autores       = array_unique(array_column($commits, 'autor'));
           </div>
         </div>
         <?php endforeach; ?>
-
         <?php endforeach; ?>
-
         <div><i class="fas fa-flag bg-secondary"></i></div>
       </div>
-      <!-- /Timeline -->
 
       <?php endif; ?>
     </div>
@@ -195,15 +232,8 @@ $autores       = array_unique(array_column($commits, 'autor'));
 </div>
 
 <style>
-.timeline-item .timeline-header {
-  font-size: .95rem;
-  font-weight: 500;
-  margin: 0;
-  padding: 8px 0 4px;
-}
-.timeline > div > .timeline-item {
-  margin-left: 50px;
-}
+.timeline-item .timeline-header { font-size:.95rem; font-weight:500; margin:0; padding:8px 0 4px; }
+.timeline > div > .timeline-item { margin-left:50px; }
 </style>
 
 <?php include('../layout/parte2.php'); ?>
