@@ -7,95 +7,94 @@ if (!in_array(39, $_SESSION['permisos'])) {
     include('../layout/parte2.php'); exit;
 }
 
+// Forzar actualización del caché antes de cualquier output
+if (isset($_GET['flush'])) {
+    @unlink(__DIR__ . '/../app/logs/changelog_cache.json');
+    header("Location: index.php"); exit;
+}
+
 // ============================================================
-// Funciones helper
+// Configuración del repositorio GitHub
+// ============================================================
+$github_owner = 'LUISFR0';
+$github_repo  = 'PROYECTO-V2';
+$por_pagina   = 100; // max 100 por request de GitHub API
+$paginas      = 2;   // 2 páginas = hasta 200 commits
+
+// Cache en archivo para no golpear la API en cada visita (TTL: 5 min)
+$cache_file = __DIR__ . '/../app/logs/changelog_cache.json';
+$cache_ttl  = 300;
+$cache_ok   = file_exists($cache_file) && (time() - filemtime($cache_file)) < $cache_ttl;
+
+// ============================================================
+// Funciones
 // ============================================================
 function clasificarCommit($mensaje) {
-    if (preg_match('/fix|correg|arregl|solucio|error|bug/i',           $mensaje)) return 'fix';
-    if (preg_match('/agrega|añad|nuevo|nueva|crear|add/i',              $mensaje)) return 'feat';
-    if (preg_match('/mejora|optim|refactor|actualiz|mejor/i',           $mensaje)) return 'mejora';
-    if (preg_match('/quita|elimina|borr|remov|quite/i',                 $mensaje)) return 'remove';
-    if (preg_match('/security|seguridad|csrf|token|pass/i',             $mensaje)) return 'security';
+    if (preg_match('/fix|correg|arregl|solucio|error|bug/i',  $mensaje)) return 'fix';
+    if (preg_match('/agrega|añad|nuevo|nueva|crear|add/i',     $mensaje)) return 'feat';
+    if (preg_match('/mejora|optim|refactor|actualiz|mejor/i',  $mensaje)) return 'mejora';
+    if (preg_match('/quita|elimina|borr|remov|quite/i',        $mensaje)) return 'remove';
+    if (preg_match('/security|seguridad|csrf|token|pass/i',    $mensaje)) return 'security';
     return 'chore';
 }
 
-function parsearLineaLog($linea) {
-    $linea = trim($linea, "' \t\r");
-    if (empty($linea)) return null;
-    $p = explode('|', $linea, 4);
-    if (count($p) < 4) return null;
-    [$hash, $fecha, $autor, $mensaje] = $p;
-    return ['hash'=>$hash,'short'=>substr($hash,0,7),'fecha'=>$fecha,'autor'=>$autor,'mensaje'=>$mensaje,'tipo'=>clasificarCommit($mensaje)];
-}
-
-// Método 2: leer .git/logs/HEAD directamente (sin shell — funciona en hosting compartido)
-function leerReflog($repo, $limite) {
-    $logFile = $repo . '/.git/logs/HEAD';
-    if (!file_exists($logFile) || !is_readable($logFile)) return [];
-
-    $lineas = @file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    if (!$lineas) return [];
-
-    $lineas  = array_reverse($lineas); // más reciente primero
-    $commits = [];
-    $vistos  = [];
-
-    foreach ($lineas as $linea) {
-        // Formato: <old-sha> <new-sha> Nombre <email> timestamp tz\tcommit: mensaje
-        if (!preg_match(
-            '/^\w+ (\w+) (.+?) <[^>]+> (\d+) [+-]\d{4}\tcommit(?:\s+\([^)]+\))?: (.+)$/',
-            $linea, $m
-        )) continue;
-
-        [, $sha, $autor, $ts, $mensaje] = $m;
-        if (isset($vistos[$sha])) continue;
-        $vistos[$sha] = true;
-
-        $commits[] = [
-            'hash'    => $sha,
-            'short'   => substr($sha, 0, 7),
-            'fecha'   => date('Y-m-d', (int)$ts),
-            'autor'   => trim($autor),
-            'mensaje' => trim($mensaje),
-            'tipo'    => clasificarCommit($mensaje),
-        ];
-
-        if (count($commits) >= $limite) break;
-    }
-    return $commits;
-}
-
-// Método 1: shell_exec / exec (localhost con git nativo)
-function leerShellGit($repo, $limite) {
-    $fmt  = '%H|%ad|%an|%s';
-    $flag = "-c safe.directory='*'";
-    $cmd  = "HOME=/tmp /usr/bin/git $flag -C " . escapeshellarg($repo) .
-            " log --pretty=format:'$fmt' --date=short -n $limite 2>/dev/null";
-
-    $raw = null;
-    if (function_exists('shell_exec'))  $raw = @shell_exec($cmd);
-    if (empty($raw) && function_exists('exec')) {
-        $out = []; @exec($cmd, $out); $raw = implode("\n", $out);
-    }
-    if (empty(trim((string)$raw))) return [];
-
-    $commits = [];
-    foreach (explode("\n", trim($raw)) as $linea) {
-        $c = parsearLineaLog($linea);
-        if ($c) $commits[] = $c;
-    }
-    return $commits;
+function fetchGitHub($url) {
+    $opts = [
+        'http' => [
+            'method'  => 'GET',
+            'header'  => "User-Agent: PHP-Changelog\r\nAccept: application/vnd.github+json\r\n",
+            'timeout' => 8,
+            'ignore_errors' => true,
+        ],
+        'ssl' => ['verify_peer' => false, 'verify_peer_name' => false]
+    ];
+    $ctx = stream_context_create($opts);
+    $raw = @file_get_contents($url, false, $ctx);
+    return $raw ? json_decode($raw, true) : null;
 }
 
 // ============================================================
-// Obtener commits (prueba shell primero, cae al reflog si falla)
+// Obtener commits
 // ============================================================
-$repo   = dirname(__DIR__);
-$limite = 200;
+$commits = [];
 
-$commits = leerShellGit($repo, $limite);
-if (empty($commits)) {
-    $commits = leerReflog($repo, $limite);
+if ($cache_ok) {
+    $commits = json_decode(file_get_contents($cache_file), true) ?? [];
+} else {
+    // Traer commits de la API paginando
+    for ($p = 1; $p <= $paginas; $p++) {
+        $url  = "https://api.github.com/repos/{$github_owner}/{$github_repo}/commits?per_page={$por_pagina}&page={$p}";
+        $data = fetchGitHub($url);
+
+        if (empty($data) || !is_array($data)) break;
+
+        foreach ($data as $item) {
+            if (empty($item['sha'])) continue;
+
+            $sha     = $item['sha'];
+            $info    = $item['commit'] ?? [];
+            $mensaje = trim(explode("\n", $info['message'] ?? '')[0]); // solo primera línea
+            $fecha   = substr($info['author']['date'] ?? date('Y-m-d'), 0, 10);
+            $autor   = $info['author']['name'] ?? 'Desconocido';
+
+            $commits[] = [
+                'hash'    => $sha,
+                'short'   => substr($sha, 0, 7),
+                'fecha'   => $fecha,
+                'autor'   => $autor,
+                'mensaje' => $mensaje,
+                'tipo'    => clasificarCommit($mensaje),
+                'url'     => $item['html_url'] ?? null,
+            ];
+        }
+
+        if (count($data) < $por_pagina) break; // última página
+    }
+
+    // Guardar cache
+    if (!empty($commits)) {
+        @file_put_contents($cache_file, json_encode($commits));
+    }
 }
 
 // Agrupar por fecha
@@ -119,87 +118,88 @@ $conteo_tipos  = array_count_values(array_column($commits, 'tipo'));
 
 <div class="content-wrapper">
   <div class="content-header">
-    <div class="container-fluid">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
       <h1 class="m-0">
-        <i class="fab fa-git-alt text-danger"></i> Changelog del Sistema
-        <small class="text-muted" style="font-size:.5em;">Historial automático de cambios</small>
+        <i class="fab fa-git-alt text-danger"></i> Changelog
+        <small class="text-muted" style="font-size:.45em;">
+          github.com/<?= $github_owner ?>/<?= $github_repo ?>
+        </small>
       </h1>
+      <?php if (!empty($commits)): ?>
+      <a href="?flush=1" class="btn btn-sm btn-outline-secondary" title="Forzar actualización">
+        <i class="fas fa-sync-alt"></i> Actualizar
+      </a>
+      <?php endif; ?>
     </div>
   </div>
 
   <div class="content">
     <div class="container-fluid">
 
+
       <?php if (empty($commits)): ?>
       <div class="card">
         <div class="card-body text-center py-5">
-          <i class="fab fa-git-alt fa-4x text-muted mb-3"></i>
-          <h4 class="text-muted">No se encontró historial de git</h4>
+          <i class="fab fa-github fa-4x text-muted mb-3"></i>
+          <h4 class="text-muted">No se pudo conectar con GitHub</h4>
           <p class="text-muted">
-            Asegúrate de que el proyecto esté desplegado desde un repositorio git<br>
-            y que la carpeta <code>.git/</code> exista en el servidor.
+            Verifica que el repositorio
+            <code><?= $github_owner ?>/<?= $github_repo ?></code>
+            sea público, o revisa la conexión a internet del servidor.
           </p>
         </div>
       </div>
       <?php else: ?>
 
+      <!-- Estadísticas -->
       <div class="row mb-4">
-        <div class="col-md-3">
-          <div class="info-box">
-            <span class="info-box-icon bg-dark"><i class="fab fa-git-alt"></i></span>
-            <div class="info-box-content">
-              <span class="info-box-text">Total commits</span>
-              <span class="info-box-number"><?= $total_commits ?></span>
-            </div>
+        <div class="col-6 col-md-3">
+          <div class="info-box"><span class="info-box-icon bg-dark"><i class="fab fa-git-alt"></i></span>
+            <div class="info-box-content"><span class="info-box-text">Total commits</span><span class="info-box-number"><?= $total_commits ?></span></div>
           </div>
         </div>
-        <div class="col-md-3">
-          <div class="info-box">
-            <span class="info-box-icon bg-success"><i class="fas fa-plus-circle"></i></span>
-            <div class="info-box-content">
-              <span class="info-box-text">Nuevas funciones</span>
-              <span class="info-box-number"><?= $conteo_tipos['feat'] ?? 0 ?></span>
-            </div>
+        <div class="col-6 col-md-3">
+          <div class="info-box"><span class="info-box-icon bg-success"><i class="fas fa-plus-circle"></i></span>
+            <div class="info-box-content"><span class="info-box-text">Nuevas funciones</span><span class="info-box-number"><?= $conteo_tipos['feat'] ?? 0 ?></span></div>
           </div>
         </div>
-        <div class="col-md-3">
-          <div class="info-box">
-            <span class="info-box-icon bg-danger"><i class="fas fa-bug"></i></span>
-            <div class="info-box-content">
-              <span class="info-box-text">Correcciones</span>
-              <span class="info-box-number"><?= $conteo_tipos['fix'] ?? 0 ?></span>
-            </div>
+        <div class="col-6 col-md-3">
+          <div class="info-box"><span class="info-box-icon bg-danger"><i class="fas fa-bug"></i></span>
+            <div class="info-box-content"><span class="info-box-text">Correcciones</span><span class="info-box-number"><?= $conteo_tipos['fix'] ?? 0 ?></span></div>
           </div>
         </div>
-        <div class="col-md-3">
-          <div class="info-box">
-            <span class="info-box-icon bg-info"><i class="fas fa-arrow-up"></i></span>
-            <div class="info-box-content">
-              <span class="info-box-text">Mejoras</span>
-              <span class="info-box-number"><?= $conteo_tipos['mejora'] ?? 0 ?></span>
-            </div>
+        <div class="col-6 col-md-3">
+          <div class="info-box"><span class="info-box-icon bg-info"><i class="fas fa-arrow-up"></i></span>
+            <div class="info-box-content"><span class="info-box-text">Mejoras</span><span class="info-box-number"><?= $conteo_tipos['mejora'] ?? 0 ?></span></div>
           </div>
         </div>
       </div>
 
+      <!-- Leyenda -->
       <div class="mb-3">
-        <?php foreach ($tipo_cfg as $tipo => $cfg): ?>
+        <?php foreach ($tipo_cfg as $cfg): ?>
         <span class="badge badge-<?= $cfg['color'] ?> mr-1 p-2">
           <i class="fas <?= $cfg['icon'] ?>"></i> <?= $cfg['label'] ?>
         </span>
         <?php endforeach; ?>
+        <small class="text-muted ml-2">
+          <i class="fas fa-clock"></i> Caché 5 min
+          <?php if (file_exists($cache_file)): ?>
+          — actualizado <?= date('H:i', filemtime($cache_file)) ?>
+          <?php endif; ?>
+        </small>
       </div>
 
+      <!-- Timeline -->
       <div class="timeline">
         <?php foreach ($por_fecha as $fecha => $commits_dia):
           $dt = DateTime::createFromFormat('Y-m-d', $fecha);
-          $fecha_display = $dt ? $dt->format('d \d\e F, Y') : $fecha;
+          $fecha_lbl = $dt ? $dt->format('d \d\e F, Y') : $fecha;
         ?>
         <div class="time-label">
           <span class="bg-dark">
-            <i class="fas fa-calendar-day mr-1"></i>
-            <?= $fecha_display ?>
-            <span class="badge badge-light ml-2"><?= count($commits_dia) ?> cambio<?= count($commits_dia) > 1 ? 's' : '' ?></span>
+            <i class="fas fa-calendar-day mr-1"></i> <?= $fecha_lbl ?>
+            <span class="badge badge-light ml-1"><?= count($commits_dia) ?> cambio<?= count($commits_dia) > 1 ? 's' : '' ?></span>
           </span>
         </div>
 
@@ -210,7 +210,13 @@ $conteo_tipos  = array_count_values(array_column($commits, 'tipo'));
           <i class="fas <?= $cfg['icon'] ?> bg-<?= $cfg['color'] ?>"></i>
           <div class="timeline-item">
             <span class="time">
+              <?php if (!empty($c['url'])): ?>
+              <a href="<?= htmlspecialchars($c['url']) ?>" target="_blank" class="text-muted">
+                <code style="font-size:.8em;"><?= $c['short'] ?></code>
+              </a>
+              <?php else: ?>
               <code class="text-muted" style="font-size:.8em;"><?= $c['short'] ?></code>
+              <?php endif; ?>
               <span class="badge badge-<?= $cfg['color'] ?> ml-1"><?= $cfg['label'] ?></span>
             </span>
             <h3 class="timeline-header"><?= htmlspecialchars($c['mensaje']) ?></h3>
