@@ -43,6 +43,7 @@ try {
             v.estado_logistico,
             c.nombre_completo AS cliente_nombre,
             c.telefono AS cliente_telefono,
+            c.email AS cliente_email,
             c.calle_numero AS calle,
             c.colonia AS colonia,
             c.municipio AS municipio,
@@ -149,7 +150,10 @@ try {
 
                                 <dt class="col-sm-5">Fecha de Salida:</dt>
                                 <dd class="col-sm-7">
-                                    <?= date('d/m/Y H:i', strtotime($venta['salida_fecha'] ?? 'No especificado')) ?>
+                                    <?php
+                                        $ts = !empty($venta['salida_fecha']) ? strtotime($venta['salida_fecha']) : false;
+                                        echo ($ts && $ts > 0) ? date('d/m/Y H:i', $ts) : '<span class="text-muted">—</span>';
+                                    ?>
                                 </dd>
 
                                 <dt class="col-sm-5">Total:</dt>
@@ -194,10 +198,14 @@ try {
 
                                 <dt class="col-sm-4">Email:</dt>
                                 <dd class="col-sm-8">
-                                    <a href="mailto:<?= htmlspecialchars($venta['cliente_email']) ?>">
-                                        <i class="fas fa-envelope"></i> 
-                                        <?= htmlspecialchars($venta['cliente_email']) ?>
-                                    </a>
+                                    <?php if (!empty($venta['cliente_email'])): ?>
+                                        <a href="mailto:<?= htmlspecialchars($venta['cliente_email']) ?>">
+                                            <i class="fas fa-envelope"></i>
+                                            <?= htmlspecialchars($venta['cliente_email']) ?>
+                                        </a>
+                                    <?php else: ?>
+                                        <span class="text-muted">—</span>
+                                    <?php endif; ?>
                                 </dd>
 
                                 <dt class="col-sm-4">Dirección:</dt>
