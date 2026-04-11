@@ -1,14 +1,12 @@
 <?php
-ob_start(); // Captura cualquier output accidental (warnings, notices)
+ini_set('display_errors', 0); // Evita que warnings/notices corrompan el JSON
 require_once(dirname(__DIR__, 2) . '/config.php');
 include(__DIR__ . '/../helpers/csrf.php');
-csrf_verify();
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
-ob_clean(); // Descarta cualquier output generado hasta aquí
 header('Content-Type: application/json');
+csrf_verify();
 
 $response = [
     'success' => false,
