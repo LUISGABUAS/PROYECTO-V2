@@ -1,4 +1,5 @@
 <?php
+ob_start(); // Captura cualquier output accidental (warnings, notices)
 require_once(dirname(__DIR__, 2) . '/config.php');
 include(__DIR__ . '/../helpers/csrf.php');
 csrf_verify();
@@ -6,6 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+ob_clean(); // Descarta cualquier output generado hasta aquí
 header('Content-Type: application/json');
 
 $response = [
@@ -114,4 +116,5 @@ try {
     $response['message'] = $e->getMessage();
 }
 
+ob_clean();
 echo json_encode($response);

@@ -1,6 +1,7 @@
 <?php
 include('../app/config.php');
 include('../layout/sesion.php');
+include('../app/controllers/helpers/csrf.php');
 include('../layout/parte1.php');
 
 /* =========================
@@ -491,7 +492,7 @@ $(document).on('click', '.delete-venta', function () {
         url: '<?= $URL ?>/app/controllers/ventas/delete_venta.php',
         type: 'POST',
         dataType: 'json',
-        data: { id_venta: id_venta },
+        data: { id_venta: id_venta, csrf_token: '<?= csrf_token() ?>' },
         success: function (r) {
           if (r.success) {
             Swal.fire('Eliminada', r.message, 'success').then(() => {

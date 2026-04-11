@@ -150,8 +150,7 @@ Swal.fire({
                              name="comprobante"
                              id="comprobante"
                              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                             style="display:none;"
-                             required>
+                             style="display:none;">
 
                       <small id="file_error" class="text-danger font-weight-bold" style="display:none;"></small>
                     </div>
@@ -416,13 +415,11 @@ function actualizarComprobante(){
 
   if(pago === 'efectivo'){
     filaComprobante.style.display = 'none';
-    inputComprobante.required     = false;
     inputComprobante.value        = '';
     document.getElementById('preview_comprobante').style.display = 'none';
     document.getElementById('preview_contenido').innerHTML       = '';
   } else {
     filaComprobante.style.display = 'block';
-    inputComprobante.required     = true;
   }
 }
 </script>
@@ -445,6 +442,55 @@ dropZone.addEventListener('dragleave', () => {
   dropZone.style.borderColor = '#aaa';
 });
 
+// Compresión de imágenes antes de subir (max 1200px, calidad 82%)
+async function comprimirImagen(file, maxWidth = 1200, quality = 0.82) {
+  return new Promise((resolve) => {
+    if (!file.type.startsWith('image/')) { resolve(file); return; }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+
+        // Si ya es pequeña no recomprimimos
+        if (width <= maxWidth && file.size < 500 * 1024) { resolve(file); return; }
+
+        const scale = width > maxWidth ? maxWidth / width : 1;
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(width  * scale);
+        canvas.height = Math.round(height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob((blob) => {
+          // Solo usar comprimido si reduce el tamaño
+          const resultado = blob && blob.size < file.size
+            ? new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg', lastModified: Date.now() })
+            : file;
+          resolve(resultado);
+        }, 'image/jpeg', quality);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Procesar archivo: comprimir si es imagen, luego preview
+async function procesarArchivo(file) {
+  dropZone.innerHTML = `
+    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+    <span class="text-muted ms-2"> Procesando...</span>`;
+
+  const fileOptimizado = await comprimirImagen(file);
+
+  const dt = new DataTransfer();
+  dt.items.add(fileOptimizado);
+  inputFile.files = dt.files;
+
+  mostrarPreview(fileOptimizado);
+}
+
 // Soltar archivo
 dropZone.addEventListener('drop', (e) => {
   e.preventDefault();
@@ -452,18 +498,12 @@ dropZone.addEventListener('drop', (e) => {
   dropZone.style.borderColor = '#aaa';
 
   const file = e.dataTransfer.files[0];
-  if (file) {
-    // Asignar el archivo al input real
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    inputFile.files = dt.files;
-    mostrarPreview(file);
-  }
+  if (file) procesarArchivo(file);
 });
 
 // Selección manual
 inputFile.addEventListener('change', function () {
-  if (this.files[0]) mostrarPreview(this.files[0]);
+  if (this.files[0]) procesarArchivo(this.files[0]);
 });
 
 function mostrarPreview(file) {
@@ -659,7 +699,6 @@ $(document).ready(function(){
       displayField.className = 'form-control bg-light';
       colTipoPago.style.display     = 'none';
       filaComprobante.style.display = 'block';
-      inputComprobante.required     = true;
       document.getElementById('tipo_pago').value = 'comprobante';
     }
   });
