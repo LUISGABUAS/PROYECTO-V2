@@ -195,18 +195,6 @@ try {
                                     </a>
                                 </dd>
 
-                                <dt class="col-sm-4">Email:</dt>
-                                <dd class="col-sm-8">
-                                    <?php if (!empty($venta['cliente_email'])): ?>
-                                        <a href="mailto:<?= htmlspecialchars($venta['cliente_email']) ?>">
-                                            <i class="fas fa-envelope"></i>
-                                            <?= htmlspecialchars($venta['cliente_email']) ?>
-                                        </a>
-                                    <?php else: ?>
-                                        <span class="text-muted">—</span>
-                                    <?php endif; ?>
-                                </dd>
-
                                 <dt class="col-sm-4">Dirección:</dt>
                                 <dd class="col-sm-8">
                                     <i class="fas fa-map-marker-alt"></i> 
