@@ -154,8 +154,11 @@ class Logger {
             
             // Escribir como JSON Line (una línea por entrada)
             $line = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
-            
+
+            $umask_prev = umask(0);
             file_put_contents($filename, $line, FILE_APPEND | LOCK_EX);
+            if (file_exists($filename)) chmod($filename, 0666);
+            umask($umask_prev);
             
             // También escribir en error.log de PHP para compatibilidad
             error_log(json_encode($data));

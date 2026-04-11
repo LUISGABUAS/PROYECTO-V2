@@ -59,11 +59,14 @@ try {
     }
 
     $pdo->commit();
-    
+
     $id_usuario_audit = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
     $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
     registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'CREAR ROL', 'tb_roles', $id_rol, $rol);
-    
+
+    // Forzar refresco de caché de permisos en la sesión activa
+    unset($_SESSION['_cache_time']);
+
     $_SESSION['icono'] = "success";
     $_SESSION['mensaje'] = "✅ Rol creado correctamente";
     header("Location: ../../../roles/index.php");

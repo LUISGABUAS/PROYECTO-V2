@@ -29,6 +29,15 @@ if (in_array(24, $_SESSION['permisos'] ?? [])) {
     $stmt_badge2->execute();
     $badge_ventas_pendientes = (int)$stmt_badge2->fetchColumn();
 }
+
+$badge_tickets = 0;
+if (in_array(37, $_SESSION['permisos'] ?? [])) {
+    try {
+        $stmt_badge3 = $pdo->prepare("SELECT COUNT(*) FROM tb_tickets WHERE estado IN ('pendiente','en_progreso')");
+        $stmt_badge3->execute();
+        $badge_tickets = (int)$stmt_badge3->fetchColumn();
+    } catch (Exception $e) { $badge_tickets = 0; }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -402,6 +411,46 @@ if (in_array(24, $_SESSION['permisos'] ?? [])) {
                 </a>
               </li>
             </ul>
+          </li>
+          <?php endif; ?>
+
+          <!-- TICKETS DE SOPORTE -->
+          <?php if(in_array(35, $_SESSION['permisos'] ?? []) || in_array(37, $_SESSION['permisos'] ?? [])): ?>
+          <li class="nav-item">
+            <a href="#" class="nav-link active" style="position:relative;">
+              <i class="nav-icon fas fa-ticket-alt"></i>
+              <p>Soporte <i class="right fas fa-angle-left"></i>
+                <?php if($badge_tickets > 0): ?>
+                <span class="badge badge-danger" style="position:absolute;right:30px;top:50%;transform:translateY(-50%);"><?= $badge_tickets ?></span>
+                <?php endif; ?>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="<?php echo $URL;?>/tickets" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p><?= in_array(37, $_SESSION['permisos'] ?? []) ? 'Todos los Tickets' : 'Mis Tickets' ?></p>
+                </a>
+              </li>
+              <?php if(in_array(36, $_SESSION['permisos'] ?? [])): ?>
+              <li class="nav-item">
+                <a href="<?php echo $URL;?>/tickets/create.php" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Nuevo Ticket</p>
+                </a>
+              </li>
+              <?php endif; ?>
+            </ul>
+          </li>
+          <?php endif; ?>
+
+          <!-- CHANGELOG -->
+          <?php if(in_array(39, $_SESSION['permisos'] ?? [])): ?>
+          <li class="nav-item">
+            <a href="<?php echo $URL;?>/changelog" class="nav-link">
+              <i class="nav-icon fab fa-git-alt"></i>
+              <p>Changelog</p>
+            </a>
           </li>
           <?php endif; ?>
 

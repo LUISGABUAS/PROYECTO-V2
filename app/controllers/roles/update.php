@@ -57,6 +57,9 @@ try {
     $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
     registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'ACTUALIZAR ROL', 'tb_roles', $id_rol, $rol_nombre);
 
+    // Forzar refresco de caché de permisos en la sesión activa
+    unset($_SESSION['_cache_time']);
+
     $_SESSION['mensaje'] = "✅ Rol actualizado correctamente";
     $_SESSION['icono'] = "success";
 

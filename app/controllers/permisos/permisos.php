@@ -50,6 +50,15 @@ $permisos = [
     'Reportes' => [
         ['id_permiso' => 24, 'nombre' => 'Ver Reportes'],
         ['id_permiso' => 25, 'nombre' => 'Ver Reportes Propios']
+    ],
+    'Tickets' => [
+        ['id_permiso' => 35, 'nombre' => 'Ver Tickets'],
+        ['id_permiso' => 36, 'nombre' => 'Crear Ticket'],
+        ['id_permiso' => 37, 'nombre' => 'Gestionar Tickets'],
+        ['id_permiso' => 38, 'nombre' => 'Eliminar Ticket']
+    ],
+    'Changelog' => [
+        ['id_permiso' => 39, 'nombre' => 'Ver Changelog']
     ]
 ];
 
