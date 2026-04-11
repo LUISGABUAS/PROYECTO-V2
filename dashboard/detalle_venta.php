@@ -43,7 +43,6 @@ try {
             v.estado_logistico,
             c.nombre_completo AS cliente_nombre,
             c.telefono AS cliente_telefono,
-            c.email AS cliente_email,
             c.calle_numero AS calle,
             c.colonia AS colonia,
             c.municipio AS municipio,
