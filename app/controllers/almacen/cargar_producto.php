@@ -2,10 +2,17 @@
 
 $id_producto_get = (int)$_GET['id'];
 
-$sql_productos = "SELECT *, cat.nombre_categoria as categoria , u.nombres as nombre_usuario , u.id as id_usuario
-                FROM tb_almacen as a INNER JOIN tb_categorias as cat ON a.id_categoria = cat.id_categoria
+$sql_productos = "SELECT a.*, cat.nombre_categoria as categoria, u.nombres as nombre_usuario, u.id as id_usuario,
+                COALESCE(s.stock, 0) as stock
+                FROM tb_almacen as a
+                INNER JOIN tb_categorias as cat ON a.id_categoria = cat.id_categoria
                 INNER JOIN tb_usuario as u ON u.id = a.id_usuario
-                WHERE id_producto = :id_producto";
+                LEFT JOIN (
+                    SELECT id_producto, COUNT(*) as stock
+                    FROM stock WHERE estado = 'EN BODEGA'
+                    GROUP BY id_producto
+                ) s ON s.id_producto = a.id_producto
+                WHERE a.id_producto = :id_producto";
 $query_productos = $pdo->prepare($sql_productos);
 $query_productos->bindParam(':id_producto', $id_producto_get, PDO::PARAM_INT);
 $query_productos->execute();
@@ -19,6 +26,7 @@ foreach ($datos_productos as $pro) {
     $descripcion   = $pro['descripcion'];
     $calidad       = $pro['calidad'] ?? '';
     $piezas        = $pro['piezas'] ?? '';
+    $stock         = $pro['stock'];
     $stock_minimo  = $pro['stock_minimo'];
     $stock_maximo  = $pro['stock_maximo'];
     $precio_compra = $pro['precio_compra'];

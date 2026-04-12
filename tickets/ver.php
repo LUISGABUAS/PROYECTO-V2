@@ -86,7 +86,7 @@ $iconos_imp  = ['baja'=>'fa-arrow-down','media'=>'fa-minus','alta'=>'fa-arrow-up
                     $ext = strtolower(pathinfo($a['nombre_original'], PATHINFO_EXTENSION));
                     $es_imagen = in_array($ext, ['jpg','jpeg','png','gif']);
                     $es_video  = in_array($ext, ['mp4','mov','avi']);
-                    $url_archivo = $URL . '/' . $a['ruta'];
+                    $url_archivo = $URL . '/tickets/archivo.php?id=' . $a['id_archivo'];
                     $kb = round($a['tamano'] / 1024, 1);
                   ?>
                   <div class="col-md-4 mb-2">
@@ -98,7 +98,9 @@ $iconos_imp  = ['baja'=>'fa-arrow-down','media'=>'fa-minus','alta'=>'fa-arrow-up
                       <?php elseif ($es_video): ?>
                         <video src="<?= $url_archivo ?>" class="w-100 rounded mb-1" style="max-height:120px;" controls></video>
                       <?php else: ?>
-                        <i class="fas fa-file fa-3x text-muted mb-2"></i>
+                        <a href="<?= $url_archivo ?>" target="_blank" class="d-block mb-2">
+                          <i class="fas fa-file fa-3x text-muted"></i>
+                        </a>
                       <?php endif; ?>
                       <div>
                         <small class="d-block text-truncate" style="max-width:160px;" title="<?= htmlspecialchars($a['nombre_original']) ?>">
@@ -106,7 +108,7 @@ $iconos_imp  = ['baja'=>'fa-arrow-down','media'=>'fa-minus','alta'=>'fa-arrow-up
                         </small>
                         <small class="text-muted"><?= $kb ?> KB</small>
                       </div>
-                      <a href="<?= $url_archivo ?>" download class="btn btn-xs btn-outline-primary mt-1">
+                      <a href="<?= $url_archivo ?>" download="<?= htmlspecialchars($a['nombre_original']) ?>" class="btn btn-xs btn-outline-primary mt-1">
                         <i class="fas fa-download"></i>
                       </a>
                     </div>

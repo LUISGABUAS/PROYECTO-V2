@@ -96,7 +96,7 @@ endif;
 <section class="content">
 <div class="container-fluid">
 
-<div class="card card-warning">
+<div class="card card-primary">
     <div class="card-header">
         <h3 class="card-title">Editar Cliente</h3>
     </div>
@@ -169,9 +169,13 @@ endif;
             <div class="form-group">
                 <label>Colonia</label>
                 <select id="colonia" name="colonia" class="form-control" required>
-                    <option value="<?= htmlspecialchars($cliente['colonia']) ?>" selected>
-                        <?= htmlspecialchars($cliente['colonia']) ?>
-                    </option>
+                    <?php if (!empty($cliente['colonia'])): ?>
+                        <option value="<?= htmlspecialchars($cliente['colonia']) ?>" selected>
+                            <?= htmlspecialchars($cliente['colonia']) ?>
+                        </option>
+                    <?php else: ?>
+                        <option value="">Seleccione colonia</option>
+                    <?php endif; ?>
                 </select>
             </div>
 
@@ -230,7 +234,7 @@ endif;
         </div><!-- card-body -->
 
         <div class="card-footer">
-            <button type="submit" class="btn btn-success">
+            <button type="submit" class="btn btn-primary">
                 <i class="fas fa-save"></i> Guardar Cambios
             </button>
             <a href="index.php" class="btn btn-secondary ml-2">
