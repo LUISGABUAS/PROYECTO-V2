@@ -149,7 +149,7 @@ document.querySelectorAll('.imp-radio').forEach(radio => {
 const dropArea  = document.getElementById('drop_area');
 const inputFile = document.getElementById('archivos_input');
 const listaDiv  = document.getElementById('lista_archivos');
-let archivosSeleccionados = new DataTransfer();
+let archivosSeleccionados = []; // Array simple de File objects
 
 dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.style.background = '#e8f4ff'; dropArea.style.borderColor = '#007bff'; });
 dropArea.addEventListener('dragleave', () => { dropArea.style.background = '#f9f9f9'; dropArea.style.borderColor = '#aaa'; });
@@ -169,22 +169,20 @@ function agregarArchivo(file) {
   if (file.size > maxSize) {
     Swal.fire('Archivo muy grande', `"${file.name}" supera los 20MB`, 'warning'); return;
   }
-  archivosSeleccionados.items.add(file);
-  inputFile.files = archivosSeleccionados.files;
+  // Evitar duplicados por nombre
+  if (archivosSeleccionados.some(f => f.name === file.name && f.size === file.size)) return;
+  archivosSeleccionados.push(file);
   renderLista();
 }
 
 function quitarArchivo(idx) {
-  const nuevo = new DataTransfer();
-  [...archivosSeleccionados.files].forEach((f, i) => { if (i !== idx) nuevo.items.add(f); });
-  archivosSeleccionados = nuevo;
-  inputFile.files = archivosSeleccionados.files;
+  archivosSeleccionados.splice(idx, 1);
   renderLista();
 }
 
 function renderLista() {
   listaDiv.innerHTML = '';
-  [...archivosSeleccionados.files].forEach((f, i) => {
+  archivosSeleccionados.forEach((f, i) => {
     const kb = (f.size / 1024).toFixed(1);
     listaDiv.innerHTML += `
       <div class="d-flex align-items-center justify-content-between border rounded px-3 py-2 mb-1 bg-light">
@@ -197,7 +195,29 @@ function renderLista() {
 }
 
 document.getElementById('form_ticket').addEventListener('submit', function(e) {
+  e.preventDefault();
+
   Swal.fire({ title: 'Enviando ticket...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+  const fd = new FormData(this);
+  fd.set('_ajax', '1');
+  fd.delete('archivos[]');
+
+  // Agregar archivos directamente desde el array (100% confiable)
+  archivosSeleccionados.forEach(f => fd.append('archivos[]', f));
+
+  fetch(this.action, { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        window.location.href = '<?= $URL ?>/tickets';
+      } else {
+        Swal.fire('Error', data.message, 'error');
+      }
+    })
+    .catch(() => {
+      Swal.fire('Error', 'No se pudo enviar el ticket', 'error');
+    });
 });
 </script>
 

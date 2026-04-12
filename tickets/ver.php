@@ -78,9 +78,11 @@ $iconos_imp  = ['baja'=>'fa-arrow-down','media'=>'fa-minus','alta'=>'fa-arrow-up
               </div>
 
               <!-- ARCHIVOS ADJUNTOS -->
-              <?php if (!empty($archivos)): ?>
               <div class="mb-3">
                 <label class="text-muted"><small><i class="fas fa-paperclip"></i> Archivos adjuntos</small></label>
+                <?php if (empty($archivos)): ?>
+                  <p class="text-muted small ml-1 mb-0">Sin archivos adjuntos</p>
+                <?php else: ?>
                 <div class="row">
                   <?php foreach ($archivos as $a):
                     $ext = strtolower(pathinfo($a['nombre_original'], PATHINFO_EXTENSION));
@@ -115,8 +117,8 @@ $iconos_imp  = ['baja'=>'fa-arrow-down','media'=>'fa-minus','alta'=>'fa-arrow-up
                   </div>
                   <?php endforeach; ?>
                 </div>
+                <?php endif; ?>
               </div>
-              <?php endif; ?>
 
               <!-- RESPUESTA DEL TÉCNICO -->
               <?php if (!empty($ticket['respuesta'])): ?>
