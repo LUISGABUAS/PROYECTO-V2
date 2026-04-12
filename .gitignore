@@ -8,3 +8,9 @@ app/logs/*.log
 app/tickets_archivos/*
 !app/tickets_archivos/.gitkeep
 !app/tickets_archivos/.htaccess
+app/comprobantes/*
+!app/comprobantes/.gitkeep
+almacen/img_productos/*
+!almacen/img_productos/.gitkeep
+public/uploads/perfiles/*
+!public/uploads/perfiles/.gitkeep
