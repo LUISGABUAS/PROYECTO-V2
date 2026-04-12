@@ -3,3 +3,8 @@
 .env
 .env.simulation
 .env.production
+app/logs/*.jsonl
+app/logs/*.log
+app/tickets_archivos/*
+!app/tickets_archivos/.gitkeep
+!app/tickets_archivos/.htaccess
