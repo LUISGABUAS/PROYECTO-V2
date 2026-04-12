@@ -1,4 +1,5 @@
 <?php
+ob_start();
 ini_set('display_errors', 0);
 require_once(dirname(__DIR__, 2) . '/config.php');
 include(__DIR__ . '/../helpers/csrf.php');
@@ -8,6 +9,7 @@ csrf_verify();
 $es_ajax = !empty($_POST['_ajax']);
 
 function responder($es_ajax, $ok, $mensaje, $redirect = '') {
+    ob_end_clean();
     if ($es_ajax) {
         header('Content-Type: application/json');
         echo json_encode(['success' => $ok, 'message' => $mensaje, 'redirect' => $redirect]);
