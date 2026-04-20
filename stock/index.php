@@ -83,23 +83,23 @@ endif;
                     <div class="card card-outline card-primary">
                         <div class="card-header">
                             <div class="row">
-                                <div class="col-md-6">
-                                    <button id="select-all" class="btn btn-secondary btn-sm">
-                                        <i class="fa fa-check-double"></i> Seleccionar todos
+                                <div class="col-md-6 d-flex align-items-center flex-wrap" style="gap:6px;">
+                                    <button id="select-not-scanned" class="btn btn-warning btn-sm">
+                                        <i class="fa fa-tag"></i> Seleccionar sin escanear
+                                        <span class="badge badge-light text-dark ml-1"><?= count(array_filter($datos_stock, fn($s)=>$s['estado']=='SIN ESCANEAR')) ?></span>
                                     </button>
-                                    <button id="select-not-scanned" class="btn btn-warning btn-sm ml-1">
-                                        <i class="fa fa-check-square"></i> No escaneados
-                                    </button>
-                                    <button id="deselect-all" class="btn btn-outline-secondary btn-sm ml-1">
-                                        <i class="fa fa-times"></i> Quitar selección
-                                    </button>
-                                    <button id="print-pdf" class="btn btn-primary btn-sm ml-2">
-                                        <i class="fa fa-print"></i> PDF Seleccionados
-                                    </button>
-                                    <button id="print-zebra" class="btn btn-dark btn-sm ml-1">
-                                        <i class="fa fa-barcode"></i> Zebra
-                                    </button>
-                                    <span id="badge-seleccion" class="badge badge-success ml-2" style="display:none;font-size:.85em;"></span>
+                                    <span id="badge-seleccion" class="text-muted small" style="display:none;">
+                                        — <span id="num-seleccion">0</span> seleccionados
+                                        <a href="#" id="deselect-all" class="text-danger ml-1" title="Quitar selección"><i class="fa fa-times-circle"></i></a>
+                                    </span>
+                                    <div id="btns-imprimir" style="display:none;">
+                                        <button id="print-pdf" class="btn btn-primary btn-sm">
+                                            <i class="fa fa-file-pdf"></i> PDF
+                                        </button>
+                                        <button id="print-zebra" class="btn btn-dark btn-sm ml-1">
+                                            <i class="fa fa-barcode"></i> Zebra
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
                                     <h3 class="card-title">
@@ -190,11 +190,17 @@ let idsSeleccionados = [];
 
 function actualizarBadge() {
     const n = idsSeleccionados.length;
-    $('#badge-seleccion').text(n > 0 ? n + ' seleccionados' : '').toggle(n > 0);
+    if (n > 0) {
+        $('#num-seleccion').text(n);
+        $('#badge-seleccion').show();
+        $('#btns-imprimir').show();
+    } else {
+        $('#badge-seleccion').hide();
+        $('#btns-imprimir').hide();
+    }
 }
 
 function obtenerIds() {
-    // Si hay selección manual, úsala; si no, toma los checkboxes visibles
     if (idsSeleccionados.length > 0) return idsSeleccionados;
     let ids = [];
     $('.select-stock:checked').each(function(){ ids.push($(this).val()); });
@@ -212,24 +218,20 @@ $(function () {
 $(document).on('change', '.select-stock', function () {
     $(this).closest('tr').toggleClass('stock-selected', $(this).is(':checked'));
     idsSeleccionados = []; // al marcar manual, limpia la selección masiva
-    actualizarBadge();
-});
-
-// SELECCIONAR TODOS (solo visibles en DOM)
-$('#select-all').click(function(){
-    idsSeleccionados = [];
-    let count = 0;
-    $('.select-stock').each(function(){
-        $(this).prop('checked', true);
-        $(this).closest('tr').addClass('stock-selected');
-        count++;
-    });
-    actualizarBadge();
-    Swal.fire('Listo', count + ' códigos seleccionados (página actual)', 'success');
+    const n = $('.select-stock:checked').length;
+    if (n > 0) {
+        $('#num-seleccion').text(n);
+        $('#badge-seleccion').show();
+        $('#btns-imprimir').show();
+    } else {
+        $('#badge-seleccion').hide();
+        $('#btns-imprimir').hide();
+    }
 });
 
 // QUITAR SELECCIÓN
-$('#deselect-all').click(function(){
+$(document).on('click', '#deselect-all', function(e){
+    e.preventDefault();
     idsSeleccionados = [];
     $('.select-stock').prop('checked', false);
     $('.stock-row').removeClass('stock-selected');
