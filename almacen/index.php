@@ -40,8 +40,13 @@ if (isset($_SESSION['mensaje'])) {
           <div class="col-sm-6">
             <h1 class="m-0">Stock</h1>
           </div><!-- /.col -->
-          <div class="col-sm-6">
-            <ol class="breadcrumb float-sm-right">
+          <div class="col-sm-6 text-right">
+            <?php if(in_array(11, $_SESSION['permisos'])): ?>
+            <a href="faltantes.php" class="btn btn-warning btn-sm mr-2">
+              <i class="fas fa-barcode"></i> Etiquetas Faltantes
+            </a>
+            <?php endif; ?>
+            <ol class="breadcrumb float-sm-right d-none d-md-flex">
               <li class="breadcrumb-item"><a href="<?php echo $URL;?>">Home</a></li>
               <li class="breadcrumb-item active">Starter Page</li>
               <li class="breadcrumb-item active">Stock</li>
