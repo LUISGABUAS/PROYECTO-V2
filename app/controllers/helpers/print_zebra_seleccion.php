@@ -29,7 +29,7 @@ if ($total > $limit && !isset($_GET['offset'])) {
         $desde = $i * $limit + 1;
         $hasta = min(($i + 1) * $limit, $total);
         echo '<a class="btn" href="' . htmlspecialchars($base_url) . '?ids=' . urlencode($ids) . '&offset=' . ($i * $limit) . '" target="_blank">'
-           . "Lote " . ($i + 1) . " (etiquetas $desde–$hasta)"
+           . 'Lote ' . ($i + 1) . ' (etiquetas ' . $desde . '-' . $hasta . ')'
            . '</a>';
     }
     echo '</body></html>';
