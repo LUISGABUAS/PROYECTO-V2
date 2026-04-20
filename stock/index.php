@@ -84,14 +84,20 @@ endif;
                         <div class="card-header">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <button id="select-not-scanned" class="btn btn-warning btn-sm">
-                                        <i class="fa fa-check-square"></i> Seleccionar no escaneados
+                                    <button id="select-all" class="btn btn-secondary btn-sm">
+                                        <i class="fa fa-check-double"></i> Seleccionar todos
+                                    </button>
+                                    <button id="select-not-scanned" class="btn btn-warning btn-sm ml-1">
+                                        <i class="fa fa-check-square"></i> No escaneados
+                                    </button>
+                                    <button id="deselect-all" class="btn btn-outline-secondary btn-sm ml-1">
+                                        <i class="fa fa-times"></i> Quitar selección
                                     </button>
                                     <button id="print-pdf" class="btn btn-primary btn-sm ml-2">
-                                        <i class="fa fa-print"></i> PDF Códigos Seleccionados
+                                        <i class="fa fa-print"></i> PDF Seleccionados
                                     </button>
-                                    <button id="print-zebra" class="btn btn-dark btn-sm ml-2">
-                                        <i class="fa fa-barcode"></i> Imprimir Zebra
+                                    <button id="print-zebra" class="btn btn-dark btn-sm ml-1">
+                                        <i class="fa fa-barcode"></i> Zebra
                                     </button>
                                 </div>
                                 <div class="col-md-6">
@@ -180,6 +186,23 @@ $(function () {
 // RESALTAR FILAS
 $(document).on('change', '.select-stock', function () {
     $(this).closest('tr').toggleClass('stock-selected', $(this).is(':checked'));
+});
+
+// SELECCIONAR TODOS
+$('#select-all').click(function(){
+    let count = 0;
+    $('.select-stock').each(function(){
+        $(this).prop('checked', true);
+        $(this).closest('tr').addClass('stock-selected');
+        count++;
+    });
+    Swal.fire('Listo', count + ' códigos seleccionados', 'success');
+});
+
+// QUITAR SELECCIÓN
+$('#deselect-all').click(function(){
+    $('.select-stock').prop('checked', false);
+    $('.stock-row').removeClass('stock-selected');
 });
 
 // SELECCIONAR NO ESCANEADOS
