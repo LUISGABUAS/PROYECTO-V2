@@ -103,15 +103,25 @@ if ($tipo === 'pdf') {
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $zpl);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 60);
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Accept: application/pdf']);
 
-    $pdf  = curl_exec($ch);
-    $http = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $pdf      = curl_exec($ch);
+    $http     = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curl_err = curl_error($ch);
     curl_close($ch);
 
     if ($http !== 200) {
         ob_end_clean();
-        echo '<p style="font-family:sans-serif;padding:2rem;color:red;">Error al generar PDF en Labelary (HTTP ' . $http . '). Intenta de nuevo.</p>';
+        $total = count($items);
+        echo '<pre style="font-family:sans-serif;padding:2rem;color:red;">';
+        echo "Error Labelary\n";
+        echo "HTTP: $http\n";
+        echo "cURL error: $curl_err\n";
+        echo "Total etiquetas: $total\n";
+        echo "Primeros 500 chars del ZPL:\n" . htmlspecialchars(substr($zpl, 0, 500)) . "\n";
+        echo "Respuesta Labelary:\n" . htmlspecialchars(substr($pdf, 0, 500));
+        echo '</pre>';
         exit;
     }
 
