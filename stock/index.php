@@ -345,6 +345,14 @@ $('#print-zebra').click(function(){
         return;
     }
 
+    // Si hay más de 50, abrir la página de selección de lotes
+    if(selected.length > 50){
+        let url = <?= json_encode($URL . '/app/controllers/helpers/print_zebra_seleccion.php') ?>
+                  + '?ids=' + selected.join(',');
+        window.open(url, '_blank');
+        return;
+    }
+
     let url = <?= json_encode($URL . '/app/controllers/helpers/print_zebra_seleccion.php') ?> 
               + '?ids=' + selected.join(',');
 

@@ -10,6 +10,33 @@ if (!$ids) {
 }
 
 $ids_array = array_map('intval', explode(',', $ids));
+
+// Labelary permite máx 50 etiquetas por petición — paginar con ?offset=N
+$limit  = 50;
+$offset = max(0, (int)($_GET['offset'] ?? 0));
+$total  = count($ids_array);
+
+// Si hay más de 50 y no se pidió offset, mostrar selector de lotes
+if ($total > $limit && !isset($_GET['offset'])) {
+    $base_url = strtok($_SERVER['REQUEST_URI'], '?');
+    $lotes = ceil($total / $limit);
+    echo '<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>Seleccionar lote</title>
+    <style>body{font-family:sans-serif;padding:2rem;} .btn{display:inline-block;margin:.3rem;padding:.6rem 1.2rem;background:#007bff;color:#fff;border-radius:6px;text-decoration:none;font-size:.95rem;} .btn:hover{background:#0056b3;}</style>
+    </head><body>';
+    echo "<h3>📦 {$total} etiquetas — selecciona el lote a imprimir:</h3>";
+    for ($i = 0; $i < $lotes; $i++) {
+        $desde = $i * $limit + 1;
+        $hasta = min(($i + 1) * $limit, $total);
+        echo '<a class="btn" href="' . htmlspecialchars($base_url) . '?ids=' . urlencode($ids) . '&offset=' . ($i * $limit) . '" target="_blank">'
+           . "Lote " . ($i + 1) . " (etiquetas $desde–$hasta)"
+           . '</a>';
+    }
+    echo '</body></html>';
+    exit;
+}
+
+$ids_array = array_slice($ids_array, $offset, $limit);
 $in = str_repeat('?,', count($ids_array) - 1) . '?';
 
 /* ==========================
