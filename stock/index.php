@@ -99,6 +99,7 @@ endif;
                                     <button id="print-zebra" class="btn btn-dark btn-sm ml-1">
                                         <i class="fa fa-barcode"></i> Zebra
                                     </button>
+                                    <span id="badge-seleccion" class="badge badge-success ml-2" style="display:none;font-size:.85em;"></span>
                                 </div>
                                 <div class="col-md-6">
                                     <h3 class="card-title">
@@ -176,6 +177,30 @@ endif;
 
 <!-- SCRIPTS -->
 <script>
+// IDs de TODOS los sin escanear (todas las páginas, generado por PHP)
+const todosSinEscanear = <?= json_encode(
+    array_values(array_map(
+        fn($s) => (int)$s['id_stock'],
+        array_filter($datos_stock, fn($s) => $s['estado'] === 'SIN ESCANEAR')
+    ))
+) ?>;
+
+// IDs seleccionados activos (se usa en PDF y Zebra)
+let idsSeleccionados = [];
+
+function actualizarBadge() {
+    const n = idsSeleccionados.length;
+    $('#badge-seleccion').text(n > 0 ? n + ' seleccionados' : '').toggle(n > 0);
+}
+
+function obtenerIds() {
+    // Si hay selección manual, úsala; si no, toma los checkboxes visibles
+    if (idsSeleccionados.length > 0) return idsSeleccionados;
+    let ids = [];
+    $('.select-stock:checked').each(function(){ ids.push($(this).val()); });
+    return ids;
+}
+
 $(function () {
     $("#example1").DataTable({
         "responsive": true, "lengthChange": false, "autoWidth": false,
@@ -186,44 +211,43 @@ $(function () {
 // RESALTAR FILAS
 $(document).on('change', '.select-stock', function () {
     $(this).closest('tr').toggleClass('stock-selected', $(this).is(':checked'));
+    idsSeleccionados = []; // al marcar manual, limpia la selección masiva
+    actualizarBadge();
 });
 
-// SELECCIONAR TODOS
+// SELECCIONAR TODOS (solo visibles en DOM)
 $('#select-all').click(function(){
+    idsSeleccionados = [];
     let count = 0;
     $('.select-stock').each(function(){
         $(this).prop('checked', true);
         $(this).closest('tr').addClass('stock-selected');
         count++;
     });
-    Swal.fire('Listo', count + ' códigos seleccionados', 'success');
+    actualizarBadge();
+    Swal.fire('Listo', count + ' códigos seleccionados (página actual)', 'success');
 });
 
 // QUITAR SELECCIÓN
 $('#deselect-all').click(function(){
+    idsSeleccionados = [];
     $('.select-stock').prop('checked', false);
     $('.stock-row').removeClass('stock-selected');
+    actualizarBadge();
 });
 
-// SELECCIONAR NO ESCANEADOS
+// SELECCIONAR NO ESCANEADOS — TODOS, incluyendo otras páginas
 $('#select-not-scanned').click(function(){
-    let count = 0;
-
+    // Marcar los visibles en el DOM
     $('.select-stock').each(function(){
-        let checkbox = $(this);
-        let row = checkbox.closest('tr');
-
-        if(checkbox.data('estado') === 'SIN ESCANEAR'){
-            checkbox.prop('checked', true);
-            row.addClass('stock-selected');
-            count++;
-        } else {
-            checkbox.prop('checked', false);
-            row.removeClass('stock-selected');
-        }
+        const esSinEscanear = $(this).data('estado') === 'SIN ESCANEAR';
+        $(this).prop('checked', esSinEscanear);
+        $(this).closest('tr').toggleClass('stock-selected', esSinEscanear);
     });
-
-    Swal.fire('Listo', count + ' productos sin escanear seleccionados', 'success');
+    // Guardar TODOS (incluye páginas no visibles)
+    idsSeleccionados = [...todosSinEscanear];
+    actualizarBadge();
+    Swal.fire('Listo', todosSinEscanear.length + ' sin escanear seleccionados (todas las páginas)', 'success');
 });
 
 
@@ -273,10 +297,7 @@ $(document).on('click', '.delete-stock', function () {
 
 // IMPRIMIR ZEBRA
 $('#print-zebra').click(function(){
-    let selected = [];
-    $('.select-stock:checked').each(function(){
-        selected.push($(this).val());
-    });
+    let selected = obtenerIds();
 
     if(selected.length === 0){
         Swal.fire('Atención','Debes seleccionar al menos un código','warning');
@@ -315,10 +336,7 @@ $('#print-zebra').click(function(){
 <!--PDF SELECCIONADOS-->
 <script>
   $('#print-pdf').click(function(){
-    let selected = [];
-    $('.select-stock:checked').each(function(){
-        selected.push($(this).val());
-    });
+    let selected = obtenerIds();
 
     if(selected.length === 0){
         Swal.fire('Atención','Debes seleccionar al menos un código','warning');
