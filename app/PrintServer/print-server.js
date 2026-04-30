@@ -1,16 +1,33 @@
-const net = require('net');
+const net  = require('net');
 const https = require('https');
+const fs   = require('fs');
+const path = require('path');
+
+// Log a archivo + consola
+const LOG_FILE = path.join(path.dirname(process.execPath || __filename), 'print-server.log');
+function log(msg) {
+    const line = `[${new Date().toISOString()}] ${msg}\n`;
+    process.stdout.write(line);
+    try { fs.appendFileSync(LOG_FILE, line); } catch(_) {}
+}
+
+// Rotar log si supera 2 MB
+try {
+    if (fs.existsSync(LOG_FILE) && fs.statSync(LOG_FILE).size > 2 * 1024 * 1024) {
+        fs.renameSync(LOG_FILE, LOG_FILE + '.old');
+    }
+} catch(_) {}
 
 // Evitar que errores no capturados maten el proceso
 process.on('uncaughtException', (err) => {
-    console.log(`[${new Date().toISOString()}] ❌ Error no capturado: ${err.message}`);
+    log(`❌ Error no capturado: ${err.message}`);
 });
 process.on('unhandledRejection', (reason) => {
-    console.log(`[${new Date().toISOString()}] ❌ Promesa rechazada: ${reason}`);
+    log(`❌ Promesa rechazada: ${reason}`);
 });
 
 const CONFIG = {
-    PRINTER_IP: '192.168.1.107',
+    PRINTER_IP: '192.168.100.107',
     PRINTER_PORT: 9100,
     SERVER: 'pacasyadira.com',
     PATH: '/app/PrintServer',        // ← agrega esto
@@ -88,10 +105,6 @@ function fetchAndPrint() {
         log(`${jobs.length} trabajo(s) en cola`);
         jobs.forEach(job => printJob(job));
     });
-}
-
-function log(msg) {
-    console.log(`[${new Date().toISOString()}] ${msg}`);
 }
 
 log('Print Server iniciado');
