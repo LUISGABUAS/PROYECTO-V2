@@ -344,7 +344,7 @@ function buscarCP(cpValue, opts) {
     const spinner = opts.spinnerId ? document.getElementById(opts.spinnerId) : null;
     if (spinner) spinner.style.display = 'inline-flex';
 
-    fetch(`https://sepomex.icalialabs.com/api/v1/zip_codes?zip_code=${cpValue}`)
+    fetch(`https://sepomex.icalialabs.com/api/v1/zip_codes?zip_code=${cpValue}&per_page=200`)
         .then(r => r.json())
         .then(data => {
             if (spinner) spinner.style.display = 'none';
@@ -360,9 +360,15 @@ function buscarCP(cpValue, opts) {
 
             if (coloniaEl) {
                 coloniaEl.innerHTML = '<option value="">— Selecciona colonia —</option>';
-                data.zip_codes.forEach(item => {
-                    coloniaEl.innerHTML += `<option value="${item.d_asenta}">${item.d_asenta}</option>`;
-                });
+                data.zip_codes
+                    .map(item => item.d_asenta)
+                    .sort((a, b) => a.localeCompare(b, 'es'))
+                    .forEach(nombre => {
+                        const opt = document.createElement('option');
+                        opt.value = nombre;
+                        opt.textContent = nombre;
+                        coloniaEl.appendChild(opt);
+                    });
                 coloniaEl.disabled = false;
             }
             if (municipioEl) municipioEl.value = data.zip_codes[0].d_mnpio;
