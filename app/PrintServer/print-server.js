@@ -27,7 +27,7 @@ process.on('unhandledRejection', (reason) => {
 });
 
 const CONFIG = {
-    PRINTER_IP: '192.168.100.107',
+    PRINTER_IP: '192.168.1.107',
     PRINTER_PORT: 9100,
     SERVER: 'pacasyadira.com',
     PATH: '/app/PrintServer',        // ← agrega esto
