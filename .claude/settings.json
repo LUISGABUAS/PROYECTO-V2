@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(curl -s \"http://localhost/PROYECTO/app/api/cp.php?cp=64000\")"
+    ]
+  }
+}
