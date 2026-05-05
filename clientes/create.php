@@ -154,7 +154,7 @@ document.getElementById('cp').addEventListener('keyup', function () {
 
     if (cp.length !== 5) return;
 
-    fetch(`/PROYECTO/app/api/cp.php?cp=${cp}`)
+    fetch(`<?= $URL ?>/app/api/cp.php?cp=${cp}`)
         .then(res => res.json())
         .then(data => {
 

@@ -344,7 +344,7 @@ function buscarCP(cpValue, opts) {
     const spinner = opts.spinnerId ? document.getElementById(opts.spinnerId) : null;
     if (spinner) spinner.style.display = 'inline-flex';
 
-    fetch(`/PROYECTO/app/api/cp.php?cp=${cpValue}`)
+    fetch(`${URL_APP}/app/api/cp.php?cp=${cpValue}`)
         .then(r => r.json())
         .then(data => {
             if (spinner) spinner.style.display = 'none';
