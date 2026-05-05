@@ -1,7 +1,6 @@
 <?php
 include('../app/config.php');
 include('../layout/sesion.php');
-include('../layout/parte1.php');
 
 if (!in_array(39, $_SESSION['permisos'])) {
     include('../layout/parte2.php'); exit;
@@ -12,6 +11,8 @@ if (isset($_GET['flush'])) {
     @unlink(__DIR__ . '/../app/logs/changelog_cache.json');
     header("Location: index.php"); exit;
 }
+
+include('../layout/parte1.php');
 
 // ============================================================
 // Configuración del repositorio GitHub
