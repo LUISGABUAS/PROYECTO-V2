@@ -344,12 +344,12 @@ function buscarCP(cpValue, opts) {
     const spinner = opts.spinnerId ? document.getElementById(opts.spinnerId) : null;
     if (spinner) spinner.style.display = 'inline-flex';
 
-    fetch(`https://sepomex.icalialabs.com/api/v1/zip_codes?zip_code=${cpValue}&per_page=200`)
+    fetch(`/PROYECTO/app/api/cp.php?cp=${cpValue}`)
         .then(r => r.json())
         .then(data => {
             if (spinner) spinner.style.display = 'none';
 
-            if (!data.zip_codes || data.zip_codes.length === 0) {
+            if (!data || data.length === 0) {
                 Swal.fire('Código Postal no encontrado', 'Verifica que sea correcto', 'warning');
                 return;
             }
@@ -360,19 +360,16 @@ function buscarCP(cpValue, opts) {
 
             if (coloniaEl) {
                 coloniaEl.innerHTML = '<option value="">— Selecciona colonia —</option>';
-                data.zip_codes
-                    .map(item => item.d_asenta)
-                    .sort((a, b) => a.localeCompare(b, 'es'))
-                    .forEach(nombre => {
-                        const opt = document.createElement('option');
-                        opt.value = nombre;
-                        opt.textContent = nombre;
-                        coloniaEl.appendChild(opt);
-                    });
+                data.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.colonia;
+                    opt.textContent = item.colonia;
+                    coloniaEl.appendChild(opt);
+                });
                 coloniaEl.disabled = false;
             }
-            if (municipioEl) municipioEl.value = data.zip_codes[0].d_mnpio;
-            if (estadoEl)    estadoEl.value    = data.zip_codes[0].d_estado;
+            if (municipioEl) municipioEl.value = data[0].municipio;
+            if (estadoEl)    estadoEl.value    = data[0].estado;
         })
         .catch(() => {
             if (spinner) spinner.style.display = 'none';

@@ -154,11 +154,11 @@ document.getElementById('cp').addEventListener('keyup', function () {
 
     if (cp.length !== 5) return;
 
-    fetch(`https://sepomex.icalialabs.com/api/v1/zip_codes?zip_code=${cp}&per_page=200`)
+    fetch(`/PROYECTO/app/api/cp.php?cp=${cp}`)
         .then(res => res.json())
         .then(data => {
 
-            if (!data.zip_codes || data.zip_codes.length === 0) {
+            if (!data || data.length === 0) {
                 alert('Código Postal no encontrado');
                 return;
             }
@@ -167,19 +167,15 @@ document.getElementById('cp').addEventListener('keyup', function () {
             coloniaSelect.innerHTML = '<option value="">Seleccione colonia</option>';
             coloniaSelect.disabled = false;
 
-            // Ordenar colonias alfabéticamente
-            data.zip_codes
-                .map(item => item.d_asenta)
-                .sort((a, b) => a.localeCompare(b, 'es'))
-                .forEach(nombre => {
-                    const opt = document.createElement('option');
-                    opt.value = nombre;
-                    opt.textContent = nombre;
-                    coloniaSelect.appendChild(opt);
-                });
+            data.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.colonia;
+                opt.textContent = item.colonia;
+                coloniaSelect.appendChild(opt);
+            });
 
-            document.getElementById('municipio').value = data.zip_codes[0].d_mnpio;
-            document.getElementById('estado').value = data.zip_codes[0].d_estado;
+            document.getElementById('municipio').value = data[0].municipio;
+            document.getElementById('estado').value = data[0].estado;
         })
         .catch(() => {
             alert('Error consultando Código Postal. Verifica tu conexión e intenta de nuevo.');

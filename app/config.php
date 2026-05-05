@@ -40,6 +40,7 @@ require_once __DIR__ . '/database/migrations/add_foto_perfil_column.php';
 require_once __DIR__ . '/database/migrations/add_id_vendedor_to_clientes.php';
 require_once __DIR__ . '/database/migrations/add_clientes_direcciones_table.php';
 require_once __DIR__ . '/database/migrations/create_tickets_tables.php';
+require_once __DIR__ . '/database/migrations/add_sepomex_table.php';
 
 // ================================================
 // LOGGING CENTRALIZADO
