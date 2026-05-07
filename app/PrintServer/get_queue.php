@@ -21,5 +21,17 @@ if ($auth !== $secret) {
     exit;
 }
 
+// Fetch + marcar como 'procesando' en una sola transacción
+// Así el siguiente ciclo no vuelve a tomar el mismo job
+$pdo->beginTransaction();
+
 $stmt = $pdo->query("SELECT id, zpl FROM print_queue WHERE status = 'pendiente' ORDER BY created_at ASC");
-echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+$jobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+if (!empty($jobs)) {
+    $ids = implode(',', array_map('intval', array_column($jobs, 'id')));
+    $pdo->query("UPDATE print_queue SET status = 'procesando' WHERE id IN ($ids)");
+}
+
+$pdo->commit();
+echo json_encode($jobs);
