@@ -122,10 +122,11 @@ if(in_array(15, $_SESSION['permisos'])):
                       <option value="">-- Elige una venta foranea --</option>
                       <?php
                       $query = "
-                        SELECT v.id_venta, v.fecha, c.nombre_completo
+                        SELECT v.id_venta, v.fecha, c.nombre_completo 
                         FROM tb_ventas v
                         JOIN clientes c ON c.id_cliente = v.cliente
                         WHERE c.tipo_cliente = 'FORANEO'
+                        AND v.guia_pdf IS NOT NULL
                       ";
                       
                       $params = [];
