@@ -79,70 +79,77 @@ try {
     }
 
     /* =========================
-       3️⃣ PROCESAR COMPROBANTE (SI VIENE NUEVO)
+       3️⃣ ELIMINAR COMPROBANTES MARCADOS
     ========================= */
-    $nuevo_comprobante = $comprobante_actual;
+    $carpeta_comp = __DIR__ . '/../../comprobantes/';
+    $ids_eliminar = array_filter($_POST['delete_comprobantes'] ?? [], fn($v) => $v !== '');
 
-    // ✅ VALIDACIÓN CORREGIDA
-    if (isset($_FILES['comprobante']) && $_FILES['comprobante']['error'] === UPLOAD_ERR_OK) {
-
-        $archivo = $_FILES['comprobante'];
-
-        // Tamaño máximo 5MB
-        if ($archivo['size'] > 5 * 1024 * 1024) {
-            throw new Exception('El comprobante supera los 5MB');
-        }
-
-        $ext = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
-        $permitidos = ['pdf','jpg','jpeg','png','doc','docx'];
-
-        if (!in_array($ext, $permitidos)) {
-            throw new Exception('Formato de comprobante no permitido');
-        }
-
-        // Crear carpeta si no existe
-        $carpeta_destino = __DIR__ . '/../../comprobantes/';
-        if (!is_dir($carpeta_destino)) {
-            mkdir($carpeta_destino, 0755, true);
-        }
-
-        // Nombre único
-        $nuevo_comprobante = 'comp_' . $id_venta . '_' . time() . '.' . $ext;
-        $ruta_destino = $carpeta_destino . $nuevo_comprobante;
-
-        if (!move_uploaded_file($archivo['tmp_name'], $ruta_destino)) {
-            throw new Exception('Error al subir el comprobante');
-        }
-
-        // Eliminar comprobante anterior
-        if (!empty($comprobante_actual)) {
-            $ruta_vieja = $carpeta_destino . $comprobante_actual;
-            if (file_exists($ruta_vieja)) {
-                unlink($ruta_vieja);
+    foreach ($ids_eliminar as $comp_id) {
+        if ($comp_id === 'legacy') {
+            // Borrar el campo legacy de tb_ventas
+            if (!empty($comprobante_actual)) {
+                $arch = $carpeta_comp . basename($comprobante_actual);
+                if (file_exists($arch)) unlink($arch);
+            }
+            $pdo->prepare("UPDATE tb_ventas SET comprobante = NULL WHERE id_venta = ?")->execute([$id_venta]);
+        } else {
+            $comp_id = (int)$comp_id;
+            $stmt2 = $pdo->prepare("SELECT ruta FROM tb_ventas_comprobantes WHERE id = ? AND id_venta = ?");
+            $stmt2->execute([$comp_id, $id_venta]);
+            $ruta_comp = $stmt2->fetchColumn();
+            if ($ruta_comp) {
+                $arch = $carpeta_comp . basename($ruta_comp);
+                if (file_exists($arch)) unlink($arch);
+                $pdo->prepare("DELETE FROM tb_ventas_comprobantes WHERE id = ?")->execute([$comp_id]);
             }
         }
     }
 
     /* =========================
-       4️⃣ ACTUALIZAR VENTA
+       4️⃣ SUBIR NUEVOS COMPROBANTES
     ========================= */
-    $stmt = $pdo->prepare("UPDATE tb_ventas
-        SET fecha = ?, cliente = ?, envio = ?, total = ?, comprobante = ?,
-            updated_at = ?
-        WHERE id_venta = ?
-    ");
-    $stmt->execute([
-        $fecha,
-        $cliente,
-        $envio,
-        $total,
-        $nuevo_comprobante,
-        $fechaHora,
-        $id_venta
-    ]);
+    $nuevos_comprobantes = [];
+    $hayArchivos = isset($_FILES['comprobantes']) && is_array($_FILES['comprobantes']['name']);
+    $indicesValidos = [];
+
+    if ($hayArchivos) {
+        foreach ($_FILES['comprobantes']['error'] as $i => $err) {
+            if ($err === UPLOAD_ERR_OK) $indicesValidos[] = $i;
+        }
+    }
+
+    if (!empty($indicesValidos)) {
+        $permitidos = ['pdf','jpg','jpeg','png','doc','docx'];
+        if (!is_dir($carpeta_comp)) mkdir($carpeta_comp, 0755, true);
+
+        foreach ($indicesValidos as $i) {
+            $ext = strtolower(pathinfo($_FILES['comprobantes']['name'][$i], PATHINFO_EXTENSION));
+            if (!in_array($ext, $permitidos)) throw new Exception('Formato de comprobante no permitido');
+            if ($_FILES['comprobantes']['size'][$i] > 5 * 1024 * 1024) throw new Exception('El comprobante supera los 5MB');
+
+            $nombre = 'comp_' . $id_venta . '_' . time() . '_' . $i . '.' . $ext;
+            if (!move_uploaded_file($_FILES['comprobantes']['tmp_name'][$i], $carpeta_comp . $nombre)) {
+                throw new Exception('Error al subir el comprobante');
+            }
+            $nuevos_comprobantes[] = 'app/comprobantes/' . $nombre;
+        }
+
+        foreach ($nuevos_comprobantes as $ruta) {
+            $pdo->prepare("INSERT INTO tb_ventas_comprobantes (id_venta, ruta) VALUES (?, ?)")->execute([$id_venta, $ruta]);
+        }
+    }
 
     /* =========================
-       5️⃣ REEMPLAZAR DETALLE
+       5️⃣ ACTUALIZAR VENTA
+    ========================= */
+    $stmt = $pdo->prepare("UPDATE tb_ventas
+        SET fecha = ?, cliente = ?, envio = ?, total = ?, updated_at = ?
+        WHERE id_venta = ?
+    ");
+    $stmt->execute([$fecha, $cliente, $envio, $total, $fechaHora, $id_venta]);
+
+    /* =========================
+       6️⃣ REEMPLAZAR DETALLE
     ========================= */
     $stmt = $pdo->prepare("DELETE FROM tb_ventas_detalle WHERE id_venta = ?");
     $stmt->execute([$id_venta]);

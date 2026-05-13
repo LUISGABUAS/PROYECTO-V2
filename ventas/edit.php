@@ -116,101 +116,66 @@ Swal.fire({
 
             <hr class="my-3">
 
-            <!-- COMPROBANTE -->
-            <div class="row mb-4" id="fila_comprobante" style="<?= ($venta['tipo_pago'] ?? 'comprobante') === 'efectivo' ? 'display:none;' : '' ?>">
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label><strong><i class="fa fa-file-pdf text-danger"></i> Comprobante</strong></label>
+            <!-- COMPROBANTES -->
+            <div id="fila_comprobante" style="<?= ($venta['tipo_pago'] ?? 'comprobante') === 'efectivo' ? 'display:none;' : '' ?>">
 
-                  <div id="drop_zone"
-                       onclick="document.getElementById('comprobante').click()"
-                       style="border: 2px dashed #aaa; border-radius: 10px; padding: 30px; text-align: center; cursor: pointer; background: #f9f9f9; transition: background 0.2s;">
-                    <i class="fa fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
-                    <p class="mb-1 text-muted">Arrastra el archivo aquí o <strong>haz clic para buscar</strong></p>
-                    <small class="text-muted">PDF, JPG, PNG, DOC, DOCX | Máx. 5MB</small>
+              <h6 class="mb-2"><i class="fa fa-file-pdf text-danger"></i> Comprobantes</h6>
+
+              <?php if (!empty($comprobantes_lista)): ?>
+              <!-- COMPROBANTES EXISTENTES -->
+              <div class="row mb-3" id="comprobantes_existentes">
+                <?php foreach ($comprobantes_lista as $comp):
+                  $arch  = basename($comp['ruta']);
+                  $ext   = strtolower(pathinfo($arch, PATHINFO_EXTENSION));
+                  $ruta  = "../app/comprobantes/" . $arch;
+                  $fisic = realpath(__DIR__ . '/../app/comprobantes/' . $arch);
+                ?>
+                <div class="col-md-4 mb-3" id="comp_card_<?= htmlspecialchars($comp['id']) ?>">
+                  <div class="card border">
+                    <div class="card-body p-2">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <small class="text-muted font-weight-bold">Comprobante</small>
+                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                onclick="marcarEliminar('<?= htmlspecialchars($comp['id']) ?>')"
+                                id="btndelete_<?= htmlspecialchars($comp['id']) ?>">
+                          <i class="fa fa-trash"></i>
+                        </button>
+                      </div>
+                      <input type="hidden" name="delete_comprobantes[]" id="del_<?= htmlspecialchars($comp['id']) ?>" value="" disabled>
+                      <?php if ($fisic && file_exists($fisic)): ?>
+                        <?php if (in_array($ext, ['jpg','jpeg','png'])): ?>
+                          <img src="<?= $ruta ?>" class="img-fluid rounded border" style="max-height:120px; width:100%; object-fit:cover;">
+                        <?php elseif ($ext === 'pdf'): ?>
+                          <embed src="<?= $ruta ?>" type="application/pdf" width="100%" height="120px">
+                        <?php else: ?>
+                          <a href="<?= $ruta ?>" target="_blank" class="btn btn-sm btn-info btn-block mt-1">
+                            <i class="fa fa-file"></i> Ver (<?= strtoupper($ext) ?>)
+                          </a>
+                        <?php endif; ?>
+                      <?php else: ?>
+                        <div class="alert alert-warning p-1 mb-0">
+                          <small><i class="fa fa-exclamation-triangle"></i> Archivo no encontrado</small>
+                        </div>
+                      <?php endif; ?>
+                    </div>
                   </div>
-
-                  <input type="file" name="comprobante" id="comprobante"
-                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                         style="display:none;">
-                  <small class="form-text text-info mt-1">Deja vacío si no deseas cambiar el comprobante actual</small>
-                  <small id="file_error" class="text-danger font-weight-bold" style="display:none;"></small>
                 </div>
-
-                <!-- PREVISUALIZACIÓN NUEVO -->
-                <div id="preview_comprobante" style="display:none;">
-                  <div class="d-flex justify-content-between align-items-center mb-1">
-                    <strong>Nuevo comprobante:</strong>
-                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="cancelarComprobante()">
-                      <i class="fa fa-times"></i> Quitar
-                    </button>
-                  </div>
-                  <div class="border rounded p-2" id="preview_contenido"></div>
-                </div>
+                <?php endforeach; ?>
               </div>
-            </div>
-
-      <!-- COMPROBANTE ACTUAL -->
-      <?php if (!empty($venta['comprobante'])): ?>
-      <div class="row mb-3" id="comprobante_actual">
-        <div class="col-md-6">
-          <label><strong>Comprobante actual:</strong></label>
-          <hr>
-
-          <?php
-            $ext = pathinfo($venta['comprobante'], PATHINFO_EXTENSION);
-            
-            // 🔥 SOLUCIÓN: Siempre construir desde la raíz del proyecto
-            // Limpiar la ruta de la BD (quitar "app/" si existe al inicio)
-            $archivo = basename($venta['comprobante']);
-            
-            // Ruta para el navegador (desde ventas/ subir a raíz y bajar a app/comprobantes/)
-            $ruta = "../app/comprobantes/" . $archivo;
-            
-            // Ruta física absoluta para verificar existencia
-            $ruta_fisica = realpath(__DIR__ . '/../app/comprobantes/' . $archivo);
-          ?>
-
-          <?php if ($ruta_fisica && file_exists($ruta_fisica)): ?>
-            <?php if (in_array(strtolower($ext), ['jpg','jpeg','png'])): ?>
-              <img src="<?= $ruta ?>" class="img-responsive border" style="max-height:300px; max-width:100%;" alt="Comprobante">
-            <?php elseif (strtolower($ext) === 'pdf'): ?>
-              <embed src="<?= $ruta ?>" type="application/pdf" width="100%" height="300px">
-            <?php else: ?>
-              <a href="<?= $ruta ?>" target="_blank" class="btn btn-sm btn-info">
-                <i class="fa fa-file"></i> Ver comprobante (<?= strtoupper($ext) ?>)
-              </a>
-            <?php endif; ?>
-          <?php else: ?>
-            <div class="alert alert-danger">
-              <i class="fa fa-exclamation-triangle"></i> 
-              <strong>Archivo no encontrado</strong><br>
-              <small class="text-muted">Archivo: <?= htmlspecialchars($archivo) ?></small><br>
-              <small class="text-muted">Buscado en: <?= htmlspecialchars(__DIR__ . '/../app/comprobantes/' . $archivo) ?></small>
-            </div>
-          <?php endif; ?>
-        </div>
-      </div>
-      <?php else: ?>
-      <div class="row mb-3" id="comprobante_actual">
-        <div class="col-md-6">
-          <div class="alert alert-warning">
-            <i class="fa fa-exclamation-triangle"></i> No hay comprobante registrado
-          </div>
-        </div>
-      </div>
-      <?php endif; ?>
-
-            <!-- PREVISUALIZACIÓN NUEVO COMPROBANTE -->
-            <div class="row mb-3" id="preview_comprobante" style="display:none;">
-              <div class="col-md-6">
-                <label><strong><i class="fa fa-eye text-success"></i> Nuevo comprobante:</strong></label>
-                <hr>
-                <div id="preview_contenido" class="border p-2 bg-light"></div>
-                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="cancelarComprobante()">
-                  <i class="fa fa-times"></i> Cancelar cambio
-                </button>
+              <?php else: ?>
+              <div class="alert alert-warning mb-3">
+                <i class="fa fa-exclamation-triangle"></i> No hay comprobantes registrados
               </div>
+              <?php endif; ?>
+
+              <!-- NUEVOS COMPROBANTES -->
+              <label class="mb-1"><strong>Agregar comprobante(s):</strong></label>
+              <div id="slots_comprobantes" class="row" style="margin:0;"></div>
+              <button type="button" class="btn btn-outline-secondary btn-sm mt-2" onclick="agregarSlotComprobante()">
+                <i class="fa fa-plus"></i> Agregar comprobante
+              </button>
+              <small class="form-text text-info d-block mt-1">Los campos vacíos se ignoran</small>
+
             </div>
 
             <hr class="my-3">
@@ -340,15 +305,12 @@ function seleccionarPago(tipo){
 }
 
 function actualizarComprobante(){
-  const pago             = document.getElementById('tipo_pago').value;
-  const filaComprobante  = document.getElementById('fila_comprobante');
-  const inputComprobante = document.getElementById('comprobante');
+  const pago            = document.getElementById('tipo_pago').value;
+  const filaComprobante = document.getElementById('fila_comprobante');
 
   if(pago === 'efectivo'){
     filaComprobante.style.display = 'none';
-    inputComprobante.value        = '';
-    document.getElementById('preview_comprobante').style.display = 'none';
-    document.getElementById('preview_contenido').innerHTML       = '';
+    document.querySelectorAll('[name="comprobantes[]"]').forEach(fi => fi.value = '');
   } else {
     filaComprobante.style.display = 'block';
   }
@@ -370,39 +332,100 @@ function actualizarPorEnvio(){
 }
 
 /* =========================
-   DRAG & DROP + PREVIEW COMPROBANTE
+   MULTI-COMPROBANTE: SLOTS DINÁMICOS
 ========================= */
-const dropZone  = document.getElementById('drop_zone');
-const inputFile = document.getElementById('comprobante');
 
-dropZone.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  dropZone.style.background  = '#e8f4ff';
-  dropZone.style.borderColor = '#007bff';
-});
+let _slotIdx = 0;
 
-dropZone.addEventListener('dragleave', () => {
-  dropZone.style.background  = '#f9f9f9';
-  dropZone.style.borderColor = '#aaa';
-});
+function _htmlSlot(idx) {
+  return `
+  <div class="col-md-4 mb-3 comprobante-slot" id="cslot_${idx}">
+    <div class="card border h-100">
+      <div class="card-body p-2">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <small class="text-muted font-weight-bold numero-slot"></small>
+          <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarSlot('cslot_${idx}')">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+        <div id="cdz_${idx}"
+             onclick="document.getElementById('cfile_${idx}').click()"
+             style="border:2px dashed #aaa; border-radius:8px; padding:20px; text-align:center; cursor:pointer; background:#f9f9f9; transition:background .2s;">
+          <i class="fa fa-cloud-upload-alt fa-lg text-muted mb-1"></i>
+          <p class="mb-0 small text-muted">Arrastra o <strong>haz clic</strong></p>
+          <small class="text-muted">PDF, JPG, PNG, DOC | 5MB</small>
+        </div>
+        <input type="file" name="comprobantes[]" id="cfile_${idx}"
+               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none;">
+        <div id="cprev_${idx}" style="display:none;" class="mt-2">
+          <div id="cpcont_${idx}" class="border rounded p-1"></div>
+        </div>
+        <small id="cerr_${idx}" class="text-danger" style="display:none;"></small>
+      </div>
+    </div>
+  </div>`;
+}
 
-dropZone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  dropZone.style.background  = '#f9f9f9';
-  dropZone.style.borderColor = '#aaa';
-  const file = e.dataTransfer.files[0];
-  if (file) procesarArchivo(file);
-});
+function agregarSlotComprobante() {
+  _slotIdx++;
+  const idx = _slotIdx;
+  document.getElementById('slots_comprobantes').insertAdjacentHTML('beforeend', _htmlSlot(idx));
+  _renumerarSlots();
 
-inputFile.addEventListener('change', function () {
-  if (this.files[0]) procesarArchivo(this.files[0]);
-});
+  const dz = document.getElementById('cdz_' + idx);
+  const fi = document.getElementById('cfile_' + idx);
+
+  dz.addEventListener('dragover',  e => { e.preventDefault(); dz.style.background = '#e8f4ff'; dz.style.borderColor = '#007bff'; });
+  dz.addEventListener('dragleave', ()=> { dz.style.background = '#f9f9f9'; dz.style.borderColor = '#aaa'; });
+  dz.addEventListener('drop',      e => {
+    e.preventDefault(); dz.style.background = '#f9f9f9'; dz.style.borderColor = '#aaa';
+    if (e.dataTransfer.files[0]) _procesarArchivoSlot(e.dataTransfer.files[0], idx);
+  });
+  fi.addEventListener('change', function() {
+    if (this.files[0]) _procesarArchivoSlot(this.files[0], idx);
+  });
+}
+
+function eliminarSlot(slotId) {
+  document.getElementById(slotId).remove();
+  _renumerarSlots();
+}
+
+function _renumerarSlots() {
+  document.querySelectorAll('.comprobante-slot .numero-slot').forEach((el, i) => {
+    el.textContent = 'Nuevo #' + (i + 1);
+  });
+}
+
+function marcarEliminar(compId) {
+  const card  = document.getElementById('comp_card_' + compId);
+  const input = document.getElementById('del_' + compId);
+  const btn   = document.getElementById('btndelete_' + compId);
+
+  if (input.disabled) {
+    // Marcar para borrar
+    input.value    = compId;
+    input.disabled = false;
+    card.style.opacity = '0.4';
+    card.style.border  = '2px solid red';
+    btn.innerHTML  = '<i class="fa fa-undo"></i>';
+    btn.title      = 'Deshacer';
+  } else {
+    // Desmarcar
+    input.value    = '';
+    input.disabled = true;
+    card.style.opacity = '1';
+    card.style.border  = '';
+    btn.innerHTML  = '<i class="fa fa-trash"></i>';
+    btn.title      = '';
+  }
+}
 
 async function comprimirImagen(file, maxWidth = 1200, quality = 0.82) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     if (!file.type.startsWith('image/')) { resolve(file); return; }
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = ev => {
       const img = new Image();
       img.onload = () => {
         let { width, height } = img;
@@ -412,11 +435,11 @@ async function comprimirImagen(file, maxWidth = 1200, quality = 0.82) {
         canvas.width  = Math.round(width  * scale);
         canvas.height = Math.round(height * scale);
         canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob((blob) => {
-          const resultado = blob && blob.size < file.size
+        canvas.toBlob(blob => {
+          const res = blob && blob.size < file.size
             ? new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg', lastModified: Date.now() })
             : file;
-          resolve(resultado);
+          resolve(res);
         }, 'image/jpeg', quality);
       };
       img.src = ev.target.result;
@@ -425,88 +448,48 @@ async function comprimirImagen(file, maxWidth = 1200, quality = 0.82) {
   });
 }
 
-async function procesarArchivo(file) {
-  dropZone.innerHTML = `
-    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-    <span class="text-muted ms-2"> Procesando...</span>`;
-
-  const fileOptimizado = await comprimirImagen(file);
-  const dt = new DataTransfer();
-  dt.items.add(fileOptimizado);
-  inputFile.files = dt.files;
-  mostrarPreview(fileOptimizado);
+async function _procesarArchivoSlot(file, idx) {
+  const dz = document.getElementById('cdz_' + idx);
+  const fi = document.getElementById('cfile_' + idx);
+  dz.innerHTML = `<div class="spinner-border spinner-border-sm text-primary"></div> <span class="small text-muted">Procesando...</span>`;
+  const opt = await comprimirImagen(file);
+  const dt  = new DataTransfer();
+  dt.items.add(opt);
+  fi.files = dt.files;
+  _mostrarPreviewSlot(opt, idx);
 }
 
-function mostrarPreview(file) {
-  const preview   = document.getElementById('preview_comprobante');
-  const contenido = document.getElementById('preview_contenido');
-  const errorMsg  = document.getElementById('file_error');
-  const actual    = document.getElementById('comprobante_actual');
+function _mostrarPreviewSlot(file, idx) {
+  const dz   = document.getElementById('cdz_'   + idx);
+  const fi   = document.getElementById('cfile_' + idx);
+  const prev = document.getElementById('cprev_' + idx);
+  const cont = document.getElementById('cpcont_'+ idx);
+  const err  = document.getElementById('cerr_'  + idx);
+  cont.innerHTML = ''; prev.style.display = 'none'; err.style.display = 'none';
 
-  contenido.innerHTML    = '';
-  preview.style.display  = 'none';
-  errorMsg.style.display = 'none';
-
-  const maxSize = 5 * 1024 * 1024;
-  if (file.size > maxSize) {
-    errorMsg.textContent   = '❌ El archivo excede el tamaño máximo de 5MB';
-    errorMsg.style.display = 'block';
-    inputFile.value = '';
-    return;
+  if (file.size > 5 * 1024 * 1024) {
+    err.textContent = '❌ Máximo 5MB'; err.style.display = 'block'; fi.value = ''; return;
   }
-
-  const tiposPermitidos = [
-    'image/jpeg', 'image/jpg', 'image/png', 'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-  ];
-  if (!tiposPermitidos.includes(file.type)) {
-    errorMsg.textContent   = '❌ Formato de archivo no permitido';
-    errorMsg.style.display = 'block';
-    inputFile.value = '';
-    return;
+  const tipos = ['image/jpeg','image/jpg','image/png','application/pdf',
+                 'application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+  if (!tipos.includes(file.type)) {
+    err.textContent = '❌ Formato no permitido'; err.style.display = 'block'; fi.value = ''; return;
   }
-
-  // Ocultar comprobante actual y mostrar nuevo
-  if (actual) actual.style.display = 'none';
-
-  dropZone.innerHTML = `
-    <i class="fa fa-check-circle fa-2x text-success mb-2"></i>
-    <p class="mb-0 text-success font-weight-bold">${file.name}</p>
-    <small class="text-muted">${(file.size / 1024).toFixed(2)} KB — haz clic para cambiar</small>`;
-
+  dz.innerHTML = `
+    <i class="fa fa-check-circle fa-lg text-success mb-1"></i>
+    <p class="mb-0 text-success small font-weight-bold">${file.name}</p>
+    <small class="text-muted">${(file.size/1024).toFixed(1)} KB — clic para cambiar</small>`;
   if (file.type.startsWith('image/')) {
-    const reader = new FileReader();
-    reader.onload = e => {
-      contenido.innerHTML   = `<img src="${e.target.result}" class="img-fluid rounded" style="max-height:300px;">`;
-      preview.style.display = 'block';
-    };
-    reader.readAsDataURL(file);
+    const r = new FileReader();
+    r.onload = e => { cont.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" style="max-height:130px;">`; prev.style.display = 'block'; };
+    r.readAsDataURL(file);
   } else if (file.type === 'application/pdf') {
-    const url             = URL.createObjectURL(file);
-    contenido.innerHTML   = `<embed src="${url}" type="application/pdf" width="100%" height="300px">`;
-    preview.style.display = 'block';
+    cont.innerHTML = `<embed src="${URL.createObjectURL(file)}" type="application/pdf" width="100%" height="130px">`;
+    prev.style.display = 'block';
   } else {
-    contenido.innerHTML   = `
-      <div class="alert alert-success mb-0">
-        <i class="fa fa-file"></i> <strong>${file.name}</strong><br>
-        <small>${(file.size / 1024).toFixed(2)} KB</small>
-      </div>`;
-    preview.style.display = 'block';
+    cont.innerHTML = `<div class="alert alert-success mb-0 p-2"><i class="fa fa-file"></i> <strong>${file.name}</strong></div>`;
+    prev.style.display = 'block';
   }
-}
-
-function cancelarComprobante() {
-  inputFile.value = '';
-  document.getElementById('preview_comprobante').style.display = 'none';
-  document.getElementById('preview_contenido').innerHTML       = '';
-  document.getElementById('file_error').style.display         = 'none';
-  const actual = document.getElementById('comprobante_actual');
-  if (actual) actual.style.display = 'block';
-  dropZone.innerHTML = `
-    <i class="fa fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
-    <p class="mb-1 text-muted">Arrastra el archivo aquí o <strong>haz clic para buscar</strong></p>
-    <small class="text-muted">PDF, JPG, PNG, DOC, DOCX | Máx. 5MB</small>`;
 }
 
 /* =========================

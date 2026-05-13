@@ -48,9 +48,14 @@ $stmt->execute([$id_venta]);
 $detalle = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 /* =========================
-   DEBUG: Verificar si el comprobante existe
+   COMPROBANTES (nueva tabla + legacy)
 ========================= */
-// Puedes descomentar esto temporalmente para debug:
-// error_log("Comprobante en BD: " . ($venta['comprobante'] ?? 'NULL'));
-// error_log("Ruta esperada: ../../comprobantes/" . $venta['comprobante']);
+$stmt = $pdo->prepare("SELECT id, ruta FROM tb_ventas_comprobantes WHERE id_venta = ? ORDER BY id ASC");
+$stmt->execute([$id_venta]);
+$comprobantes_lista = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Fallback: si no hay en nueva tabla pero sí en columna legacy, mostrarla igual
+if (empty($comprobantes_lista) && !empty($venta['comprobante'])) {
+    $comprobantes_lista = [['id' => 'legacy', 'ruta' => $venta['comprobante']]];
+}
 ?>
