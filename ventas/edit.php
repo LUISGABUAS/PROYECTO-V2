@@ -125,10 +125,9 @@ Swal.fire({
               <!-- COMPROBANTES EXISTENTES -->
               <div class="row mb-3" id="comprobantes_existentes">
                 <?php foreach ($comprobantes_lista as $comp):
-                  $arch  = basename($comp['ruta']);
-                  $ext   = strtolower(pathinfo($arch, PATHINFO_EXTENSION));
-                  $ruta  = "../app/comprobantes/" . $arch;
-                  $fisic = realpath(__DIR__ . '/../app/comprobantes/' . $arch);
+                  $arch = basename($comp['ruta']);
+                  $ext  = strtolower(pathinfo($arch, PATHINFO_EXTENSION));
+                  $ruta = "../app/comprobantes/" . $arch;
                 ?>
                 <div class="col-md-4 mb-3" id="comp_card_<?= htmlspecialchars($comp['id']) ?>">
                   <div class="card border">
@@ -142,25 +141,30 @@ Swal.fire({
                         </button>
                       </div>
                       <input type="hidden" name="delete_comprobantes[]" id="del_<?= htmlspecialchars($comp['id']) ?>" value="" disabled>
-                      <?php if ($fisic && file_exists($fisic)): ?>
-                        <?php if (in_array($ext, ['jpg','jpeg','png'])): ?>
-                          <img src="<?= $ruta ?>" class="img-fluid rounded border" style="max-height:120px; width:100%; object-fit:cover;">
-                        <?php elseif ($ext === 'pdf'): ?>
-                          <embed src="<?= $ruta ?>" type="application/pdf" width="100%" height="120px">
-                        <?php else: ?>
-                          <a href="<?= $ruta ?>" target="_blank" class="btn btn-sm btn-info btn-block mt-1">
-                            <i class="fa fa-file"></i> Ver (<?= strtoupper($ext) ?>)
-                          </a>
-                        <?php endif; ?>
+                      <?php if (in_array($ext, ['jpg','jpeg','png'])): ?>
+                        <img src="<?= $ruta ?>" class="img-fluid rounded border" style="max-height:120px; width:100%; object-fit:cover;"
+                             onerror="this.replaceWith(document.getElementById('tpl_broken').content.cloneNode(true))">
+                      <?php elseif ($ext === 'pdf'): ?>
+                        <embed src="<?= $ruta ?>" type="application/pdf" width="100%" height="120px">
+                        <a href="<?= $ruta ?>" target="_blank" class="btn btn-sm btn-outline-secondary btn-block mt-1">
+                          <i class="fa fa-external-link-alt"></i> Abrir PDF
+                        </a>
                       <?php else: ?>
-                        <div class="alert alert-warning p-1 mb-0">
-                          <small><i class="fa fa-exclamation-triangle"></i> Archivo no encontrado</small>
-                        </div>
+                        <a href="<?= $ruta ?>" target="_blank" class="btn btn-sm btn-info btn-block mt-1">
+                          <i class="fa fa-file"></i> Ver (<?= strtoupper($ext) ?>)
+                        </a>
                       <?php endif; ?>
                     </div>
                   </div>
                 </div>
                 <?php endforeach; ?>
+
+                <!-- Template para imagen rota -->
+                <template id="tpl_broken">
+                  <div class="alert alert-secondary p-1 mb-0">
+                    <small><i class="fa fa-image"></i> Vista previa no disponible en este entorno</small>
+                  </div>
+                </template>
               </div>
               <?php else: ?>
               <div class="alert alert-warning mb-3">
