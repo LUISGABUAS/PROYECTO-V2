@@ -137,6 +137,16 @@ Swal.fire({
 
                 </div>
 
+                <!-- DIRECCIÓN DEL CLIENTE -->
+                <div class="row" id="fila_dir_cliente" style="display:none;">
+                  <div class="col-md-12">
+                    <div class="alert alert-secondary py-2 mb-0" style="font-size:.9rem;">
+                      <i class="fas fa-map-marker-alt text-danger"></i>
+                      <strong>Dirección:</strong> <span id="dir_cliente_texto"></span>
+                    </div>
+                  </div>
+                </div>
+
                 <hr class="my-3">
 
                 <!-- COMPROBANTE(S) -->
@@ -678,13 +688,31 @@ $(document).ready(function(){
     cargarDireccionesCliente(this.value);
   });
 
+  let _dirData = [];
+
+  function mostrarDireccion(dir) {
+    const fila = document.getElementById('fila_dir_cliente');
+    const txt  = document.getElementById('dir_cliente_texto');
+    if (!dir) { fila.style.display = 'none'; return; }
+    txt.textContent = `${dir.calle_numero}, ${dir.colonia}, ${dir.municipio}, ${dir.estado} CP ${dir.cp}`;
+    fila.style.display = 'block';
+  }
+
+  document.getElementById('select_direccion').addEventListener('change', function() {
+    const id  = parseInt(this.value);
+    const dir = _dirData.find(d => d.id == id);
+    mostrarDireccion(dir || null);
+  });
+
   function cargarDireccionesCliente(idCliente) {
     const colDir = document.getElementById('col_direccion_entrega');
     const selDir = document.getElementById('select_direccion');
+    _dirData = [];
 
     if (!idCliente) {
       colDir.style.display = 'none';
       selDir.innerHTML = '';
+      mostrarDireccion(null);
       return;
     }
 
@@ -693,14 +721,23 @@ $(document).ready(function(){
     })
     .then(r => r.json())
     .then(data => {
-      if (!data.success || data.data.length <= 1) {
+      if (!data.success || !data.data.length) {
         colDir.style.display = 'none';
         selDir.innerHTML = '';
-        if (data.success && data.data.length === 1) {
-          selDir.innerHTML = `<option value="${data.data[0].id}" selected></option>`;
-        }
+        mostrarDireccion(null);
         return;
       }
+
+      _dirData = data.data;
+      const principal = data.data.find(d => d.es_principal == 1) || data.data[0];
+      mostrarDireccion(principal);
+
+      if (data.data.length <= 1) {
+        colDir.style.display = 'none';
+        selDir.innerHTML = `<option value="${data.data[0].id}" selected></option>`;
+        return;
+      }
+
       selDir.innerHTML = data.data.map(dir =>
         `<option value="${dir.id}" ${dir.es_principal == 1 ? 'selected' : ''}>
           ${dir.es_principal == 1 ? '★ ' : ''}${dir.calle_numero} — ${dir.colonia}, ${dir.municipio}
@@ -710,6 +747,7 @@ $(document).ready(function(){
     })
     .catch(() => {
       colDir.style.display = 'none';
+      mostrarDireccion(null);
     });
   }
 });

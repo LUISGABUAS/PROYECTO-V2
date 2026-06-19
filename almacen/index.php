@@ -45,6 +45,9 @@ if (isset($_SESSION['mensaje'])) {
             <a href="faltantes.php" class="btn btn-warning btn-sm mr-2">
               <i class="fas fa-barcode"></i> Etiquetas Faltantes
             </a>
+            <a href="etiquetas_bodega.php" class="btn btn-success btn-sm mr-2">
+              <i class="fas fa-box"></i> Etiquetas en Bodega
+            </a>
             <?php endif; ?>
             <ol class="breadcrumb float-sm-right d-none d-md-flex">
               <li class="breadcrumb-item"><a href="<?php echo $URL;?>">Home</a></li>
