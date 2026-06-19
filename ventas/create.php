@@ -81,14 +81,6 @@ Swal.fire({
                     </div>
                   </div>
 
-                  <!-- DIRECCIÓN DE ENTREGA (visible solo si el cliente tiene +1 dirección) -->
-                  <div class="col-md-4" id="col_direccion_entrega" style="display:none;">
-                    <div class="form-group">
-                      <label><strong>Dirección de entrega</strong></label>
-                      <select name="id_direccion_entrega" id="select_direccion" class="form-control"></select>
-                    </div>
-                  </div>
-
                   <!-- ENVÍO -->
                   <div class="col-md-2">
                     <div class="form-group">
@@ -135,6 +127,16 @@ Swal.fire({
                     </div>
                   </div>
 
+                </div>
+
+                <!-- SELECTOR DE DIRECCIÓN DE ENTREGA (solo si cliente tiene +1 dirección) -->
+                <div class="row" id="fila_direccion_entrega" style="display:none;">
+                  <div class="col-md-6">
+                    <div class="form-group mb-2">
+                      <label><strong><i class="fas fa-map-marker-alt text-danger"></i> Dirección de entrega</strong></label>
+                      <select name="id_direccion_entrega" id="select_direccion" class="form-control"></select>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- DIRECCIÓN DEL CLIENTE -->
@@ -705,12 +707,12 @@ $(document).ready(function(){
   });
 
   function cargarDireccionesCliente(idCliente) {
-    const colDir = document.getElementById('col_direccion_entrega');
-    const selDir = document.getElementById('select_direccion');
+    const filaDir = document.getElementById('fila_direccion_entrega');
+    const selDir  = document.getElementById('select_direccion');
     _dirData = [];
 
     if (!idCliente) {
-      colDir.style.display = 'none';
+      filaDir.style.display = 'none';
       selDir.innerHTML = '';
       mostrarDireccion(null);
       return;
@@ -722,7 +724,7 @@ $(document).ready(function(){
     .then(r => r.json())
     .then(data => {
       if (!data.success || !data.data.length) {
-        colDir.style.display = 'none';
+        filaDir.style.display = 'none';
         selDir.innerHTML = '';
         mostrarDireccion(null);
         return;
@@ -733,7 +735,7 @@ $(document).ready(function(){
       mostrarDireccion(principal);
 
       if (data.data.length <= 1) {
-        colDir.style.display = 'none';
+        filaDir.style.display = 'none';
         selDir.innerHTML = `<option value="${data.data[0].id}" selected></option>`;
         return;
       }
@@ -743,10 +745,10 @@ $(document).ready(function(){
           ${dir.es_principal == 1 ? '★ ' : ''}${dir.calle_numero} — ${dir.colonia}, ${dir.municipio}
         </option>`
       ).join('');
-      colDir.style.display = 'block';
+      filaDir.style.display = 'block';
     })
     .catch(() => {
-      colDir.style.display = 'none';
+      filaDir.style.display = 'none';
       mostrarDireccion(null);
     });
   }
