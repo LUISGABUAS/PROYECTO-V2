@@ -107,8 +107,8 @@ try {
             $stocks = $stmt_stock->fetchAll(PDO::FETCH_COLUMN);
 
             foreach ($stocks as $id_stock) {
-                $pdo->prepare("UPDATE stock SET estado = 'VENDIDO', id_venta = ? WHERE id_stock = ?")
-                    ->execute([$id_venta, $id_stock]);
+                $pdo->prepare("UPDATE stock SET estado = 'VENDIDO', fecha_salida = NOW() WHERE id_stock = ?")
+                    ->execute([$id_stock]);
             }
         }
     }
