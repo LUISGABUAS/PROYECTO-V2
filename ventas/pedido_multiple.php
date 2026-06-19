@@ -89,7 +89,7 @@ Swal.fire({
                     <small>PDF, JPG, PNG | 5MB</small></p>
                   </div>
                   <input type="file" name="comprobante" id="file_comprobante"
-                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none;" required>
+                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none;">
                   <div id="prev_comprobante" class="mt-2" style="display:none;"></div>
                 </div>
               </div>
