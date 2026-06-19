@@ -268,13 +268,13 @@ function confirmarEliminar(id, nombre) {
           text: 'Copy',
           extend: 'copy',
           exportOptions: {
-            columns: ':visible',
+            columns: ':visible:not(.no-export)',
           modifier: {
             search: 'applied',
             order: 'applied',
             page: 'all'
           }
-        } 
+        }
         },{
           text: 'Excel',
           extend: 'excel',
@@ -290,24 +290,24 @@ function confirmarEliminar(id, nombre) {
           text: 'PDF',
           extend: 'pdf',
           exportOptions: {
-            columns: ':visible',
+            columns: ':visible:not(.no-export)',
           modifier: {
             search: 'applied',
             order: 'applied',
             page: 'all'
           }
-        } 
+        }
         },{
           text: 'Print',
           extend: 'print',
           exportOptions: {
-            columns: ':visible',
+            columns: ':visible:not(.no-export)',
           modifier: {
             search: 'applied',
             order: 'applied',
             page: 'all'
           }
-        } 
+        }
         }]
       },
       {
