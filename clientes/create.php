@@ -86,28 +86,26 @@ endif;
 
         <!-- CP -->
         <div class="form-group">
-            <label>Código Postal</label>
-            <input type="text" id="cp" name="cp" class="form-control" maxlength="5" required>
+            <label>Código Postal <span class="text-muted">(Opcional — ayuda a autocompletar)</span></label>
+            <input type="text" id="cp" name="cp" class="form-control" maxlength="5" placeholder="Ej. 64000">
         </div>
 
         <!-- COLONIA -->
         <div class="form-group">
             <label>Colonia</label>
-            <select id="colonia" name="colonia" class="form-control" disabled required>
-                <option value="">Seleccione colonia</option>
-            </select>
+            <input type="text" id="colonia" name="colonia" class="form-control" required placeholder="Ej. Centro, Las Palmas...">
         </div>
 
         <!-- MUNICIPIO -->
         <div class="form-group">
             <label>Municipio</label>
-            <input type="text" id="municipio" name="municipio" class="form-control" readonly>
+            <input type="text" id="municipio" name="municipio" class="form-control" required placeholder="Ej. Monterrey">
         </div>
 
         <!-- ESTADO -->
         <div class="form-group">
             <label>Estado</label>
-            <input type="text" id="estado" name="estado" class="form-control" readonly>
+            <input type="text" id="estado" name="estado" class="form-control" required placeholder="Ej. Nuevo León">
         </div>
 
         <!-- TELÉFONO -->
@@ -146,40 +144,21 @@ endif;
 </section>
 </div>
 
-<!-- AUTOCOMPLETAR CP -->
+<!-- AUTOCOMPLETAR CP (opcional) -->
 <script>
 document.getElementById('cp').addEventListener('keyup', function () {
-
     const cp = this.value.trim();
-
     if (cp.length !== 5) return;
 
     fetch(`<?= $URL ?>/app/api/cp.php?cp=${cp}`)
         .then(res => res.json())
         .then(data => {
-
-            if (!data || data.length === 0) {
-                alert('Código Postal no encontrado');
-                return;
-            }
-
-            const coloniaSelect = document.getElementById('colonia');
-            coloniaSelect.innerHTML = '<option value="">Seleccione colonia</option>';
-            coloniaSelect.disabled = false;
-
-            data.forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item.colonia;
-                opt.textContent = item.colonia;
-                coloniaSelect.appendChild(opt);
-            });
-
+            if (!data || data.length === 0) return;
+            document.getElementById('colonia').value  = data[0].colonia;
             document.getElementById('municipio').value = data[0].municipio;
-            document.getElementById('estado').value = data[0].estado;
+            document.getElementById('estado').value    = data[0].estado;
         })
-        .catch(() => {
-            alert('Error consultando Código Postal. Verifica tu conexión e intenta de nuevo.');
-        });
+        .catch(() => {});
 });
 </script>
 
