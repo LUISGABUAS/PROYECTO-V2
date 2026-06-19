@@ -24,18 +24,19 @@ if (!empty($errores)) {
     exit;
 }
 
-$id_cliente       = $_POST['id_cliente'] ?? null;
-$tipo_cliente     = trim($_POST['tipo_cliente'] ?? '');
-$nombre_completo  = trim($_POST['nombre_completo'] ?? '');
-$calle_numero     = trim($_POST['calle_numero'] ?? '');
-$cp               = trim($_POST['cp'] ?? '');
-$colonia          = trim($_POST['colonia'] ?? '');
-$municipio        = trim($_POST['municipio'] ?? '');
-$estado           = trim($_POST['estado'] ?? '');
-$telefono         = trim($_POST['telefono'] ?? '');
-$referencias      = trim($_POST['referencias'] ?? '');
-$id_usuario       = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
-$id_rol_sesion    = $_SESSION['id_rol_sesion'] ?? null;
+$id_cliente        = $_POST['id_cliente'] ?? null;
+$tipo_cliente      = trim($_POST['tipo_cliente'] ?? '');
+$nombre_completo   = trim($_POST['nombre_completo'] ?? '');
+$calle_numero      = trim($_POST['calle_numero'] ?? '');
+$cp                = trim($_POST['cp'] ?? '');
+$colonia           = trim($_POST['colonia'] ?? '');
+$municipio         = trim($_POST['municipio'] ?? '');
+$estado            = trim($_POST['estado'] ?? '');
+$telefono          = trim($_POST['telefono'] ?? '');
+$referencias       = trim($_POST['referencias'] ?? '');
+$id_direccion_edit = !empty($_POST['id_direccion_edit']) ? (int)$_POST['id_direccion_edit'] : null;
+$id_usuario        = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
+$id_rol_sesion     = $_SESSION['id_rol_sesion'] ?? null;
 
 // Determinar id_vendedor según el rol
 if ($id_rol_sesion == 21) {
@@ -80,73 +81,57 @@ try {
     // Iniciar transacción
     $pdo->beginTransaction();
 
-    // 1. Actualizar cliente
-    $sql = "UPDATE clientes SET
-                tipo_cliente     = :tipo_cliente,
-                nombre_completo  = :nombre_completo,
-                calle_numero     = :calle_numero,
-                cp               = :cp,
-                colonia          = :colonia,
-                municipio        = :municipio,
-                estado           = :estado,
-                telefono         = :telefono,
-                referencias      = :referencias,
-                id_vendedor      = :id_vendedor,
-                updated_at       = NOW()
-            WHERE id_cliente = :id_cliente";
+    // Determinar si la dirección a editar es la principal
+    $es_principal_edit = true;
+    if ($id_direccion_edit) {
+        $chk = $pdo->prepare("SELECT es_principal FROM clientes_direcciones WHERE id = ? AND id_cliente = ?");
+        $chk->execute([$id_direccion_edit, $id_cliente]);
+        $dir_info = $chk->fetch();
+        $es_principal_edit = !$dir_info || $dir_info['es_principal'] == 1;
+    }
 
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([
-        ':tipo_cliente'    => $tipo_cliente,
-        ':nombre_completo' => $nombre_completo,
-        ':calle_numero'    => $calle_numero,
-        ':cp'              => $cp,
-        ':colonia'         => $colonia,
-        ':municipio'       => $municipio,
-        ':estado'          => $estado,
-        ':telefono'        => $telefono,
-        ':referencias'     => $referencias,
-        ':id_vendedor'     => $id_vendedor,
-        ':id_cliente'      => $id_cliente
-    ]);
-
-    // 2. Actualizar dirección principal en clientes_direcciones
-    $sql_dir = "UPDATE clientes_direcciones SET
-                    calle_numero = :calle_numero,
-                    colonia = :colonia,
-                    municipio = :municipio,
-                    estado = :estado,
-                    cp = :cp,
-                    referencias = :referencias,
-                    actualizada_en = NOW()
-                WHERE id_cliente = :id_cliente AND es_principal = 1";
-
-    $stmt_dir = $pdo->prepare($sql_dir);
-    $stmt_dir->execute([
-        ':calle_numero'  => $calle_numero,
-        ':colonia'       => $colonia,
-        ':municipio'     => $municipio,
-        ':estado'        => $estado,
-        ':cp'            => $cp,
-        ':referencias'   => $referencias,
-        ':id_cliente'    => $id_cliente
-    ]);
-    
-    // Si no hay dirección principal, crearla
-    if ($stmt_dir->rowCount() === 0) {
-        $sql_insert = "INSERT INTO clientes_direcciones 
-                      (id_cliente, calle_numero, colonia, municipio, estado, cp, referencias, es_principal, activa)
-                      VALUES (:id_cliente, :calle_numero, :colonia, :municipio, :estado, :cp, :referencias, 1, 1)";
-        $stmt_insert = $pdo->prepare($sql_insert);
-        $stmt_insert->execute([
-            ':id_cliente'    => $id_cliente,
-            ':calle_numero'  => $calle_numero,
-            ':colonia'       => $colonia,
-            ':municipio'     => $municipio,
-            ':estado'        => $estado,
-            ':cp'            => $cp,
-            ':referencias'   => $referencias
+    // 1. Actualizar cliente (campos de dirección solo si es la principal)
+    if ($es_principal_edit) {
+        $stmt = $pdo->prepare("UPDATE clientes SET
+                    tipo_cliente = ?, nombre_completo = ?, calle_numero = ?, cp = ?,
+                    colonia = ?, municipio = ?, estado = ?, telefono = ?,
+                    referencias = ?, id_vendedor = ?, updated_at = NOW()
+                WHERE id_cliente = ?");
+        $stmt->execute([
+            $tipo_cliente, $nombre_completo, $calle_numero, $cp,
+            $colonia, $municipio, $estado, $telefono,
+            $referencias, $id_vendedor, $id_cliente
         ]);
+    } else {
+        $stmt = $pdo->prepare("UPDATE clientes SET
+                    tipo_cliente = ?, nombre_completo = ?, telefono = ?,
+                    id_vendedor = ?, updated_at = NOW()
+                WHERE id_cliente = ?");
+        $stmt->execute([$tipo_cliente, $nombre_completo, $telefono, $id_vendedor, $id_cliente]);
+    }
+
+    // 2. Actualizar la dirección correspondiente en clientes_direcciones
+    if ($id_direccion_edit && !$es_principal_edit) {
+        // Editar dirección adicional específica
+        $stmt_dir = $pdo->prepare("UPDATE clientes_direcciones SET
+                    calle_numero = ?, colonia = ?, municipio = ?, estado = ?, cp = ?,
+                    referencias = ?, actualizada_en = NOW()
+                WHERE id = ? AND id_cliente = ?");
+        $stmt_dir->execute([$calle_numero, $colonia, $municipio, $estado, $cp, $referencias, $id_direccion_edit, $id_cliente]);
+    } else {
+        // Editar dirección principal
+        $stmt_dir = $pdo->prepare("UPDATE clientes_direcciones SET
+                    calle_numero = ?, colonia = ?, municipio = ?, estado = ?, cp = ?,
+                    referencias = ?, actualizada_en = NOW()
+                WHERE id_cliente = ? AND es_principal = 1");
+        $stmt_dir->execute([$calle_numero, $colonia, $municipio, $estado, $cp, $referencias, $id_cliente]);
+
+        if ($stmt_dir->rowCount() === 0) {
+            $stmt_ins = $pdo->prepare("INSERT INTO clientes_direcciones
+                        (id_cliente, calle_numero, colonia, municipio, estado, cp, referencias, es_principal, activa)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1)");
+            $stmt_ins->execute([$id_cliente, $calle_numero, $colonia, $municipio, $estado, $cp, $referencias]);
+        }
     }
 
     // Confirmar transacción

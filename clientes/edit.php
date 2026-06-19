@@ -22,6 +22,11 @@ if (!$cliente) {
     echo "<h4 class='text-danger'>Cliente no encontrado</h4>";
     exit;
 }
+
+// Cargar todas las direcciones del cliente
+$stmt_dirs = $pdo->prepare("SELECT * FROM clientes_direcciones WHERE id_cliente = ? AND activa = 1 ORDER BY es_principal DESC");
+$stmt_dirs->execute([$id_cliente]);
+$todas_direcciones = $stmt_dirs->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <?php if (isset($_SESSION['mensaje'])): ?>
@@ -150,6 +155,30 @@ endif;
                 <input type="text" name="nombre_completo" class="form-control"
                        value="<?= htmlspecialchars($cliente['nombre_completo']) ?>" required>
             </div>
+
+            <!-- SELECTOR DE DIRECCIÓN -->
+            <?php if (count($todas_direcciones) > 1): ?>
+            <div class="form-group">
+                <label><strong><i class="fas fa-map-marker-alt text-danger"></i> Dirección a editar</strong></label>
+                <select id="select_dir_editar" class="form-control" onchange="cambiarDireccion(this.value)">
+                    <?php foreach ($todas_direcciones as $dir): ?>
+                    <option value="<?= $dir['id'] ?>"
+                            data-calle="<?= htmlspecialchars($dir['calle_numero']) ?>"
+                            data-cp="<?= htmlspecialchars($dir['cp']) ?>"
+                            data-colonia="<?= htmlspecialchars($dir['colonia']) ?>"
+                            data-municipio="<?= htmlspecialchars($dir['municipio']) ?>"
+                            data-estado="<?= htmlspecialchars($dir['estado']) ?>"
+                            data-referencias="<?= htmlspecialchars($dir['referencias'] ?? '') ?>"
+                            data-principal="<?= $dir['es_principal'] ?>">
+                        <?= $dir['es_principal'] ? '★ ' : '' ?><?= htmlspecialchars($dir['calle_numero']) ?> — <?= htmlspecialchars($dir['colonia']) ?>, <?= htmlspecialchars($dir['municipio']) ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+                <small class="text-muted">★ = Dirección principal</small>
+            </div>
+            <?php endif; ?>
+            <input type="hidden" name="id_direccion_edit" id="id_direccion_edit"
+                   value="<?= !empty($todas_direcciones) ? $todas_direcciones[0]['id'] : '' ?>">
 
             <!-- CALLE -->
             <div class="form-group">
@@ -594,6 +623,19 @@ function eliminarDireccion(idDireccion) {
             Swal.fire('Error', 'Ocurrió un problema al eliminar la dirección', 'error');
         });
     });
+}
+
+// ─── Selector de dirección a editar ──────────────────────────────────────────
+function cambiarDireccion(idDir) {
+    const opt = document.querySelector(`#select_dir_editar option[value="${idDir}"]`);
+    if (!opt) return;
+    document.getElementById('id_direccion_edit').value = idDir;
+    document.querySelector('[name="calle_numero"]').value  = opt.dataset.calle;
+    document.getElementById('cp').value                   = opt.dataset.cp;
+    document.getElementById('colonia').value              = opt.dataset.colonia;
+    document.getElementById('municipio').value            = opt.dataset.municipio;
+    document.getElementById('estado').value               = opt.dataset.estado;
+    document.querySelector('[name="referencias"]').value  = opt.dataset.referencias;
 }
 
 // ─── Submit del formulario principal ─────────────────────────────────────────
