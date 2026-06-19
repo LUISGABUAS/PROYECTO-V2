@@ -86,7 +86,7 @@ if (isset($_SESSION['mensaje'])) {
                         <th><center>Codigo</center></th>
                         <th><center>Categoria</center></th>
                         <th><center>Etiqueta</center></th>
-                        <th><center>Imagen</center></th>
+                        <th class="no-export"><center>Imagen</center></th>
                         <th><center>Nombre</center></th>
                         <th><center>Descripcion</center></th>
                         <th><center>En Bodega</center></th> 
@@ -115,7 +115,7 @@ if (isset($_SESSION['mensaje'])) {
                           <td><?php echo htmlspecialchars($dato['codigo'], ENT_QUOTES, 'UTF-8') ?></td>
                           <td><?php echo htmlspecialchars($dato['categoria'], ENT_QUOTES, 'UTF-8') ?></td>
                           <td><?php echo htmlspecialchars($dato['proveedor'], ENT_QUOTES, 'UTF-8') ?></td>
-                          <td>
+                          <td class="no-export">
                             <img src="<?php echo $URL."/almacen/img_productos/".htmlspecialchars($dato['imagen'], ENT_QUOTES, 'UTF-8') ?>" width="75px" alt="">
                           </td>
                           <td><?php echo htmlspecialchars($dato['nombre'], ENT_QUOTES, 'UTF-8') ?></td>
@@ -279,13 +279,13 @@ function confirmarEliminar(id, nombre) {
           text: 'Excel',
           extend: 'excel',
           exportOptions: {
-            columns: ':visible',
+            columns: ':visible:not(.no-export)',
           modifier: {
             search: 'applied',
             order: 'applied',
             page: 'all'
           }
-        } 
+        }
         },{
           text: 'PDF',
           extend: 'pdf',
