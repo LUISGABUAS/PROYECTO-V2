@@ -11,12 +11,12 @@ if (!$ids) {
 
 $ids_array = array_map('intval', explode(',', $ids));
 
-// Labelary permite máx 50 etiquetas por petición — paginar con ?offset=N
-$limit  = 50;
+// Labelary limita el tamaño del payload — con GFA pesadas usar lotes pequeños
+$limit  = 20;
 $offset = max(0, (int)($_GET['offset'] ?? 0));
 $total  = count($ids_array);
 
-// Si hay más de 50 y no se pidió offset, mostrar selector de lotes
+// Si hay más de 20 y no se pidió offset, mostrar selector de lotes
 if ($total > $limit && !isset($_GET['offset'])) {
     $base_url = strtok($_SERVER['REQUEST_URI'], '?');
     $lotes = ceil($total / $limit);
@@ -100,7 +100,8 @@ $ch = curl_init("https://api.labelary.com/v1/printers/8dpmm/labels/4x6/");
 curl_setopt($ch, CURLOPT_POST, true);
 curl_setopt($ch, CURLOPT_POSTFIELDS, $zpl);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+curl_setopt($ch, CURLOPT_TIMEOUT, 120);
+curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
 curl_setopt($ch, CURLOPT_HTTPHEADER, [
     "Accept: application/pdf"
 ]);
