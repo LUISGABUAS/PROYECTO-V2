@@ -35,24 +35,27 @@ $id_venta = (int)$_GET['id'];
 ========================= */
 try {
     // Información general de la venta
-    $sqlVenta = $pdo->prepare("SELECT 
+    $sqlVenta = $pdo->prepare("SELECT
             v.id_venta,
             v.fecha,
             v.total,
             v.updated_at as salida_fecha,
             v.estado_logistico,
+            v.id_direccion_entrega,
             c.nombre_completo AS cliente_nombre,
             c.telefono AS cliente_telefono,
-            c.calle_numero AS calle,
-            c.colonia AS colonia,
-            c.municipio AS municipio,
-            c.estado AS estado,
-            c.cp AS cp,
+            COALESCE(d.calle_numero, c.calle_numero) AS calle,
+            COALESCE(d.colonia,     c.colonia)       AS colonia,
+            COALESCE(d.municipio,   c.municipio)     AS municipio,
+            COALESCE(d.estado,      c.estado)        AS estado,
+            COALESCE(d.cp,          c.cp)            AS cp,
+            d.es_principal AS dir_es_principal,
             u.nombres AS vendedor_nombre,
             u.email AS vendedor_email
         FROM tb_ventas v
         JOIN clientes c ON v.cliente = c.id_cliente
         JOIN tb_usuario u ON v.id_usuario = u.id
+        LEFT JOIN clientes_direcciones d ON d.id = v.id_direccion_entrega
         WHERE v.id_venta = :id");
     
     $sqlVenta->execute([':id' => $id_venta]);
@@ -195,10 +198,13 @@ try {
                                     </a>
                                 </dd>
 
-                                <dt class="col-sm-4">Dirección:</dt>
+                                <dt class="col-sm-4">Dirección entrega:</dt>
                                 <dd class="col-sm-8">
-                                    <i class="fas fa-map-marker-alt"></i> 
-                                    <?= htmlspecialchars($venta['calle'] . ' ' . $venta['colonia'] . ' ' . $venta['municipio'] . ' ' . $venta['estado'] . ' ' . $venta['cp']) ?>
+                                    <i class="fas fa-map-marker-alt text-danger"></i>
+                                    <?= htmlspecialchars($venta['calle'] . ', ' . $venta['colonia'] . ', ' . $venta['municipio'] . ', ' . $venta['estado'] . ' CP ' . $venta['cp']) ?>
+                                    <?php if ($venta['id_direccion_entrega'] && !$venta['dir_es_principal']): ?>
+                                    <br><span class="badge badge-warning mt-1"><i class="fas fa-exclamation-triangle"></i> Dirección alternativa</span>
+                                    <?php endif; ?>
                                 </dd>
                             </dl>
                         </div>
