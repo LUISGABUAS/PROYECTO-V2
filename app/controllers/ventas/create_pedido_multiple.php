@@ -102,8 +102,8 @@ try {
             // Descontar stock (marcar como VENDIDO)
             $stmt_stock = $pdo->prepare("SELECT id_stock FROM stock
                 WHERE id_producto = ? AND estado = 'EN BODEGA'
-                ORDER BY id_stock ASC LIMIT ?");
-            $stmt_stock->execute([$id_prod, $cantidad]);
+                ORDER BY id_stock ASC LIMIT {$cantidad}");
+            $stmt_stock->execute([$id_prod]);
             $stocks = $stmt_stock->fetchAll(PDO::FETCH_COLUMN);
 
             foreach ($stocks as $id_stock) {
