@@ -98,18 +98,6 @@ try {
             $pdo->prepare("INSERT INTO tb_ventas_detalle (id_venta, id_producto, cantidad, precio, subtotal)
                            VALUES (?, ?, ?, ?, ?)")
                 ->execute([$id_venta, $id_prod, $cantidad, $precio, $subtotal]);
-
-            // Descontar stock (marcar como VENDIDO)
-            $stmt_stock = $pdo->prepare("SELECT id_stock FROM stock
-                WHERE id_producto = ? AND estado = 'EN BODEGA'
-                ORDER BY id_stock ASC LIMIT {$cantidad}");
-            $stmt_stock->execute([$id_prod]);
-            $stocks = $stmt_stock->fetchAll(PDO::FETCH_COLUMN);
-
-            foreach ($stocks as $id_stock) {
-                $pdo->prepare("UPDATE stock SET estado = 'VENDIDO', fecha_salida = NOW() WHERE id_stock = ?")
-                    ->execute([$id_stock]);
-            }
         }
     }
 
