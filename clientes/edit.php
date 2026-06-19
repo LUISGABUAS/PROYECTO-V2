@@ -168,15 +168,8 @@ endif;
             <!-- COLONIA -->
             <div class="form-group">
                 <label>Colonia</label>
-                <select id="colonia" name="colonia" class="form-control" required>
-                    <?php if (!empty($cliente['colonia'])): ?>
-                        <option value="<?= htmlspecialchars($cliente['colonia']) ?>" selected>
-                            <?= htmlspecialchars($cliente['colonia']) ?>
-                        </option>
-                    <?php else: ?>
-                        <option value="">Seleccione colonia</option>
-                    <?php endif; ?>
-                </select>
+                <input type="text" id="colonia" name="colonia" class="form-control" required
+                       value="<?= htmlspecialchars($cliente['colonia']) ?>" placeholder="Ej. Centro, Las Palmas...">
             </div>
 
             <!-- MUNICIPIO -->
@@ -299,9 +292,7 @@ endif;
 
                 <div class="form-group">
                     <label><strong>Colonia</strong> <span class="text-danger">*</span></label>
-                    <select id="nd_colonia" class="form-control" disabled>
-                        <option value="">— Ingresa el CP primero —</option>
-                    </select>
+                    <input type="text" id="nd_colonia" class="form-control" placeholder="Ej. Centro, Las Palmas...">
                 </div>
 
                 <div class="form-group">
@@ -338,7 +329,6 @@ const URL_APP    = '<?= $URL ?>';
 
 // ─── Utilidad: buscar CP en Sepomex ──────────────────────────────────────────
 function buscarCP(cpValue, opts) {
-    // opts: { coloniaId, municipioId, estadoId, spinnerId }
     if (cpValue.length !== 5) return;
 
     const spinner = opts.spinnerId ? document.getElementById(opts.spinnerId) : null;
@@ -358,16 +348,7 @@ function buscarCP(cpValue, opts) {
             const municipioEl = document.getElementById(opts.municipioId);
             const estadoEl    = document.getElementById(opts.estadoId);
 
-            if (coloniaEl) {
-                coloniaEl.innerHTML = '<option value="">— Selecciona colonia —</option>';
-                data.forEach(item => {
-                    const opt = document.createElement('option');
-                    opt.value = item.colonia;
-                    opt.textContent = item.colonia;
-                    coloniaEl.appendChild(opt);
-                });
-                coloniaEl.disabled = false;
-            }
+            if (coloniaEl)   coloniaEl.value   = data[0].colonia;
             if (municipioEl) municipioEl.value = data[0].municipio;
             if (estadoEl)    estadoEl.value    = data[0].estado;
         })
@@ -390,11 +371,8 @@ document.getElementById('cp').addEventListener('input', function () {
 document.getElementById('nd_cp').addEventListener('input', function () {
     const cp = this.value.trim();
 
-    // Resetear si el usuario borra
     if (cp.length < 5) {
-        const coloniaEl = document.getElementById('nd_colonia');
-        coloniaEl.innerHTML = '<option value="">— Ingresa el CP primero —</option>';
-        coloniaEl.disabled  = true;
+        document.getElementById('nd_colonia').value   = '';
         document.getElementById('nd_municipio').value = '';
         document.getElementById('nd_estado').value    = '';
         return;
@@ -410,17 +388,12 @@ document.getElementById('nd_cp').addEventListener('input', function () {
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 function abrirModalDireccion() {
-    // Limpiar campos
     document.getElementById('nd_cp').value         = '';
     document.getElementById('nd_calle').value       = '';
     document.getElementById('nd_referencias').value = '';
+    document.getElementById('nd_colonia').value     = '';
     document.getElementById('nd_municipio').value   = '';
     document.getElementById('nd_estado').value      = '';
-
-    const coloniaEl = document.getElementById('nd_colonia');
-    coloniaEl.innerHTML = '<option value="">— Ingresa el CP primero —</option>';
-    coloniaEl.disabled  = true;
-
     $('#modalDireccion').modal('show');
 }
 

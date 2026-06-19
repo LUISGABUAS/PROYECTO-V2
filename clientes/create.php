@@ -86,8 +86,8 @@ endif;
 
         <!-- CP -->
         <div class="form-group">
-            <label>Código Postal <span class="text-muted">(Opcional — ayuda a autocompletar)</span></label>
-            <input type="text" id="cp" name="cp" class="form-control" maxlength="5" placeholder="Ej. 64000">
+            <label>Código Postal</label>
+            <input type="text" id="cp" name="cp" class="form-control" maxlength="5" required placeholder="Ej. 64000">
         </div>
 
         <!-- COLONIA -->
@@ -99,13 +99,13 @@ endif;
         <!-- MUNICIPIO -->
         <div class="form-group">
             <label>Municipio</label>
-            <input type="text" id="municipio" name="municipio" class="form-control" required placeholder="Ej. Monterrey">
+            <input type="text" id="municipio" name="municipio" class="form-control" readonly>
         </div>
 
         <!-- ESTADO -->
         <div class="form-group">
             <label>Estado</label>
-            <input type="text" id="estado" name="estado" class="form-control" required placeholder="Ej. Nuevo León">
+            <input type="text" id="estado" name="estado" class="form-control" readonly>
         </div>
 
         <!-- TELÉFONO -->
@@ -144,17 +144,20 @@ endif;
 </section>
 </div>
 
-<!-- AUTOCOMPLETAR CP (opcional) -->
+<!-- AUTOCOMPLETAR CP -->
 <script>
-document.getElementById('cp').addEventListener('keyup', function () {
+document.getElementById('cp').addEventListener('input', function () {
     const cp = this.value.trim();
     if (cp.length !== 5) return;
 
     fetch(`<?= $URL ?>/app/api/cp.php?cp=${cp}`)
         .then(res => res.json())
         .then(data => {
-            if (!data || data.length === 0) return;
-            document.getElementById('colonia').value  = data[0].colonia;
+            if (!data || data.length === 0) {
+                Swal.fire('Código Postal no encontrado', 'Verifica que sea correcto', 'warning');
+                return;
+            }
+            document.getElementById('colonia').value   = data[0].colonia;
             document.getElementById('municipio').value = data[0].municipio;
             document.getElementById('estado').value    = data[0].estado;
         })

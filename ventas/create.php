@@ -81,6 +81,14 @@ Swal.fire({
                     </div>
                   </div>
 
+                  <!-- DIRECCIÓN DE ENTREGA (visible solo si el cliente tiene +1 dirección) -->
+                  <div class="col-md-4" id="col_direccion_entrega" style="display:none;">
+                    <div class="form-group">
+                      <label><strong>Dirección de entrega</strong></label>
+                      <select name="id_direccion_entrega" id="select_direccion" class="form-control"></select>
+                    </div>
+                  </div>
+
                   <!-- ENVÍO -->
                   <div class="col-md-2">
                     <div class="form-group">
@@ -651,7 +659,6 @@ $(document).ready(function(){
     const displayField     = document.getElementById('tipo_envio_display');
     const colTipoPago      = document.getElementById('col_tipo_pago');
     const filaComprobante  = document.getElementById('fila_comprobante');
-    const inputComprobante = document.getElementById('comprobante');
 
     tipoEnvioHidden.value = envio;
 
@@ -667,7 +674,44 @@ $(document).ready(function(){
       filaComprobante.style.display = 'block';
       document.getElementById('tipo_pago').value = 'comprobante';
     }
+
+    cargarDireccionesCliente(this.value);
   });
+
+  function cargarDireccionesCliente(idCliente) {
+    const colDir = document.getElementById('col_direccion_entrega');
+    const selDir = document.getElementById('select_direccion');
+
+    if (!idCliente) {
+      colDir.style.display = 'none';
+      selDir.innerHTML = '';
+      return;
+    }
+
+    fetch(`<?= $URL ?>/app/controllers/clientes/direcciones.php?accion=listar&id_cliente=${idCliente}`, {
+      credentials: 'same-origin'
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success || data.data.length <= 1) {
+        colDir.style.display = 'none';
+        selDir.innerHTML = '';
+        if (data.success && data.data.length === 1) {
+          selDir.innerHTML = `<option value="${data.data[0].id}" selected></option>`;
+        }
+        return;
+      }
+      selDir.innerHTML = data.data.map(dir =>
+        `<option value="${dir.id}" ${dir.es_principal == 1 ? 'selected' : ''}>
+          ${dir.es_principal == 1 ? '★ ' : ''}${dir.calle_numero} — ${dir.colonia}, ${dir.municipio}
+        </option>`
+      ).join('');
+      colDir.style.display = 'block';
+    })
+    .catch(() => {
+      colDir.style.display = 'none';
+    });
+  }
 });
 </script>
 

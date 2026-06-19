@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Validar datos obligatorios
-$errores = validarDatos(['tipo_cliente', 'nombre_completo', 'telefono', 'calle_numero', 'colonia', 'municipio', 'estado']);
+$errores = validarDatos(['tipo_cliente', 'nombre_completo', 'telefono', 'calle_numero', 'colonia', 'municipio', 'estado', 'cp']);
 if (!empty($errores)) {
     error400('Faltan datos obligatorios', $errores);
     $_SESSION['mensaje'] = "❌ Faltan datos obligatorios";

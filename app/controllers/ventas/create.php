@@ -17,12 +17,13 @@ try {
     /* ======================
        DATOS GENERALES
     ====================== */
-    $id_usuario = $_POST['id_usuario'];
-    $fecha      = $_POST['fecha'];
-    $cliente    = $_POST['cliente'];
-    $envio      = $_POST['envio'];
-    $total      = (float)$_POST['total'];
-    $tipo_pago  = $_POST['tipo_pago'] ?? 'comprobante'; // ✅ NUEVO
+    $id_usuario          = $_POST['id_usuario'];
+    $fecha               = $_POST['fecha'];
+    $cliente             = $_POST['cliente'];
+    $envio               = $_POST['envio'];
+    $total               = (float)$_POST['total'];
+    $tipo_pago           = $_POST['tipo_pago'] ?? 'comprobante';
+    $id_direccion_entrega = !empty($_POST['id_direccion_entrega']) ? (int)$_POST['id_direccion_entrega'] : null;
 
     $productos  = $_POST['productos'];
     $cantidades = $_POST['cantidades'];
@@ -81,10 +82,10 @@ try {
        INSERTAR VENTA (PADRE)
     ====================== */
     $stmt = $pdo->prepare("
-        INSERT INTO tb_ventas (fecha, cliente, envio, tipo_pago, total, comprobante, id_usuario)
-        VALUES (?, ?, ?, ?, ?, NULL, ?)
+        INSERT INTO tb_ventas (fecha, cliente, envio, tipo_pago, total, comprobante, id_usuario, id_direccion_entrega)
+        VALUES (?, ?, ?, ?, ?, NULL, ?, ?)
     ");
-    $stmt->execute([$fecha, $cliente, $envio, $tipo_pago, $total, $id_usuario]);
+    $stmt->execute([$fecha, $cliente, $envio, $tipo_pago, $total, $id_usuario, $id_direccion_entrega]);
 
     $id_venta = $pdo->lastInsertId();
 
