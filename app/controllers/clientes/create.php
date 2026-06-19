@@ -47,6 +47,16 @@ if ($id_rol_sesion == 21) {
     $id_vendedor = ($id_vendedor === '' || $id_vendedor === null) ? null : $id_vendedor;
 }
 
+// Verificar si ya existe un cliente con el mismo nombre
+$stmt_check = $pdo->prepare("SELECT id_cliente FROM clientes WHERE nombre_completo = ? LIMIT 1");
+$stmt_check->execute([$nombre]);
+if ($stmt_check->fetch()) {
+    $_SESSION['mensaje'] = "⚠️ Ya existe un cliente con ese nombre";
+    $_SESSION['icono']   = "warning";
+    header("Location: ".$URL."/clientes/create.php");
+    exit;
+}
+
 try {
     // Iniciar transacción
     $pdo->beginTransaction();
