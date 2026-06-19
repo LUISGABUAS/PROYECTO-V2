@@ -18,6 +18,7 @@ $stmt = $pdo->prepare("SELECT
         c.telefono AS telefono,
         COALESCE(d.referencias, c.referencias)   AS referencia,
         v.estado_logistico AS estado_logistico,
+        v.id_pedido,
         v.id_usuario,
         v.guia_pdf AS guia_pdf,
         u.nombres AS vendedor

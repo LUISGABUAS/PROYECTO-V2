@@ -27,8 +27,11 @@ Swal.fire({
 <div class="content-wrapper">
 
   <div class="content-header">
-    <div class="container-fluid">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
       <h1 class="m-0">Nueva Venta</h1>
+      <a href="pedido_multiple.php" class="btn btn-outline-primary btn-sm">
+        <i class="fa fa-layer-group"></i> Pedido con múltiples envíos
+      </a>
     </div>
   </div>
 

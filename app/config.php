@@ -43,6 +43,7 @@ require_once __DIR__ . '/database/migrations/create_tickets_tables.php';
 require_once __DIR__ . '/database/migrations/add_sepomex_table.php';
 require_once __DIR__ . '/database/migrations/add_id_direccion_to_ventas.php';
 require_once __DIR__ . '/database/migrations/add_nombre_destinatario_to_direcciones.php';
+require_once __DIR__ . '/database/migrations/create_pedidos_table.php';
 
 // ================================================
 // LOGGING CENTRALIZADO

@@ -162,6 +162,9 @@ if (!in_array(20, $_SESSION['permisos'])) {
                     <?php if ($v['destinatario'] !== $v['cliente']): ?>
                       <br><small class="text-muted"><i class="fas fa-shipping-fast"></i> Para: <strong><?= htmlspecialchars($v['destinatario']) ?></strong></small>
                     <?php endif; ?>
+                    <?php if ($v['id_pedido']): ?>
+                      <br><span class="badge badge-primary" title="Parte de un pedido múltiple"><i class="fa fa-layer-group"></i> Pedido #<?= $v['id_pedido'] ?></span>
+                    <?php endif; ?>
                   </td>
 
                   <?php if (in_array(24, $_SESSION['permisos'])): ?>
