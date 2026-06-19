@@ -372,6 +372,18 @@ function renumerarEnvios() {
 document.getElementById('form_pedido').addEventListener('submit', function(e) {
   e.preventDefault();
 
+  // Validar comprobante
+  if (!fileComp.files || !fileComp.files[0]) {
+    Swal.fire('Falta comprobante', 'Debes adjuntar el comprobante de pago antes de guardar', 'warning');
+    return;
+  }
+
+  // Validar cliente
+  if (!document.getElementById('sel_cliente').value) {
+    Swal.fire('Falta cliente', 'Selecciona un cliente', 'warning');
+    return;
+  }
+
   const envios = [];
   let valido = true;
 
