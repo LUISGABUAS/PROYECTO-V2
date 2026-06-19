@@ -62,6 +62,18 @@ if ($check->rowCount() === 0) {
 }
 
 /* =========================
+   VERIFICAR NOMBRE DUPLICADO
+========================= */
+$check_nombre = $pdo->prepare("SELECT id_cliente FROM clientes WHERE nombre_completo = ? AND id_cliente != ? LIMIT 1");
+$check_nombre->execute([$nombre_completo, $id_cliente]);
+if ($check_nombre->fetch()) {
+    $_SESSION['mensaje'] = '⚠️ Ya existe otro cliente con ese nombre';
+    $_SESSION['icono'] = 'warning';
+    header('Location: ' . $URL . '/clientes/edit.php?id=' . $id_cliente);
+    exit;
+}
+
+/* =========================
    ACTUALIZAR CLIENTE
 ========================= */
 try {
