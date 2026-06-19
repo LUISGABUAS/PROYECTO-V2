@@ -5,19 +5,19 @@ $hasta = $_GET['hasta'] ?? date('Y-m-d');
 
 $permisos   = $_SESSION['permisos'];
 
-$stmt = $pdo->prepare("SELECT 
+$stmt = $pdo->prepare("SELECT
         v.id_venta,
         v.fecha,
         c.nombre_completo AS cliente,
-        c.calle_numero AS calle,
-        c.colonia AS colonia,
-        c.municipio AS municipio,
-        c.estado AS estado,
-        c.cp as cp,
+        COALESCE(d.nombre_destinatario, c.nombre_completo) AS destinatario,
+        COALESCE(d.calle_numero, c.calle_numero) AS calle,
+        COALESCE(d.colonia,     c.colonia)       AS colonia,
+        COALESCE(d.municipio,   c.municipio)     AS municipio,
+        COALESCE(d.estado,      c.estado)        AS estado,
+        COALESCE(d.cp,          c.cp)            AS cp,
         c.telefono AS telefono,
-        c.referencias AS referencia,
-        v.estado_logistico as estado_logistico,
-
+        COALESCE(d.referencias, c.referencias)   AS referencia,
+        v.estado_logistico AS estado_logistico,
         v.id_usuario,
         v.guia_pdf AS guia_pdf,
         u.nombres AS vendedor
@@ -25,6 +25,7 @@ $stmt = $pdo->prepare("SELECT
     FROM tb_ventas v
     JOIN tb_usuario u ON u.id = v.id_usuario
     JOIN clientes c ON v.cliente = c.id_cliente
+    LEFT JOIN clientes_direcciones d ON d.id = v.id_direccion_entrega
     WHERE v.envio = 'foraneo'
     AND DATE(v.fecha) BETWEEN :desde AND :hasta
     ORDER BY u.nombres, v.fecha DESC

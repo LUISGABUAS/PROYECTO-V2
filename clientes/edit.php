@@ -287,6 +287,12 @@ endif;
             </div>
             <div class="modal-body">
 
+                <div class="form-group">
+                    <label><strong>Nombre del destinatario</strong> <span class="text-danger">*</span></label>
+                    <input type="text" id="nd_nombre" class="form-control"
+                           placeholder="Nombre de quien recibe en esta dirección">
+                </div>
+
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
@@ -417,7 +423,8 @@ document.getElementById('nd_cp').addEventListener('input', function () {
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 function abrirModalDireccion() {
-    document.getElementById('nd_cp').value         = '';
+    document.getElementById('nd_nombre').value      = '';
+    document.getElementById('nd_cp').value          = '';
     document.getElementById('nd_calle').value       = '';
     document.getElementById('nd_referencias').value = '';
     document.getElementById('nd_colonia').value     = '';
@@ -428,6 +435,7 @@ function abrirModalDireccion() {
 
 // ─── Guardar dirección ────────────────────────────────────────────────────────
 function guardarDireccion() {
+    const nombre     = document.getElementById('nd_nombre').value.trim();
     const cp         = document.getElementById('nd_cp').value.trim();
     const colonia    = document.getElementById('nd_colonia').value.trim();
     const municipio  = document.getElementById('nd_municipio').value.trim();
@@ -435,8 +443,8 @@ function guardarDireccion() {
     const calle      = document.getElementById('nd_calle').value.trim();
     const referencias = document.getElementById('nd_referencias').value.trim();
 
-    if (!cp || !colonia || !municipio || !estado || !calle) {
-        Swal.fire('Campos incompletos', 'Completa CP, colonia y calle antes de guardar', 'warning');
+    if (!nombre || !cp || !colonia || !municipio || !estado || !calle) {
+        Swal.fire('Campos incompletos', 'Completa el nombre del destinatario, CP, colonia y calle', 'warning');
         return;
     }
 
@@ -445,15 +453,16 @@ function guardarDireccion() {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
 
     const formData = new FormData();
-    formData.append('accion',       'crear');
-    formData.append('id_cliente',   ID_CLIENTE);
-    formData.append('calle_numero', calle);
-    formData.append('colonia',      colonia);
-    formData.append('municipio',    municipio);
-    formData.append('estado',       estado);
-    formData.append('cp',           cp);
-    formData.append('referencias',  referencias);
-    formData.append('csrf_token',   document.querySelector('input[name="csrf_token"]').value);
+    formData.append('accion',               'crear');
+    formData.append('id_cliente',           ID_CLIENTE);
+    formData.append('nombre_destinatario',  nombre);
+    formData.append('calle_numero',         calle);
+    formData.append('colonia',              colonia);
+    formData.append('municipio',            municipio);
+    formData.append('estado',               estado);
+    formData.append('cp',                   cp);
+    formData.append('referencias',          referencias);
+    formData.append('csrf_token',           document.querySelector('input[name="csrf_token"]').value);
 
     fetch(`${URL_APP}/app/controllers/clientes/direcciones.php`, {
         method: 'POST',
@@ -550,10 +559,15 @@ function renderDirecciones(dirs) {
             ? `<div class="dir-refs"><i class="fas fa-sticky-note"></i> ${dir.referencias}</div>`
             : '';
 
+        const nombreDestinatario = !esPrincipal && dir.nombre_destinatario
+            ? `<div style="font-size:.85rem;color:#495057;margin-bottom:2px;"><i class="fas fa-user"></i> <strong>${dir.nombre_destinatario}</strong></div>`
+            : '';
+
         return `
             <div class="dir-card ${esPrincipal ? 'is-principal' : ''}">
                 <div class="d-flex justify-content-between align-items-start">
                     <div style="flex:1; min-width:0;">
+                        ${nombreDestinatario}
                         <div class="dir-address">
                             <i class="fas fa-map-pin ${esPrincipal ? 'text-primary' : 'text-secondary'}"></i>
                             ${dir.calle_numero}

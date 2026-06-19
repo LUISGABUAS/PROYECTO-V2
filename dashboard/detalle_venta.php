@@ -49,6 +49,7 @@ try {
             COALESCE(d.municipio,   c.municipio)     AS municipio,
             COALESCE(d.estado,      c.estado)        AS estado,
             COALESCE(d.cp,          c.cp)            AS cp,
+            d.nombre_destinatario AS dir_nombre_destinatario,
             d.es_principal AS dir_es_principal,
             u.nombres AS vendedor_nombre,
             u.email AS vendedor_email
@@ -198,13 +199,19 @@ try {
                                     </a>
                                 </dd>
 
+                                <?php if ($venta['id_direccion_entrega'] && !$venta['dir_es_principal'] && $venta['dir_nombre_destinatario']): ?>
+                                <dt class="col-sm-4">Destinatario:</dt>
+                                <dd class="col-sm-8">
+                                    <i class="fas fa-user text-primary"></i>
+                                    <strong><?= htmlspecialchars($venta['dir_nombre_destinatario']) ?></strong>
+                                    <span class="badge badge-warning ml-1">Dirección alternativa</span>
+                                </dd>
+                                <?php endif; ?>
+
                                 <dt class="col-sm-4">Dirección entrega:</dt>
                                 <dd class="col-sm-8">
                                     <i class="fas fa-map-marker-alt text-danger"></i>
                                     <?= htmlspecialchars($venta['calle'] . ', ' . $venta['colonia'] . ', ' . $venta['municipio'] . ', ' . $venta['estado'] . ' CP ' . $venta['cp']) ?>
-                                    <?php if ($venta['id_direccion_entrega'] && !$venta['dir_es_principal']): ?>
-                                    <br><span class="badge badge-warning mt-1"><i class="fas fa-exclamation-triangle"></i> Dirección alternativa</span>
-                                    <?php endif; ?>
                                 </dd>
                             </dl>
                         </div>

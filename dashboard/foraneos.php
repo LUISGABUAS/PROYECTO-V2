@@ -157,10 +157,15 @@ if (!in_array(20, $_SESSION['permisos'])) {
                 <tr>
                   <td><?= $c++ ?></td>
                   <td><?= $v['fecha'] ?></td>
-                  <td><?= $v['cliente'] ?></td>
+                  <td>
+                    <?= htmlspecialchars($v['cliente']) ?>
+                    <?php if ($v['destinatario'] !== $v['cliente']): ?>
+                      <br><small class="text-muted"><i class="fas fa-shipping-fast"></i> Para: <strong><?= htmlspecialchars($v['destinatario']) ?></strong></small>
+                    <?php endif; ?>
+                  </td>
 
                   <?php if (in_array(24, $_SESSION['permisos'])): ?>
-                    <td><?= $v['calle'] ?>, <?= $v['colonia'] ?>, <?= $v['municipio'] ?>, <?= $v['estado'] ?>, <?= $v['cp'] ?></td>
+                    <td><?= htmlspecialchars($v['calle']) ?>, <?= htmlspecialchars($v['colonia']) ?>, <?= htmlspecialchars($v['municipio']) ?>, <?= htmlspecialchars($v['estado']) ?>, <?= htmlspecialchars($v['cp']) ?></td>
                   <?php endif; ?>
 
                   <td><?= ($v['telefono']) ?></td>

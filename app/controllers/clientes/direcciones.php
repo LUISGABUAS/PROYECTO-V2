@@ -17,50 +17,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // CREAR DIRECCIÓN ADICIONAL
 // =====================
 if ($accion === 'crear') {
-    $id_cliente = $_POST['id_cliente'] ?? null;
-    $calle = trim($_POST['calle_numero'] ?? '');
-    $colonia = trim($_POST['colonia'] ?? '');
-    $municipio = trim($_POST['municipio'] ?? '');
-    $estado = trim($_POST['estado'] ?? '');
-    $cp = trim($_POST['cp'] ?? '');
-    $referencias = trim($_POST['referencias'] ?? '');
+    $id_cliente          = $_POST['id_cliente'] ?? null;
+    $nombre_destinatario = trim($_POST['nombre_destinatario'] ?? '');
+    $calle               = trim($_POST['calle_numero'] ?? '');
+    $colonia             = trim($_POST['colonia'] ?? '');
+    $municipio           = trim($_POST['municipio'] ?? '');
+    $estado              = trim($_POST['estado'] ?? '');
+    $cp                  = trim($_POST['cp'] ?? '');
+    $referencias         = trim($_POST['referencias'] ?? '');
 
-    if (!$id_cliente || empty($calle) || empty($colonia)) {
+    if (!$id_cliente || empty($nombre_destinatario) || empty($calle) || empty($colonia)) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Faltan datos obligatorios']);
+        echo json_encode(['success' => false, 'message' => 'Faltan datos obligatorios (nombre, calle y colonia)']);
         exit;
     }
 
     try {
-        // Verificar si ya existe una dirección idéntica
-        $sql_check = "SELECT id FROM clientes_direcciones 
-                      WHERE id_cliente = ? 
-                      AND calle_numero = ? 
-                      AND colonia = ? 
-                      AND municipio = ? 
-                      AND estado = ? 
-                      AND cp = ? 
-                      AND activa = 1";
-        
+        $sql_check = "SELECT id FROM clientes_direcciones
+                      WHERE id_cliente = ? AND calle_numero = ? AND colonia = ?
+                      AND municipio = ? AND estado = ? AND cp = ? AND activa = 1";
         $stmt_check = $pdo->prepare($sql_check);
         $stmt_check->execute([$id_cliente, $calle, $colonia, $municipio, $estado, $cp]);
-        
         if ($stmt_check->rowCount() > 0) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Esta dirección ya existe para este cliente']);
             exit;
         }
 
-        $sql = "INSERT INTO clientes_direcciones 
-                (id_cliente, calle_numero, colonia, municipio, estado, cp, referencias) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)";
-        
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$id_cliente, $calle, $colonia, $municipio, $estado, $cp, $referencias]);
+        $stmt = $pdo->prepare("INSERT INTO clientes_direcciones
+                (id_cliente, nombre_destinatario, calle_numero, colonia, municipio, estado, cp, referencias)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$id_cliente, $nombre_destinatario, $calle, $colonia, $municipio, $estado, $cp, $referencias]);
 
         echo json_encode([
-            'success' => true,
-            'id' => $pdo->lastInsertId(),
+            'success'   => true,
+            'id'        => $pdo->lastInsertId(),
             'direccion' => "$calle, $colonia, $municipio, $estado CP $cp"
         ]);
     } catch (Exception $e) {
@@ -83,8 +74,8 @@ if ($accion === 'listar') {
     }
 
     try {
-        $sql = "SELECT id, calle_numero, colonia, municipio, estado, cp, referencias, es_principal, activa
-                FROM clientes_direcciones 
+        $sql = "SELECT id, nombre_destinatario, calle_numero, colonia, municipio, estado, cp, referencias, es_principal, activa
+                FROM clientes_direcciones
                 WHERE id_cliente = ? AND activa = 1
                 ORDER BY es_principal DESC, id DESC";
         

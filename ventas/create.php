@@ -696,7 +696,8 @@ $(document).ready(function(){
     const fila = document.getElementById('fila_dir_cliente');
     const txt  = document.getElementById('dir_cliente_texto');
     if (!dir) { fila.style.display = 'none'; return; }
-    txt.textContent = `${dir.calle_numero}, ${dir.colonia}, ${dir.municipio}, ${dir.estado} CP ${dir.cp}`;
+    const nombre = (!dir.es_principal && dir.nombre_destinatario) ? ` — <strong>${dir.nombre_destinatario}</strong>` : '';
+    txt.innerHTML = `${dir.calle_numero}, ${dir.colonia}, ${dir.municipio}, ${dir.estado} CP ${dir.cp}${nombre}`;
     fila.style.display = 'block';
   }
 
@@ -740,11 +741,12 @@ $(document).ready(function(){
         return;
       }
 
-      selDir.innerHTML = data.data.map(dir =>
-        `<option value="${dir.id}" ${dir.es_principal == 1 ? 'selected' : ''}>
-          ${dir.es_principal == 1 ? '★ ' : ''}${dir.calle_numero} — ${dir.colonia}, ${dir.municipio}
-        </option>`
-      ).join('');
+      selDir.innerHTML = data.data.map(dir => {
+        const label = dir.es_principal == 1
+          ? `★ ${dir.calle_numero} — ${dir.colonia}, ${dir.municipio}`
+          : `${dir.nombre_destinatario ? dir.nombre_destinatario + ' · ' : ''}${dir.calle_numero} — ${dir.colonia}, ${dir.municipio}`;
+        return `<option value="${dir.id}" ${dir.es_principal == 1 ? 'selected' : ''}>${label}</option>`;
+      }).join('');
       filaDir.style.display = 'block';
     })
     .catch(() => {
