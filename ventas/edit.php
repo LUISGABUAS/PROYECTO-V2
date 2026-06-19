@@ -114,6 +114,26 @@ Swal.fire({
 
             </div>
 
+            <!-- SELECTOR DE DIRECCIÓN DE ENTREGA -->
+            <div class="row" id="fila_direccion_entrega" style="display:none;">
+              <div class="col-md-6">
+                <div class="form-group mb-2">
+                  <label><strong><i class="fas fa-map-marker-alt text-danger"></i> Dirección de entrega</strong></label>
+                  <select name="id_direccion_entrega" id="select_direccion" class="form-control"></select>
+                </div>
+              </div>
+            </div>
+
+            <!-- DIRECCIÓN ACTUAL -->
+            <div class="row" id="fila_dir_cliente" style="display:none;">
+              <div class="col-md-12">
+                <div class="alert alert-secondary py-2 mb-0" style="font-size:.9rem;">
+                  <i class="fas fa-map-marker-alt text-danger"></i>
+                  <strong>Dirección:</strong> <span id="dir_cliente_texto"></span>
+                </div>
+              </div>
+            </div>
+
             <hr class="my-3">
 
             <!-- COMPROBANTES -->
@@ -639,12 +659,87 @@ document.addEventListener('DOMContentLoaded', () => {
 <link rel="stylesheet" href="<?= $URL ?>/public/templates/AdminLTE-3.2.0/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
 <script src="<?= $URL ?>/public/templates/AdminLTE-3.2.0/plugins/select2/js/select2.full.min.js"></script>
 <script>
+const _idDireccionGuardada = <?= (int)($venta['id_direccion_entrega'] ?? 0) ?>;
+let _dirData = [];
+
+function mostrarDireccion(dir) {
+  const fila = document.getElementById('fila_dir_cliente');
+  const txt  = document.getElementById('dir_cliente_texto');
+  if (!dir) { fila.style.display = 'none'; return; }
+  txt.textContent = `${dir.calle_numero}, ${dir.colonia}, ${dir.municipio}, ${dir.estado} CP ${dir.cp}`;
+  fila.style.display = 'block';
+}
+
+document.getElementById('select_direccion').addEventListener('change', function() {
+  const dir = _dirData.find(d => d.id == this.value);
+  mostrarDireccion(dir || null);
+});
+
+function cargarDireccionesCliente(idCliente, preselect) {
+  const filaDir = document.getElementById('fila_direccion_entrega');
+  const selDir  = document.getElementById('select_direccion');
+  _dirData = [];
+
+  if (!idCliente) {
+    filaDir.style.display = 'none';
+    selDir.innerHTML = '';
+    mostrarDireccion(null);
+    return;
+  }
+
+  fetch(`<?= $URL ?>/app/controllers/clientes/direcciones.php?accion=listar&id_cliente=${idCliente}`, {
+    credentials: 'same-origin'
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (!data.success || !data.data.length) {
+      filaDir.style.display = 'none';
+      selDir.innerHTML = '';
+      mostrarDireccion(null);
+      return;
+    }
+
+    _dirData = data.data;
+    const seleccionada = preselect
+      ? (data.data.find(d => d.id == preselect) || data.data.find(d => d.es_principal == 1) || data.data[0])
+      : (data.data.find(d => d.es_principal == 1) || data.data[0]);
+
+    mostrarDireccion(seleccionada);
+
+    if (data.data.length <= 1) {
+      filaDir.style.display = 'none';
+      selDir.innerHTML = `<option value="${data.data[0].id}" selected></option>`;
+      return;
+    }
+
+    selDir.innerHTML = data.data.map(dir =>
+      `<option value="${dir.id}" ${dir.id == seleccionada.id ? 'selected' : ''}>
+        ${dir.es_principal == 1 ? '★ ' : ''}${dir.calle_numero} — ${dir.colonia}, ${dir.municipio}
+      </option>`
+    ).join('');
+    filaDir.style.display = 'block';
+  })
+  .catch(() => {
+    filaDir.style.display = 'none';
+    mostrarDireccion(null);
+  });
+}
+
 $(document).ready(function(){
   $('.producto').select2({
     theme: 'bootstrap4',
     placeholder: 'Buscar por nombre o código...',
     width: '100%'
   }).on('change', function(){ asignarPrecio(this); });
+
+  // Cargar direcciones al iniciar con el cliente actual
+  const idClienteActual = <?= (int)$venta['cliente'] ?>;
+  cargarDireccionesCliente(idClienteActual, _idDireccionGuardada);
+
+  // Recargar cuando cambia el cliente
+  $('select[name="cliente"]').on('change', function() {
+    cargarDireccionesCliente(this.value, 0);
+  });
 });
 </script>
 

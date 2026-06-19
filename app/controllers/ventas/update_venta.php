@@ -13,11 +13,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 /* =========================
    DATOS GENERALES
 ========================= */
-$id_venta   = (int)$_POST['id_venta'];
-$fecha      = $_POST['fecha'];
-$cliente    = $_POST['cliente'];
-$envio      = $_POST['envio'];
-$total      = (float)$_POST['total'];
+$id_venta             = (int)$_POST['id_venta'];
+$fecha                = $_POST['fecha'];
+$cliente              = $_POST['cliente'];
+$envio                = $_POST['envio'];
+$total                = (float)$_POST['total'];
+$id_direccion_entrega = !empty($_POST['id_direccion_entrega']) ? (int)$_POST['id_direccion_entrega'] : null;
 
 $productos  = $_POST['productos'];
 $cantidades = $_POST['cantidades'];
@@ -143,10 +144,10 @@ try {
        5️⃣ ACTUALIZAR VENTA
     ========================= */
     $stmt = $pdo->prepare("UPDATE tb_ventas
-        SET fecha = ?, cliente = ?, envio = ?, total = ?, updated_at = ?
+        SET fecha = ?, cliente = ?, envio = ?, total = ?, id_direccion_entrega = ?, updated_at = ?
         WHERE id_venta = ?
     ");
-    $stmt->execute([$fecha, $cliente, $envio, $total, $fechaHora, $id_venta]);
+    $stmt->execute([$fecha, $cliente, $envio, $total, $id_direccion_entrega, $fechaHora, $id_venta]);
 
     /* =========================
        6️⃣ REEMPLAZAR DETALLE
