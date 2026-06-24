@@ -319,12 +319,103 @@ if(in_array(15, $_SESSION['permisos'])):
         </div>
       </div>
 
+      <!-- VENTAS PENDIENTES -->
+      <div class="row mt-4">
+        <div class="col-md-12">
+          <div class="card card-outline card-warning">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-clock text-warning"></i> Ventas pendientes de entrega</h3>
+            </div>
+            <div class="card-body p-0">
+              <?php
+              $stmt_pend = $pdo->query("
+                SELECT
+                  v.id_venta,
+                  v.fecha,
+                  v.envio,
+                  c.nombre_completo AS cliente,
+                  SUM(vd.cantidad)              AS total_pacas,
+                  SUM(vd.cantidad_entregada)    AS entregadas,
+                  SUM(vd.cantidad - vd.cantidad_entregada) AS pendientes
+                FROM tb_ventas v
+                JOIN clientes c ON c.id_cliente = v.cliente
+                JOIN tb_ventas_detalle vd ON vd.id_venta = v.id_venta
+                WHERE vd.cantidad_entregada < vd.cantidad
+                GROUP BY v.id_venta
+                ORDER BY v.fecha ASC
+              ");
+              $ventas_pendientes = $stmt_pend->fetchAll(PDO::FETCH_ASSOC);
+              ?>
+
+              <?php if (empty($ventas_pendientes)): ?>
+              <div class="alert alert-success m-3">
+                <i class="fas fa-check-circle"></i> No hay ventas pendientes de entrega.
+              </div>
+              <?php else: ?>
+              <table class="table table-bordered table-striped table-sm mb-0">
+                <thead class="thead-light">
+                  <tr>
+                    <th>#Venta</th>
+                    <th>Fecha</th>
+                    <th>Cliente</th>
+                    <th>Tipo</th>
+                    <th class="text-center">Total pacas</th>
+                    <th class="text-center">Entregadas</th>
+                    <th class="text-center">Pendientes</th>
+                    <th class="text-center">Progreso</th>
+                    <th class="text-center">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($ventas_pendientes as $vp):
+                    $pct = $vp['total_pacas'] > 0 ? round(($vp['entregadas'] / $vp['total_pacas']) * 100) : 0;
+                    $tipo_link = $vp['envio'] === 'foraneo' ? 'foraneo' : 'local';
+                  ?>
+                  <tr>
+                    <td><strong><?= $vp['id_venta'] ?></strong></td>
+                    <td><?= $vp['fecha'] ?></td>
+                    <td><?= htmlspecialchars($vp['cliente']) ?></td>
+                    <td>
+                      <?php if ($vp['envio'] === 'foraneo'): ?>
+                        <span class="badge badge-info"><i class="fas fa-truck"></i> Foráneo</span>
+                      <?php else: ?>
+                        <span class="badge badge-primary"><i class="fas fa-home"></i> Local</span>
+                      <?php endif; ?>
+                    </td>
+                    <td class="text-center"><?= $vp['total_pacas'] ?></td>
+                    <td class="text-center text-success"><strong><?= $vp['entregadas'] ?></strong></td>
+                    <td class="text-center text-danger"><strong><?= $vp['pendientes'] ?></strong></td>
+                    <td style="min-width:120px;">
+                      <div class="progress" style="height:18px;">
+                        <div class="progress-bar <?= $pct > 0 ? 'bg-warning' : 'bg-danger' ?>"
+                             style="width:<?= $pct ?>%;">
+                          <?= $pct ?>%
+                        </div>
+                      </div>
+                    </td>
+                    <td class="text-center">
+                      <a href="salida.php?id_venta=<?= $vp['id_venta'] ?>&tipo=<?= $tipo_link ?>"
+                         class="btn btn-sm btn-danger">
+                        <i class="fas fa-barcode"></i> Procesar
+                      </a>
+                    </td>
+                  </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+              <?php endif; ?>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
 
 <script>
-document.getElementById('form-salida').addEventListener('submit', function(e) {
+const formSalida = document.getElementById('form-salida');
+if (formSalida) formSalida.addEventListener('submit', function(e) {
   e.preventDefault();
 
   const formData = new FormData(this);
