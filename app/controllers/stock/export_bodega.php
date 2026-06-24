@@ -16,12 +16,14 @@ $stmt = $pdo->query("
         a.nombre  AS nombre_producto,
         a.codigo  AS codigo_producto,
         c.nombre_categoria,
+        p.nombre_proveedor,
         s.id_stock,
         s.codigo_unico,
         DATE(s.fecha_ingreso) AS fecha_ingreso
     FROM stock s
     INNER JOIN tb_almacen a ON a.id_producto = s.id_producto
     INNER JOIN tb_categorias c ON c.id_categoria = a.id_categoria
+    LEFT JOIN tb_proveedores p ON p.id_proovedor = a.id_proovedor
     WHERE s.estado = 'EN BODEGA'
     ORDER BY a.nombre ASC, s.id_stock ASC
 ");
@@ -46,13 +48,14 @@ if ($tipo === 'excel') {
     $out = fopen('php://output', 'w');
     fprintf($out, chr(0xEF).chr(0xBB).chr(0xBF));
 
-    fputcsv($out, ['Producto', 'Código Producto', 'Categoría', 'Código Etiqueta', 'Fecha Ingreso']);
+    fputcsv($out, ['Producto', 'Código Producto', 'Categoría', 'Proveedor', 'Código Etiqueta', 'Fecha Ingreso']);
 
     foreach ($items as $row) {
         fputcsv($out, [
             $row['nombre_producto'],
             $row['codigo_producto'],
             $row['nombre_categoria'],
+            $row['nombre_proveedor'] ?? '',
             $row['codigo_unico'],
             $row['fecha_ingreso'],
         ]);

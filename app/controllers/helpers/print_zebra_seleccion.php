@@ -42,11 +42,13 @@ $in = str_repeat('?,', count($ids_array) - 1) . '?';
 /* ==========================
    CONSULTAR STOCK
 ========================== */
-$sql = "SELECT 
+$sql = "SELECT
             s.codigo_unico,
-            p.nombre AS nombre_producto
+            p.nombre AS nombre_producto,
+            pr.nombre_proveedor
         FROM stock s
         INNER JOIN tb_almacen p ON p.id_producto = s.id_producto
+        LEFT JOIN tb_proveedores pr ON pr.id_proovedor = p.id_proovedor
         WHERE s.id_stock IN ($in)
         ORDER BY s.id_stock ASC";
 
@@ -65,8 +67,9 @@ $zpl = "";
 
 foreach ($stocks as $stock) {
 
-    $codigo   = $stock['codigo_unico'];
-    $producto = strtoupper($stock['nombre_producto']);
+    $codigo    = $stock['codigo_unico'];
+    $producto  = strtoupper($stock['nombre_producto']);
+    $proveedor = strtoupper($stock['nombre_proveedor'] ?? '');
 
     $zpl .= "^XA
 ^JUS
@@ -84,6 +87,11 @@ foreach ($stocks as $stock) {
 ^FB600,3,0,C
 ^A0B,70,70
 ^FD{$producto}^FS
+
+^FO155,380
+^FB450,2,0,C
+^A0B,42,42
+^FD{$proveedor}^FS
 
 ^FO107,492^GFA,609,3050,10,:Z64:eJzt1bFxwzAMBVAoKtiFI2iTKCOlTGd22SrHbKIRWKrQCSFA4tO2GDc5X1zE1TvZlshPACLSzxutBfQOrUc56GTybGKTh9jkITZ508CmyVQuifxdtJh22a/qUzLQZb7IjkVkShCZFtNOVWM05b1FE2+mE8enkrPLF2vO+SJZQhshta9DkgOUUzINEM2dMxqhoXOWZ2pn3uqATM/QFKBo8guemy407FYRnkNd/cyLY93niZMvyt8U5d9sk2kvGrNmExe5a61FfKV65glaoAgF0yZnmcjtuvN8fuNaFCQ8U9KEqm52ynC32r2zgu3jTKgS92OV/Fbtzu1p3bX8fUKPmum8VzmpddWsha1ziGV4ZUkj5QbI0lZJpB2qC7UJLL0gf5XxqL1a/rxS2VHAfG6KpUNZu6ypdmPq6yyhJEuXyZU7j2r39FKDbqfxAGf+KFXy/2b/f7Nf1kGbtoQKI1QdWQ9eaYHwFE2oiCOUoA3iUFbgo04mne3zSrXa9T5a7fJalR3l9b3OlsuACnPQdKy68VB/rowuuTMq0X/cs/42vPcXvK2Caas716FbazJYQjuyWjuZdrJv59HOrXO+BH0DVBCjjA==:72E2
 ^FO118,907^GFA,373,1218,6,:Z64:eJzVkkFqxDAMRX8wVLvxEXyTybW6s0sXcy0fJUdIdykN+ZWiDMmQDIRCCxX4LRL56wt/AHjVg2ZaGXjMbY/fOlMZEL6xKt/Zq9SNA8IQOSJ0iROktsbSkhDkhREX5ElUgKMU5RAKGr2Ky8wY2IciN/ZShOwExqj6rGnmVdtZJmNQz3lKukU7GmOXeOw2ViCh7bW/Zh3DTn02/DC3/FSfd36ZT/KYNZWoW9gR3ePObT29e56msvDFHmm3C1eK7+tsZyZv2tB1ZHEqf+XzFyr3NogW1agh0JU1HLBw6Q81NVgq5jfl/JrGvee9W/+ybLTp3+q4sk9ZJvp0d+Ku3OG/93yuHvL0wxQFZzGFgJXf3HmPnw==:EDFC
