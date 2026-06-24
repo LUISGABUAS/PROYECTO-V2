@@ -7,7 +7,8 @@ if(in_array(15, $_SESSION['permisos'])):
 
   // Definir variables de fechas al inicio
   $fecha_inicio = $_GET['fecha_inicio'] ?? date('Y-m-01');
-  $fecha_fin = $_GET['fecha_fin'] ?? date('Y-m-d');
+  $fecha_fin    = $_GET['fecha_fin']    ?? date('Y-m-d');
+  $hora_hasta   = $_GET['hora_hasta']   ?? '';
   
 ?>
 
@@ -32,23 +33,31 @@ if(in_array(15, $_SESSION['permisos'])):
 
             <div class="card-body text-center">
 
-              <!-- Filtro por Fechas -->
+              <!-- Filtro por Fechas y Hora -->
               <div class="row mb-4">
                 <form method="get" class="w-100">
                   <div class="row justify-content-center align-items-end">
                     <div class="col-md-3">
                       <div class="form-group">
-                        <label for="fecha_inicio">Desde:</label>
-                        <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control" value="<?= $fecha_inicio?>">
+                        <label>Desde:</label>
+                        <input type="date" name="fecha_inicio" class="form-control" value="<?= $fecha_inicio ?>">
                       </div>
                     </div>
                     <div class="col-md-3">
                       <div class="form-group">
-                        <label for="fecha_fin">Hasta:</label>
-                        <input type="date" name="fecha_fin" id="fecha_fin" class="form-control" value="<?= $fecha_fin?>">
+                        <label>Hasta fecha:</label>
+                        <input type="date" name="fecha_fin" class="form-control" value="<?= $fecha_fin ?>">
                       </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-2">
+                      <div class="form-group">
+                        <label>Hasta hora:</label>
+                        <input type="time" name="hora_hasta" class="form-control" value="<?= $hora_hasta ?>"
+                               placeholder="ej. 14:00">
+                        <small class="text-muted">Hora Monterrey</small>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
                       <div class="form-group d-flex gap-2">
                         <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-filter"></i> Filtrar</button>
                         <a href="salida.php" class="btn btn-secondary btn-sm"><i class="fa fa-times"></i> Limpiar</a>
@@ -365,22 +374,32 @@ if(in_array(15, $_SESSION['permisos'])):
             </div>
             <div class="card-body p-0">
               <?php
-              $stmt_pend = $pdo->query("
-                SELECT
-                  v.id_venta,
-                  v.fecha,
-                  v.envio,
-                  c.nombre_completo AS cliente,
-                  SUM(vd.cantidad)              AS total_pacas,
-                  SUM(vd.cantidad_entregada)    AS entregadas,
-                  SUM(vd.cantidad - vd.cantidad_entregada) AS pendientes
-                FROM tb_ventas v
-                JOIN clientes c ON c.id_cliente = v.cliente
-                JOIN tb_ventas_detalle vd ON vd.id_venta = v.id_venta
-                WHERE vd.cantidad_entregada < vd.cantidad
-                GROUP BY v.id_venta
-                ORDER BY v.fecha ASC
-              ");
+              $sql_pend  = "SELECT v.id_venta, v.fecha, v.created_at, v.envio,
+                              c.nombre_completo AS cliente,
+                              SUM(vd.cantidad)                         AS total_pacas,
+                              SUM(vd.cantidad_entregada)               AS entregadas,
+                              SUM(vd.cantidad - vd.cantidad_entregada) AS pendientes
+                            FROM tb_ventas v
+                            JOIN clientes c ON c.id_cliente = v.cliente
+                            JOIN tb_ventas_detalle vd ON vd.id_venta = v.id_venta
+                            WHERE vd.cantidad_entregada < vd.cantidad";
+              $params_pend = [];
+              if ($fecha_inicio) {
+                  $sql_pend .= " AND DATE(v.created_at) >= ?";
+                  $params_pend[] = $fecha_inicio;
+              }
+              if ($fecha_fin) {
+                  if ($hora_hasta) {
+                      $sql_pend .= " AND v.created_at <= ?";
+                      $params_pend[] = $fecha_fin . ' ' . $hora_hasta . ':00';
+                  } else {
+                      $sql_pend .= " AND DATE(v.created_at) <= ?";
+                      $params_pend[] = $fecha_fin;
+                  }
+              }
+              $sql_pend .= " GROUP BY v.id_venta ORDER BY v.created_at ASC";
+              $stmt_pend = $pdo->prepare($sql_pend);
+              $stmt_pend->execute($params_pend);
               $ventas_pendientes = $stmt_pend->fetchAll(PDO::FETCH_ASSOC);
               ?>
 
@@ -410,7 +429,12 @@ if(in_array(15, $_SESSION['permisos'])):
                   ?>
                   <tr>
                     <td><strong><?= $vp['id_venta'] ?></strong></td>
-                    <td><?= $vp['fecha'] ?></td>
+                    <td>
+                      <?= $vp['fecha'] ?>
+                      <?php if ($vp['created_at']): ?>
+                      <br><small class="text-muted"><?= date('H:i', strtotime($vp['created_at'])) ?> hrs</small>
+                      <?php endif; ?>
+                    </td>
                     <td><?= htmlspecialchars($vp['cliente']) ?></td>
                     <td>
                       <?php if ($vp['envio'] === 'foraneo'): ?>
