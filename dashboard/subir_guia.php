@@ -279,15 +279,85 @@ function renderGuias(multiplicador) {
     contenedor.appendChild(badge);
 
     for (let n = GUIAS_SUBIDAS + 1; n <= totalRequeridas; n++) {
+        const idx = n;
         const div = document.createElement('div');
         div.className = 'form-group';
-        div.innerHTML = `<label>Guía ${n} de ${totalRequeridas} (PDF)</label>
-            <input type="file" name="guias[]" class="form-control"
-                   accept="application/pdf" ${n === GUIAS_SUBIDAS + 1 ? 'required' : ''}>`;
+        div.innerHTML = `
+        <label><strong>Guía ${n}</strong> de ${totalRequeridas}</label>
+        <div id="dz_${idx}"
+             style="border:2px dashed #aaa;border-radius:8px;padding:22px;text-align:center;
+                    cursor:pointer;background:#f9f9f9;transition:background .2s,border-color .2s;"
+             onclick="document.getElementById('fi_${idx}').click()">
+          <i class="fas fa-file-pdf fa-2x text-danger mb-2"></i>
+          <p class="mb-0 text-muted">Arrastra el PDF aquí o <strong>haz clic</strong></p>
+          <small class="text-muted">Solo PDF</small>
+        </div>
+        <input type="file" id="fi_${idx}" name="guias[]"
+               accept="application/pdf" style="display:none;"
+               ${n === GUIAS_SUBIDAS + 1 ? 'required' : ''}>
+        <div id="prev_${idx}" class="mt-2" style="display:none;">
+          <div id="prevc_${idx}" class="border rounded p-1"></div>
+        </div>`;
         contenedor.appendChild(div);
+
+        const dz = document.getElementById(`dz_${idx}`);
+        const fi = document.getElementById(`fi_${idx}`);
+
+        dz.addEventListener('dragover', e => {
+            e.preventDefault();
+            dz.style.background = '#e8f4ff';
+            dz.style.borderColor = '#007bff';
+        });
+        dz.addEventListener('dragleave', () => {
+            dz.style.background = '#f9f9f9';
+            dz.style.borderColor = '#aaa';
+        });
+        dz.addEventListener('drop', e => {
+            e.preventDefault();
+            dz.style.background = '#f9f9f9';
+            dz.style.borderColor = '#aaa';
+            const file = e.dataTransfer.files[0];
+            if (file) asignarArchivo(file, idx);
+        });
+        fi.addEventListener('change', function() {
+            if (this.files[0]) asignarArchivo(this.files[0], idx);
+        });
     }
 
     btnSubir.style.display = 'inline-block';
+}
+
+function asignarArchivo(file, idx) {
+    if (file.type !== 'application/pdf') {
+        alert('Solo se permiten archivos PDF');
+        return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+        alert('El archivo supera 10MB');
+        return;
+    }
+
+    // Asignar al input
+    const fi = document.getElementById(`fi_${idx}`);
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    fi.files = dt.files;
+
+    // Actualizar zona visual
+    const dz   = document.getElementById(`dz_${idx}`);
+    const prev  = document.getElementById(`prev_${idx}`);
+    const prevc = document.getElementById(`prevc_${idx}`);
+
+    dz.style.background   = '#d4edda';
+    dz.style.borderColor  = '#28a745';
+    dz.innerHTML = `
+        <i class="fas fa-check-circle fa-2x text-success mb-1"></i>
+        <p class="mb-0 text-success font-weight-bold">${file.name}</p>
+        <small class="text-muted">${(file.size/1024).toFixed(1)} KB — clic para cambiar</small>`;
+
+    prevc.innerHTML = `<embed src="${URL.createObjectURL(file)}"
+                              type="application/pdf" width="100%" height="140px">`;
+    prev.style.display = 'block';
 }
 
 function mostrarSeleccionada(nombre) {
