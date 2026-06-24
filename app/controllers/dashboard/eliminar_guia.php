@@ -61,7 +61,7 @@ $pdo->prepare("DELETE FROM tb_ventas_guias WHERE id_venta = ?")->execute([$id_ve
 /* =========================
    ACTUALIZAR BD
 ========================= */
-$stmt = $pdo->prepare("UPDATE tb_ventas SET guia_pdf = NULL, estado_logistico = 'PENDIENTE GUIA' WHERE id_venta = ?");
+$stmt = $pdo->prepare("UPDATE tb_ventas SET guia_pdf = NULL, paqueteria = NULL, estado_logistico = 'PENDIENTE GUIA' WHERE id_venta = ?");
 
 if ($stmt->execute([$id_venta])) {
     http_response_code(200);

@@ -47,8 +47,8 @@ if ($primera) {
     $pdo->prepare("UPDATE tb_ventas SET guia_pdf = ? WHERE id_venta = ?")
         ->execute([$primera['archivo'], $id_venta]);
 } else {
-    // No quedan guías — limpiar estado
-    $pdo->prepare("UPDATE tb_ventas SET guia_pdf = NULL, estado_logistico = 'PENDIENTE GUIA' WHERE id_venta = ?")
+    // No quedan guías — limpiar estado y paquetería
+    $pdo->prepare("UPDATE tb_ventas SET guia_pdf = NULL, paqueteria = NULL, estado_logistico = 'PENDIENTE GUIA' WHERE id_venta = ?")
         ->execute([$id_venta]);
 }
 
