@@ -169,6 +169,14 @@ if(in_array(15, $_SESSION['permisos'])):
                 $cliente = $stmt->fetch(PDO::FETCH_ASSOC);
               ?>
 
+              <!-- Hoja de empaque -->
+              <div class="mb-2 text-right">
+                <a href="hoja_empaque.php?id=<?= $id_venta ?>" target="_blank"
+                   class="btn btn-outline-dark btn-sm">
+                  <i class="fas fa-print"></i> Hoja de empaque / Guías
+                </a>
+              </div>
+
               <!-- Datos del cliente -->
               <div class="alert alert-info text-left">
                 <strong>Cliente:</strong> <?= htmlspecialchars($cliente['nombre_completo']) ?><br>
@@ -426,6 +434,10 @@ if(in_array(15, $_SESSION['permisos'])):
                       <a href="salida.php?id_venta=<?= $vp['id_venta'] ?>&tipo=<?= $tipo_link ?>"
                          class="btn btn-sm btn-danger">
                         <i class="fas fa-barcode"></i> Procesar
+                      </a>
+                      <a href="hoja_empaque.php?id=<?= $vp['id_venta'] ?>" target="_blank"
+                         class="btn btn-sm btn-outline-dark ml-1" title="Hoja de empaque">
+                        <i class="fas fa-print"></i>
                       </a>
                     </td>
                   </tr>
