@@ -13,14 +13,22 @@ $db   = $_ENV['DB_NAME'] ;
 $user = $_ENV['DB_USER'] ;
 $pass = $_ENV['DB_PASS']; 
 
+// Calcular offset de Monterrey dinámicamente (ajusta DST verano/invierno)
+$mty_tz      = new DateTimeZone('America/Monterrey');
+$offset_secs = $mty_tz->getOffset(new DateTime('now', new DateTimeZone('UTC')));
+$offset_h    = intdiv(abs($offset_secs), 3600);
+$offset_m    = (abs($offset_secs) % 3600) / 60;
+$tz_offset   = sprintf('%s%02d:%02d', $offset_secs < 0 ? '-' : '+', $offset_h, $offset_m);
+
 try {
     $pdo = new PDO(
         "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4",
         $user,
         $pass,
         [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '$tz_offset'"
         ]
     );
     // echo "Conectado a Railway";
