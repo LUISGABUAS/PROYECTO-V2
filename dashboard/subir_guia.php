@@ -8,6 +8,18 @@ $id_venta = $_GET['id'] ?? null;
 if (!$id_venta) {
     die('Venta no válida');
 }
+
+// Total de pacas vendidas en esta venta
+$stmt_pacas = $pdo->prepare("SELECT COALESCE(SUM(cantidad), 1) AS total_pacas FROM tb_ventas_detalle WHERE id_venta = ?");
+$stmt_pacas->execute([$id_venta]);
+$total_pacas = (int)$stmt_pacas->fetchColumn();
+if ($total_pacas < 1) $total_pacas = 1;
+
+// Guías ya subidas
+$stmt_guias = $pdo->prepare("SELECT id, numero, archivo FROM tb_ventas_guias WHERE id_venta = ? ORDER BY numero ASC");
+$stmt_guias->execute([$id_venta]);
+$guias_existentes = $stmt_guias->fetchAll(PDO::FETCH_ASSOC);
+$guias_subidas = count($guias_existentes);
 ?>
 
 <div class="content-wrapper">
@@ -136,22 +148,55 @@ if (!$id_venta) {
               </small>
             </div>
 
-            <div class="form-group">
-              <label>Guía (PDF)</label>
-              <input type="file"
-                     name="guia_pdf"
-                     class="form-control"
-                     accept="application/pdf"
-                     required>
+            <!-- GUÍAS -->
+            <div class="mt-3">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="mb-0"><strong>Guías de envío</strong></label>
+                <span class="badge badge-info" style="font-size:.9rem;">
+                  <?= $guias_subidas ?> / <?= $total_pacas ?> guías subidas
+                </span>
+              </div>
+
+              <?php if ($guias_subidas > 0): ?>
+              <div class="mb-3">
+                <small class="text-muted">Ya subidas:</small>
+                <div class="d-flex flex-wrap mt-1" style="gap:.5rem;">
+                  <?php foreach ($guias_existentes as $g): ?>
+                  <a href="<?= $URL ?>/dashboard/guia_pdf/<?= $g['archivo'] ?>" target="_blank"
+                     class="btn btn-sm btn-outline-success">
+                    <i class="fas fa-file-pdf"></i> Guía <?= $g['numero'] ?>
+                  </a>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+              <?php endif; ?>
+
+              <?php
+              $faltantes = $total_pacas - $guias_subidas;
+              if ($faltantes > 0):
+                for ($n = $guias_subidas + 1; $n <= $total_pacas; $n++):
+              ?>
+              <div class="form-group">
+                <label>Guía <?= $n ?> de <?= $total_pacas ?> (PDF)</label>
+                <input type="file" name="guias[]" class="form-control"
+                       accept="application/pdf" <?= $n === ($guias_subidas + 1) ? 'required' : '' ?>>
+              </div>
+              <?php endfor; ?>
+              <?php else: ?>
+              <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> Todas las guías ya fueron subidas (<?= $total_pacas ?>).
+              </div>
+              <?php endif; ?>
             </div>
         </div>
 
-
+            <?php if ($faltantes > 0): ?>
             <button type="submit" class="btn btn-primary">
-              <i class="fa fa-upload"></i> Subir guía
+              <i class="fa fa-upload"></i> Subir guías
             </button>
+            <?php endif; ?>
 
-            <a href="../ventas" class="btn btn-secondary">Cancelar</a>
+            <a href="../dashboard/foraneos.php" class="btn btn-secondary">Cancelar</a>
           </form>
             </div>
       </div>

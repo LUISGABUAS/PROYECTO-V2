@@ -45,3 +45,14 @@ $sql_base .= " ORDER BY u.nombres, v.fecha DESC";
 $stmt = $pdo->prepare($sql_base);
 $stmt->execute($params);
 $ventas_foraneos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Cargar todas las guías de estas ventas
+$ids_ventas = array_column($ventas_foraneos, 'id_venta');
+$guias_por_venta = [];
+if (!empty($ids_ventas)) {
+    $in_guias = implode(',', array_map('intval', $ids_ventas));
+    $rows = $pdo->query("SELECT id_venta, numero, archivo FROM tb_ventas_guias WHERE id_venta IN ($in_guias) ORDER BY id_venta, numero ASC")->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($rows as $r) {
+        $guias_por_venta[$r['id_venta']][] = $r;
+    }
+}

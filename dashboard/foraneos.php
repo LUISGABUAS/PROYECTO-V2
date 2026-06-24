@@ -232,42 +232,33 @@ if (!in_array(20, $_SESSION['permisos'])) {
                     <?php endif; ?>
                   </td>
 
-                  <td class="text-center"><?php if (!empty($v['guia_pdf'])): ?>
-                     <!-- Vista rápida -->
-                      <div class="guia-preview">
-                        <iframe 
-                            src="<?= $URL ?>/dashboard/guia_pdf/<?= $v['guia_pdf'] ?>#page=1"
-                            width="90"
-                            height="120"
-                            loading="lazy">
-                        </iframe>
+                  <td class="text-center">
+                  <?php
+                    $guias_venta = $guias_por_venta[$v['id_venta']] ?? [];
+                    if (!empty($guias_venta)):
+                      foreach ($guias_venta as $g):
+                  ?>
+                      <div class="guia-preview mb-1">
+                        <iframe src="<?= $URL ?>/dashboard/guia_pdf/<?= $g['archivo'] ?>#page=1"
+                                width="90" height="120" loading="lazy"></iframe>
                         <div class="guia-overlay">
-                          <a href="<?= $URL ?>/dashboard/guia_pdf/<?= $v['guia_pdf'] ?>" target="_blank"
-                    class="btn btn-xs btn-info">
-                      <i class="fas fa-eye"></i>
-                    </a>
-
-                    <button class="btn btn-xs btn-warning btn-reemplazar-guia"
-                    data-id="<?= $v['id_venta'] ?>">
-                            <i class="fa-solid fa-arrows-rotate"></i>
-                </button>
-
-                <button class="btn btn-xs btn-danger btn-eliminar-guia"
-                    data-id="<?= $v['id_venta'] ?>">
-                            <i class="fa-solid fa-trash"></i>
-                </button>
+                          <small class="d-block text-white font-weight-bold">G<?= $g['numero'] ?></small>
+                          <a href="<?= $URL ?>/dashboard/guia_pdf/<?= $g['archivo'] ?>" target="_blank"
+                             class="btn btn-xs btn-info"><i class="fas fa-eye"></i></a>
+                          <button class="btn btn-xs btn-danger btn-eliminar-guia-individual"
+                                  data-id="<?= $g['id'] ?>" data-venta="<?= $v['id_venta'] ?>">
+                            <i class="fas fa-trash"></i>
+                          </button>
                         </div>
-                    </div>
-                        
-
-
-                    
+                      </div>
+                  <?php endforeach; ?>
                   <?php else: ?>
-                    <center><span class="badge badge-warning">Sin guia</span></center>
-                  <a href="subir_guia.php?id=<?= $v['id_venta'] ?>" class="badge badge-primary">
-                      Agregar guía
-                    </a>
-                  <?php endif; ?></td>
+                    <span class="badge badge-warning">Sin guía</span><br>
+                  <?php endif; ?>
+                  <a href="subir_guia.php?id=<?= $v['id_venta'] ?>" class="badge badge-primary mt-1">
+                    <i class="fas fa-plus"></i> <?= empty($guias_venta) ? 'Agregar guías' : 'Más guías' ?>
+                  </a>
+                  </td>
                   <td><?php if ($v['estado_logistico'] == 'PENDIENTE GUIA'):   ?>
                 <span class="badge badge-warning">Pendiente Guia</span>
                 <?php elseif ($v['estado_logistico'] == 'GUIA REGISTRADA'): ?>
