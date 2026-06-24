@@ -468,20 +468,52 @@ if (formSalida) formSalida.addEventListener('submit', function(e) {
   })
   .then(res => res.json())
   .then(data => {
-    alerta.innerHTML = `<div class="alert alert-${data.success ? 'success' : 'danger'} mt-3">${data.message}</div>`;
-    
     // 🔊 REPRODUCIR SONIDO
     if(data.success) {
-      const soundOk = new Audio('<?= $URL ?>/app/controllers/sounds/ok.mp3');
-      soundOk.play();
+      new Audio('<?= $URL ?>/app/controllers/sounds/ok.mp3').play();
     } else {
-      const soundError = new Audio('<?= $URL ?>/app/controllers/sounds/error.mp3');
-      soundError.play();
+      new Audio('<?= $URL ?>/app/controllers/sounds/error.mp3').play();
     }
 
     if(data.success) {
+      // Construir alerta con guía asignada
+      let guiaHtml = '';
+      if (data.guias_paca && data.guias_paca.length > 0) {
+        guiaHtml = `<div class="mt-2 p-2" style="background:#dc3545;border-radius:6px;color:#fff;">
+          <strong>📦 Paca #${data.num_paca} — Pegar esta(s) guía(s):</strong><br>
+          ${data.guias_paca.map(g =>
+            `<a href="<?= $URL ?>/dashboard/guia_pdf/${g.archivo}" target="_blank"
+                style="display:inline-block;margin:4px;padding:4px 12px;background:#fff;color:#dc3545;border-radius:4px;font-weight:bold;text-decoration:none;">
+               📄 Ver Guía ${g.numero}
+             </a>
+             <a href="<?= $URL ?>/dashboard/guia_pdf/${g.archivo}" target="_blank"
+                onclick="setTimeout(()=>document.querySelector('[name=codigo_unico]').focus(),500)"
+                style="display:inline-block;margin:4px;padding:4px 12px;background:#ffc107;color:#000;border-radius:4px;font-weight:bold;text-decoration:none;">
+               🖨️ Imprimir Guía ${g.numero}
+             </a>`
+          ).join('')}
+        </div>`;
+      } else if (data.paqueteria) {
+        guiaHtml = `<div class="alert alert-warning mt-2 mb-0">
+          ⚠️ Paca #${data.num_paca} — <strong>Sin guía asignada aún</strong> para esta paca
+        </div>`;
+      }
+
+      alerta.innerHTML = `<div class="alert alert-success mt-3 mb-0">
+        ✅ ${data.message}
+        ${guiaHtml}
+      </div>`;
+
       this.codigo_unico.value = '';
-      this.codigo_unico.focus();
+      // Solo re-enfocar si no hay guía que ver (para dar tiempo a hacer clic)
+      if (!data.guias_paca || data.guias_paca.length === 0) {
+        this.codigo_unico.focus();
+      }
+    } else {
+      alerta.innerHTML = `<div class="alert alert-danger mt-3">${data.message}</div>`;
+    }
+
+    if(data.success) {
 
       // Actualizar tabla de progreso sin recargar
       fetch(`../app/controllers/stock/estado_venta.php?id_venta=${formData.get('id_venta')}`)

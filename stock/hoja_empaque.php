@@ -214,30 +214,54 @@ $guias_requeridas = $total_pacas * $multiplicador;
   </tbody>
 </table>
 
-<!-- CÓDIGOS ESCANEADOS -->
-<?php if (!empty($codigos_escaneados)): ?>
-<h4 style="margin-bottom:6px;">Códigos de paca incluidos (<?= count($codigos_escaneados) ?>)</h4>
+<!-- ASIGNACIÓN PACA → GUÍA -->
+<h4 style="margin-bottom:6px;color:#dc3545;">📦 Asignación de guía por paca</h4>
 <table>
   <thead>
     <tr>
-      <th>#</th>
+      <th>#Paca</th>
       <th>Código de paca</th>
       <th>Producto</th>
+      <th style="background:#dc3545;">Guía(s) a pegar</th>
       <th>Escaneado</th>
     </tr>
   </thead>
   <tbody>
-    <?php foreach ($codigos_escaneados as $i => $cod): ?>
+    <?php if (!empty($codigos_escaneados)):
+      foreach ($codigos_escaneados as $i => $cod):
+        $num_paca = $i + 1;
+        if ($multiplicador === 2) {
+            $idx1 = ($num_paca * 2) - 2;
+            $idx2 = ($num_paca * 2) - 1;
+            $guias_paca = array_filter([$guias[$idx1] ?? null, $guias[$idx2] ?? null]);
+        } else {
+            $guias_paca = isset($guias[$i]) ? [$guias[$i]] : [];
+        }
+    ?>
     <tr>
-      <td><?= $i + 1 ?></td>
+      <td style="text-align:center;font-weight:bold;font-size:16px;"><?= $num_paca ?></td>
       <td><strong><?= htmlspecialchars($cod['codigo_unico']) ?></strong></td>
       <td><?= htmlspecialchars($cod['producto']) ?></td>
+      <td style="background:#fff3cd;">
+        <?php if (!empty($guias_paca)): ?>
+          <?php foreach ($guias_paca as $g): ?>
+          <a href="<?= $URL ?>/dashboard/guia_pdf/<?= $g['archivo'] ?>" target="_blank"
+             style="display:inline-block;padding:3px 8px;background:#dc3545;color:#fff;border-radius:4px;text-decoration:none;margin:2px;font-size:12px;">
+            Guía <?= $g['numero'] ?>
+          </a>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <span style="color:#856404;">Sin guía aún</span>
+        <?php endif; ?>
+      </td>
       <td><?= $cod['fecha_scan'] ?></td>
     </tr>
-    <?php endforeach; ?>
+    <?php endforeach;
+    else: ?>
+    <tr><td colspan="5" style="text-align:center;color:#666;">Aún no se han escaneado pacas para esta venta</td></tr>
+    <?php endif; ?>
   </tbody>
 </table>
-<?php endif; ?>
 
 <div class="footer">
   Generado: <?= date('d/m/Y H:i') ?> — Sistema Pacas Yadira

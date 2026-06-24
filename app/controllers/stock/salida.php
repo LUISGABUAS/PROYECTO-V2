@@ -159,8 +159,37 @@ try {
     $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
     registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'SALIDA STOCK', 'stock', $id_stock, $codigo_unico);
 
-    $response['success'] = true;
-    $response['message'] = 'Producto entregado correctamente.';
+    // Número de paca en esta venta (total escaneadas hasta ahora)
+    $stmt_n = $pdo->prepare("SELECT COUNT(*) FROM tb_ventas_stock WHERE id_venta = ?");
+    $stmt_n->execute([$id_venta]);
+    $num_paca = (int)$stmt_n->fetchColumn();
+
+    // Guías de la venta
+    $paqueteria_v = $pdo->prepare("SELECT paqueteria FROM tb_ventas WHERE id_venta = ?");
+    $paqueteria_v->execute([$id_venta]);
+    $paqueteria_v = $paqueteria_v->fetchColumn();
+
+    $stmt_guias = $pdo->prepare("SELECT numero, archivo FROM tb_ventas_guias WHERE id_venta = ? ORDER BY numero ASC");
+    $stmt_guias->execute([$id_venta]);
+    $todas_guias = $stmt_guias->fetchAll(PDO::FETCH_ASSOC);
+
+    // Asignar guía(s) a esta paca
+    $guias_paca = [];
+    if ($paqueteria_v === 'Estafeta') {
+        $i1 = ($num_paca * 2) - 2;
+        $i2 = ($num_paca * 2) - 1;
+        if (isset($todas_guias[$i1])) $guias_paca[] = $todas_guias[$i1];
+        if (isset($todas_guias[$i2])) $guias_paca[] = $todas_guias[$i2];
+    } else {
+        $idx = $num_paca - 1;
+        if (isset($todas_guias[$idx])) $guias_paca[] = $todas_guias[$idx];
+    }
+
+    $response['success']    = true;
+    $response['message']    = "Paca #$num_paca escaneada correctamente.";
+    $response['num_paca']   = $num_paca;
+    $response['paqueteria'] = $paqueteria_v;
+    $response['guias_paca'] = $guias_paca;
 
 } catch (Exception $e) {
     $pdo->rollBack();
