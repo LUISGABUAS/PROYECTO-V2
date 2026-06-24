@@ -266,14 +266,25 @@ if (!in_array(20, $_SESSION['permisos'])) {
                   </button>
                   <?php endif; ?>
                   </td>
-                  <td><?php if ($v['estado_logistico'] == 'PENDIENTE GUIA'):   ?>
-                <span class="badge badge-warning">Pendiente Guia</span>
-                <?php elseif ($v['estado_logistico'] == 'GUIA REGISTRADA'): ?>
-                <span class="badge badge-info">Guia Registrada</span>
-              <?php elseif ($v['estado_logistico'] == 'ENVIADA'): ?>
-                <span class="badge badge-success">Enviado</span>
-
-                <?php endif; ?></td>
+                  <td>
+                  <?php
+                    $pacas_v     = $pacas_por_venta[$v['id_venta']] ?? 1;
+                    $paq_v       = $v['paqueteria'] ?? '';
+                    $multiplicador_v = ($paq_v === 'Estafeta') ? 2 : 1;
+                    $requeridas_v    = $pacas_v * $multiplicador_v;
+                    $subidas_v       = count($guias_por_venta[$v['id_venta']] ?? []);
+                    $faltantes_v     = $requeridas_v - $subidas_v;
+                  ?>
+                  <?php if ($v['estado_logistico'] == 'ENVIADA'): ?>
+                    <span class="badge badge-success">Enviado</span>
+                  <?php elseif ($faltantes_v > 0): ?>
+                    <span class="badge badge-danger">
+                      Faltan <?= $faltantes_v ?> guía<?= $faltantes_v > 1 ? 's' : '' ?>
+                    </span>
+                  <?php else: ?>
+                    <span class="badge badge-info">Guías completas ✓</span>
+                  <?php endif; ?>
+                  </td>
                 
 
                   <?php if (

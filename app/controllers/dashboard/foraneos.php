@@ -46,13 +46,23 @@ $stmt = $pdo->prepare($sql_base);
 $stmt->execute($params);
 $ventas_foraneos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Cargar todas las guías de estas ventas
-$ids_ventas = array_column($ventas_foraneos, 'id_venta');
+// Cargar todas las guías y pacas de estas ventas
+$ids_ventas      = array_column($ventas_foraneos, 'id_venta');
 $guias_por_venta = [];
+$pacas_por_venta = [];
+
 if (!empty($ids_ventas)) {
-    $in_guias = implode(',', array_map('intval', $ids_ventas));
-    $rows = $pdo->query("SELECT id, id_venta, numero, archivo FROM tb_ventas_guias WHERE id_venta IN ($in_guias) ORDER BY id_venta, numero ASC")->fetchAll(PDO::FETCH_ASSOC);
+    $in = implode(',', array_map('intval', $ids_ventas));
+
+    // Guías subidas
+    $rows = $pdo->query("SELECT id, id_venta, numero, archivo FROM tb_ventas_guias WHERE id_venta IN ($in) ORDER BY id_venta, numero ASC")->fetchAll(PDO::FETCH_ASSOC);
     foreach ($rows as $r) {
         $guias_por_venta[$r['id_venta']][] = $r;
+    }
+
+    // Total pacas por venta
+    $rows_pacas = $pdo->query("SELECT id_venta, COALESCE(SUM(cantidad),1) AS total FROM tb_ventas_detalle WHERE id_venta IN ($in) GROUP BY id_venta")->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($rows_pacas as $r) {
+        $pacas_por_venta[$r['id_venta']] = (int)$r['total'];
     }
 }
