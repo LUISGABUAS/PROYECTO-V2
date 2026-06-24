@@ -178,37 +178,66 @@ if(in_array(15, $_SESSION['permisos'])):
                 <strong>Total:</strong> $<?= number_format($cliente['total'],2) ?>
               </div>
 
-              <!-- Botones de Guía (solo para foraneos) -->
-              <?php if($tipo_venta === 'foraneo' && !empty($cliente['guia_pdf'])): ?>
-              <div class="mb-3 text-center">
-                <div class="btn-group" role="group">
-                  <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#modalGuia">
-                    <i class="fa fa-eye"></i> Ver Guía
-                  </button>
-                  <a href="<?= $URL ?>/dashboard/guia_pdf/<?= htmlspecialchars($cliente['guia_pdf']) ?>" class="btn btn-success btn-sm" download>
-                    <i class="fa fa-download"></i> Descargar Guía
-                  </a>
+              <!-- Guías (solo foráneos) -->
+              <?php if($tipo_venta === 'foraneo'):
+                $stmt_g = $pdo->prepare("SELECT id, numero, archivo FROM tb_ventas_guias WHERE id_venta = ? ORDER BY numero ASC");
+                $stmt_g->execute([$id_venta]);
+                $guias_salida = $stmt_g->fetchAll(PDO::FETCH_ASSOC);
+
+                // Fallback: guía antigua en tb_ventas si no hay registros en tb_ventas_guias
+                if (empty($guias_salida) && !empty($cliente['guia_pdf'])) {
+                    $guias_salida = [['id' => 0, 'numero' => 1, 'archivo' => $cliente['guia_pdf']]];
+                }
+              ?>
+              <?php if (!empty($guias_salida)): ?>
+              <div class="mb-3">
+                <strong><i class="fas fa-file-pdf text-danger"></i> Guías de envío (<?= count($guias_salida) ?>):</strong>
+                <div class="d-flex flex-wrap mt-2" style="gap:.5rem;">
+                  <?php foreach ($guias_salida as $g): ?>
+                  <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-warning"
+                            onclick="verGuia('<?= $URL ?>/dashboard/guia_pdf/<?= htmlspecialchars($g['archivo']) ?>', <?= $g['numero'] ?>)">
+                      <i class="fa fa-eye"></i> Guía <?= $g['numero'] ?>
+                    </button>
+                    <a href="<?= $URL ?>/dashboard/guia_pdf/<?= htmlspecialchars($g['archivo']) ?>"
+                       class="btn btn-success" download>
+                      <i class="fa fa-download"></i>
+                    </a>
+                    <a href="<?= $URL ?>/dashboard/guia_pdf/<?= htmlspecialchars($g['archivo']) ?>"
+                       class="btn btn-info" target="_blank" title="Imprimir">
+                      <i class="fa fa-print"></i>
+                    </a>
+                  </div>
+                  <?php endforeach; ?>
                 </div>
               </div>
+              <?php else: ?>
+              <div class="alert alert-warning mb-3">
+                <i class="fas fa-exclamation-triangle"></i> Esta venta foránea aún no tiene guía registrada.
+                <a href="<?= $URL ?>/dashboard/subir_guia.php?id=<?= $id_venta ?>" class="btn btn-sm btn-primary ml-2">
+                  <i class="fa fa-upload"></i> Subir guía
+                </a>
+              </div>
+              <?php endif; ?>
 
               <!-- Modal para previsualizar Guía -->
               <div class="modal fade" id="modalGuia" tabindex="-1" role="dialog">
-                <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-dialog modal-xl" role="document">
                   <div class="modal-content">
                     <div class="modal-header">
-                      <h5 class="modal-title">Previsualización de Guía - Venta #<?= $id_venta ?></h5>
-                      <button type="button" class="close" data-dismiss="modal">
-                        <span>&times;</span>
-                      </button>
+                      <h5 class="modal-title" id="modalGuiaTitulo">Guía - Venta #<?= $id_venta ?></h5>
+                      <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                     </div>
-                    <div class="modal-body">
-                      <iframe src="<?= $URL ?>/dashboard/guia_pdf/<?= htmlspecialchars($cliente['guia_pdf']) ?>#toolbar=0" 
-                              style="width:100%; height:500px; border:none;"></iframe>
+                    <div class="modal-body p-0">
+                      <iframe id="modalGuiaIframe" src="" style="width:100%; height:600px; border:none;"></iframe>
                     </div>
                     <div class="modal-footer">
                       <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                      <a href="<?= $URL ?>/dashboard/guia_pdf/<?= htmlspecialchars($cliente['guia_pdf']) ?>" class="btn btn-success" download>
+                      <a id="modalGuiaDescargar" href="#" class="btn btn-success" download>
                         <i class="fa fa-download"></i> Descargar
+                      </a>
+                      <a id="modalGuiaImprimir" href="#" class="btn btn-info" target="_blank">
+                        <i class="fa fa-print"></i> Abrir para imprimir
                       </a>
                     </div>
                   </div>
@@ -463,6 +492,15 @@ setTimeout(() => {
   const input = document.querySelector('input[name="codigo_unico"]');
   if(input) input.focus();
 }, 300);
+
+// Ver guía en modal
+function verGuia(url, numero) {
+  document.getElementById('modalGuiaTitulo').textContent = 'Guía ' + numero;
+  document.getElementById('modalGuiaIframe').src = url + '#toolbar=0';
+  document.getElementById('modalGuiaDescargar').href = url;
+  document.getElementById('modalGuiaImprimir').href = url;
+  $('#modalGuia').modal('show');
+}
 </script>
 
 
