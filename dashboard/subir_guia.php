@@ -148,15 +148,18 @@ $guias_subidas = count($guias_existentes);
               </small>
             </div>
 
+            <!-- TOGGLE DOBLE GUÍA FEDEX -->
+            <div id="div_fedex_doble" class="mt-2" style="display:none;">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="chk_fedex_doble">
+                <label class="custom-control-label" for="chk_fedex_doble">
+                  Esta guía FedEx requiere <strong>doble guía</strong>
+                </label>
+              </div>
+            </div>
+
             <!-- GUÍAS -->
             <div class="mt-3">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <label class="mb-0"><strong>Guías de envío</strong></label>
-                <span class="badge badge-info" style="font-size:.9rem;">
-                  <?= $guias_subidas ?> / <?= $total_pacas ?> guías subidas
-                </span>
-              </div>
-
               <?php if ($guias_subidas > 0): ?>
               <div class="mb-3">
                 <small class="text-muted">Ya subidas:</small>
@@ -171,30 +174,13 @@ $guias_subidas = count($guias_existentes);
               </div>
               <?php endif; ?>
 
-              <?php
-              $faltantes = $total_pacas - $guias_subidas;
-              if ($faltantes > 0):
-                for ($n = $guias_subidas + 1; $n <= $total_pacas; $n++):
-              ?>
-              <div class="form-group">
-                <label>Guía <?= $n ?> de <?= $total_pacas ?> (PDF)</label>
-                <input type="file" name="guias[]" class="form-control"
-                       accept="application/pdf" <?= $n === ($guias_subidas + 1) ? 'required' : '' ?>>
-              </div>
-              <?php endfor; ?>
-              <?php else: ?>
-              <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i> Todas las guías ya fueron subidas (<?= $total_pacas ?>).
-              </div>
-              <?php endif; ?>
+              <div id="contenedor_guias"></div>
             </div>
         </div>
 
-            <?php if ($faltantes > 0): ?>
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" class="btn btn-primary" id="btn_subir" style="display:none;">
               <i class="fa fa-upload"></i> Subir guías
             </button>
-            <?php endif; ?>
 
             <a href="../dashboard/foraneos.php" class="btn btn-secondary">Cancelar</a>
           </form>
@@ -210,36 +196,99 @@ $guias_subidas = count($guias_existentes);
 
 
 <script>
+const TOTAL_PACAS   = <?= $total_pacas ?>;
+const GUIAS_SUBIDAS = <?= $guias_subidas ?>;
+
+let paqueteriaActual = '';
+
 document.querySelectorAll('.btn-paqueteria').forEach(btn => {
     btn.addEventListener('click', function() {
-        // Quitar selección anterior
         document.querySelectorAll('.btn-paqueteria').forEach(b => {
             b.classList.remove('active');
             b.style.fontWeight = '';
         });
-
-        const valor = this.dataset.valor;
         this.classList.add('active');
         this.style.fontWeight = 'bold';
 
-        const divOtra = document.getElementById('div_otra_paqueteria');
-        const inputOtra = document.getElementById('input_otra_paqueteria');
+        const valor = this.dataset.valor;
+        paqueteriaActual = valor;
+
+        const divOtra    = document.getElementById('div_otra_paqueteria');
+        const inputOtra  = document.getElementById('input_otra_paqueteria');
+        const divFedex   = document.getElementById('div_fedex_doble');
+        const chkFedex   = document.getElementById('chk_fedex_doble');
+
+        // Mostrar/ocultar controles especiales
+        divOtra.style.display  = (valor === 'Otra')  ? 'block' : 'none';
+        divFedex.style.display = (valor === 'FedEx') ? 'block' : 'none';
 
         if (valor === 'Otra') {
-            divOtra.style.display = 'block';
             inputOtra.focus();
             document.getElementById('paqueteria_value').value = '';
-            inputOtra.addEventListener('input', function() {
+            inputOtra.oninput = function() {
                 document.getElementById('paqueteria_value').value = this.value;
                 mostrarSeleccionada(this.value);
-            });
+            };
         } else {
-            divOtra.style.display = 'none';
             document.getElementById('paqueteria_value').value = valor;
             mostrarSeleccionada(valor);
         }
+
+        // Reconstruir campos de guía
+        const multiplicador = getMultiplicador(valor, chkFedex.checked);
+        renderGuias(multiplicador);
     });
 });
+
+// Cuando cambia el toggle de FedEx doble
+document.getElementById('chk_fedex_doble').addEventListener('change', function() {
+    const mult = getMultiplicador('FedEx', this.checked);
+    renderGuias(mult);
+});
+
+function getMultiplicador(paqueteria, fedexDoble) {
+    if (paqueteria === 'Estafeta') return 2;
+    if (paqueteria === 'FedEx' && fedexDoble) return 2;
+    return 1;
+}
+
+function renderGuias(multiplicador) {
+    const totalRequeridas = TOTAL_PACAS * multiplicador;
+    const faltantes = totalRequeridas - GUIAS_SUBIDAS;
+    const contenedor = document.getElementById('contenedor_guias');
+    const btnSubir   = document.getElementById('btn_subir');
+
+    contenedor.innerHTML = '';
+
+    if (faltantes <= 0) {
+        contenedor.innerHTML = `<div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> Todas las guías ya fueron subidas (${totalRequeridas}).
+        </div>`;
+        btnSubir.style.display = 'none';
+        return;
+    }
+
+    // Badge contador
+    const badge = document.createElement('div');
+    badge.className = 'd-flex justify-content-between align-items-center mb-2';
+    badge.innerHTML = `<label class="mb-0"><strong>Guías de envío</strong></label>
+        <span class="badge badge-info" style="font-size:.9rem;">
+          ${GUIAS_SUBIDAS} / ${totalRequeridas} guías
+          ${multiplicador === 2 ? '<span class="ml-1 badge badge-warning">×2</span>' : ''}
+        </span>`;
+    contenedor.appendChild(badge);
+
+    for (let n = GUIAS_SUBIDAS + 1; n <= totalRequeridas; n++) {
+        const div = document.createElement('div');
+        div.className = 'form-group';
+        div.innerHTML = `<label>Guía ${n} de ${totalRequeridas} (PDF)</label>
+            <input type="file" name="guias[]" class="form-control"
+                   accept="application/pdf" ${n === GUIAS_SUBIDAS + 1 ? 'required' : ''}>`;
+        contenedor.appendChild(div);
+    }
+
+    btnSubir.style.display = 'inline-block';
+}
 
 function mostrarSeleccionada(nombre) {
     const el = document.getElementById('paqueteria_seleccionada');
