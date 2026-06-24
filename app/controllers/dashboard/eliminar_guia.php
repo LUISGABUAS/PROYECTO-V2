@@ -39,42 +39,35 @@ if (!$venta) {
 }
 
 /* =========================
-   ELIMINAR PDF FÍSICO
+   ELIMINAR TODOS LOS PDFs
 ========================= */
 $ruta = __DIR__ . '/../../../dashboard/guia_pdf/';
 
+// Eliminar archivo de tb_ventas.guia_pdf
 if (!empty($venta['guia_pdf'])) {
     $archivo = $ruta . $venta['guia_pdf'];
-
-    if (file_exists($archivo)) {
-        unlink($archivo);
-    }
+    if (file_exists($archivo)) unlink($archivo);
 }
+
+// Eliminar todos los archivos de tb_ventas_guias
+$stmt_guias = $pdo->prepare("SELECT archivo FROM tb_ventas_guias WHERE id_venta = ?");
+$stmt_guias->execute([$id_venta]);
+foreach ($stmt_guias->fetchAll(PDO::FETCH_COLUMN) as $arch) {
+    $f = $ruta . $arch;
+    if (file_exists($f)) unlink($f);
+}
+$pdo->prepare("DELETE FROM tb_ventas_guias WHERE id_venta = ?")->execute([$id_venta]);
 
 /* =========================
    ACTUALIZAR BD
 ========================= */
-$update = "UPDATE tb_ventas 
-           SET guia_pdf = NULL,
-               estado_logistico = 'PENDIENTE GUIA'
-           WHERE id_venta = :id_venta";
+$stmt = $pdo->prepare("UPDATE tb_ventas SET guia_pdf = NULL, estado_logistico = 'PENDIENTE GUIA' WHERE id_venta = ?");
 
-$stmt = $pdo->prepare($update);
-
-if ($stmt->execute(['id_venta' => $id_venta])) {
-
-    $_SESSION['icono'] = 'success';
-    $_SESSION['mensaje'] = 'Guía eliminada correctamente';
+if ($stmt->execute([$id_venta])) {
     http_response_code(200);
-
     echo json_encode(['success' => true]);
-
 } else {
-
-    $_SESSION['icono'] = 'error';
-    $_SESSION['mensaje'] = 'Error al eliminar la guía';
     http_response_code(500);
-
     echo json_encode(['success' => false]);
 }
 

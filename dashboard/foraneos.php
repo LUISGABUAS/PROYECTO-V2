@@ -255,9 +255,16 @@ if (!in_array(20, $_SESSION['permisos'])) {
                   <?php else: ?>
                     <span class="badge badge-warning">Sin guía</span><br>
                   <?php endif; ?>
-                  <a href="subir_guia.php?id=<?= $v['id_venta'] ?>" class="badge badge-primary mt-1">
+                  <a href="subir_guia.php?id=<?= $v['id_venta'] ?>" class="badge badge-primary mt-1 d-block">
                     <i class="fas fa-plus"></i> <?= empty($guias_venta) ? 'Agregar guías' : 'Más guías' ?>
                   </a>
+                  <?php if (count($guias_venta) > 0): ?>
+                  <button class="btn btn-xs btn-danger btn-eliminar-guia mt-1"
+                          data-id="<?= $v['id_venta'] ?>"
+                          title="Eliminar todas las guías">
+                    <i class="fas fa-trash"></i> Eliminar <?= count($guias_venta) > 1 ? 'todas' : '' ?>
+                  </button>
+                  <?php endif; ?>
                   </td>
                   <td><?php if ($v['estado_logistico'] == 'PENDIENTE GUIA'):   ?>
                 <span class="badge badge-warning">Pendiente Guia</span>
