@@ -455,7 +455,7 @@ if(in_array(15, $_SESSION['permisos'])):
                       </div>
                     </td>
                     <td class="text-center">
-                      <a href="salida.php?id_venta=<?= $vp['id_venta'] ?>&tipo=<?= $tipo_link ?>"
+                      <a href="salida.php?id_venta=<?= $vp['id_venta'] ?>&tipo=<?= $tipo_link ?>&fecha_inicio=<?= urlencode($fecha_inicio) ?>&fecha_fin=<?= urlencode($fecha_fin) ?><?= $hora_hasta ? '&hora_hasta=' . urlencode($hora_hasta) : '' ?>"
                          class="btn btn-sm btn-danger">
                         <i class="fas fa-barcode"></i> Procesar
                       </a>
