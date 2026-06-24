@@ -104,6 +104,38 @@ if (!$id_venta) {
 
         </div>
 
+            <!-- PAQUETERÍA -->
+            <div class="form-group mt-3">
+              <label><strong>Paquetería</strong></label>
+              <input type="hidden" name="paqueteria" id="paqueteria_value">
+              <div class="d-flex flex-wrap" style="gap:.5rem;">
+                <?php
+                $paqueterias = [
+                    ['valor' => 'DHL',                  'color' => 'warning',   'icono' => 'fa-shipping-fast'],
+                    ['valor' => 'Estafeta',             'color' => 'primary',   'icono' => 'fa-truck'],
+                    ['valor' => 'FedEx',                'color' => 'danger',    'icono' => 'fa-box'],
+                    ['valor' => 'Paquetería Express',   'color' => 'success',   'icono' => 'fa-bolt'],
+                    ['valor' => 'J&T Express',          'color' => 'info',      'icono' => 'fa-truck-moving'],
+                    ['valor' => 'Otra',                 'color' => 'secondary', 'icono' => 'fa-ellipsis-h'],
+                ];
+                foreach ($paqueterias as $p): ?>
+                <button type="button"
+                        class="btn btn-outline-<?= $p['color'] ?> btn-paqueteria"
+                        data-valor="<?= $p['valor'] ?>"
+                        style="min-width:130px;">
+                  <i class="fas <?= $p['icono'] ?>"></i> <?= $p['valor'] ?>
+                </button>
+                <?php endforeach; ?>
+              </div>
+              <div id="div_otra_paqueteria" class="mt-2" style="display:none;">
+                <input type="text" id="input_otra_paqueteria" class="form-control"
+                       placeholder="Escribe el nombre de la paquetería..." style="max-width:300px;">
+              </div>
+              <small id="paqueteria_seleccionada" class="text-success mt-1" style="display:none;">
+                <i class="fas fa-check-circle"></i> <span></span>
+              </small>
+            </div>
+
             <div class="form-group">
               <label>Guía (PDF)</label>
               <input type="file"
@@ -131,5 +163,48 @@ if (!$id_venta) {
     
   </section>
 
+
+<script>
+document.querySelectorAll('.btn-paqueteria').forEach(btn => {
+    btn.addEventListener('click', function() {
+        // Quitar selección anterior
+        document.querySelectorAll('.btn-paqueteria').forEach(b => {
+            b.classList.remove('active');
+            b.style.fontWeight = '';
+        });
+
+        const valor = this.dataset.valor;
+        this.classList.add('active');
+        this.style.fontWeight = 'bold';
+
+        const divOtra = document.getElementById('div_otra_paqueteria');
+        const inputOtra = document.getElementById('input_otra_paqueteria');
+
+        if (valor === 'Otra') {
+            divOtra.style.display = 'block';
+            inputOtra.focus();
+            document.getElementById('paqueteria_value').value = '';
+            inputOtra.addEventListener('input', function() {
+                document.getElementById('paqueteria_value').value = this.value;
+                mostrarSeleccionada(this.value);
+            });
+        } else {
+            divOtra.style.display = 'none';
+            document.getElementById('paqueteria_value').value = valor;
+            mostrarSeleccionada(valor);
+        }
+    });
+});
+
+function mostrarSeleccionada(nombre) {
+    const el = document.getElementById('paqueteria_seleccionada');
+    if (nombre) {
+        el.querySelector('span').textContent = nombre + ' seleccionada';
+        el.style.display = 'block';
+    } else {
+        el.style.display = 'none';
+    }
+}
+</script>
 
 <?php include('../layout/parte2.php'); ?>

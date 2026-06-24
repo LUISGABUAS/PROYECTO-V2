@@ -14,8 +14,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$id_venta = $_POST['id_venta'] ?? null;
-$guia_pdf = $_FILES['guia_pdf'] ?? null;
+$id_venta   = $_POST['id_venta'] ?? null;
+$guia_pdf   = $_FILES['guia_pdf'] ?? null;
+$paqueteria = trim($_POST['paqueteria'] ?? '');
 
 /* 🔴 Validación básica */
 if (!$id_venta || !$guia_pdf || $guia_pdf['error'] !== UPLOAD_ERR_OK) {
@@ -72,14 +73,16 @@ $uploadFile = $uploadDir . $filename;
 if (move_uploaded_file($guia_pdf['tmp_name'], $uploadFile)) {
 
     $stmt = $pdo->prepare("
-        UPDATE tb_ventas 
-        SET guia_pdf = :guia_pdf,
+        UPDATE tb_ventas
+        SET guia_pdf         = :guia_pdf,
+            paqueteria       = :paqueteria,
             estado_logistico = 'GUIA REGISTRADA'
         WHERE id_venta = :id_venta
     ");
     $stmt->execute([
-        ':guia_pdf' => $filename,
-        ':id_venta' => $id_venta
+        ':guia_pdf'   => $filename,
+        ':paqueteria' => $paqueteria ?: null,
+        ':id_venta'   => $id_venta,
     ]);
 
     $_SESSION['icono'] = "success";

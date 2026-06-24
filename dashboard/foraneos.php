@@ -108,18 +108,43 @@ if (!in_array(20, $_SESSION['permisos'])) {
   <div class="content">
     <div class="container-fluid">
 
-      <!-- FILTRO FECHAS -->
-      <form method="get" class="row mb-3">
-        <div class="col-md-3">
+      <!-- FILTRO -->
+      <form method="get" class="row mb-3 align-items-end">
+        <div class="col-md-2">
+          <label class="mb-1">Desde</label>
           <input type="date" name="desde" class="form-control" value="<?= $desde ?>">
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
+          <label class="mb-1">Hasta</label>
           <input type="date" name="hasta" class="form-control" value="<?= $hasta ?>">
         </div>
+        <div class="col-md-3">
+          <label class="mb-1">Paquetería</label>
+          <select name="paqueteria_filtro" class="form-control">
+            <option value="">Todas</option>
+            <?php foreach(['DHL','Estafeta','FedEx','Paquetería Express','J&T Express','Otra'] as $p): ?>
+              <option value="<?= $p ?>" <?= ($_GET['paqueteria_filtro'] ?? '') === $p ? 'selected' : '' ?>><?= $p ?></option>
+            <?php endforeach; ?>
+            <option value="sin_paqueteria" <?= ($_GET['paqueteria_filtro'] ?? '') === 'sin_paqueteria' ? 'selected' : '' ?>>Sin paquetería</option>
+          </select>
+        </div>
         <div class="col-md-2">
-          <button class="btn btn-primary">Filtrar</button>
+          <button class="btn btn-primary btn-block">Filtrar</button>
+        </div>
+        <div class="col-md-1">
+          <a href="foraneos.php" class="btn btn-secondary btn-block">Reset</a>
         </div>
       </form>
+
+      <!-- LEYENDA COLORES -->
+      <div class="mb-2 d-flex flex-wrap" style="gap:.4rem;">
+        <span class="badge" style="background:#ffcc00;color:#000;padding:6px 10px;">DHL</span>
+        <span class="badge" style="background:#003087;color:#fff;padding:6px 10px;">Estafeta</span>
+        <span class="badge" style="background:#4d148c;color:#fff;padding:6px 10px;">FedEx</span>
+        <span class="badge" style="background:#28a745;color:#fff;padding:6px 10px;">Paquetería Express</span>
+        <span class="badge" style="background:#d40511;color:#fff;padding:6px 10px;">J&T Express</span>
+        <span class="badge" style="background:#e9ecef;color:#212529;padding:6px 10px;">Otra / Sin asignar</span>
+      </div>
 
       <?php if (in_array(24, $_SESSION['permisos'])): ?>
 
@@ -139,6 +164,7 @@ if (!in_array(20, $_SESSION['permisos'])) {
                 <th>Domicilio</th>
                 <th>Telefono</th>
                 <th>Referencia</th>
+                <th>Paquetería</th>
                 <th>Guia</th>
                 <th>Estado</th>
 
@@ -153,8 +179,26 @@ if (!in_array(20, $_SESSION['permisos'])) {
             </thead>
 
             <tbody>
-              <?php $c = 1; foreach ($ventas_foraneos as $v): ?>
-                <tr>
+              <?php
+              $colores_paq = [
+                  'DHL'                 => '#fff9cc',
+                  'Estafeta'            => '#ccd6f0',
+                  'FedEx'               => '#ede0f7',
+                  'Paquetería Express'  => '#d4edda',
+                  'J&T Express'         => '#f8d7da',
+              ];
+              $badges_paq = [
+                  'DHL'                => '<span class="badge" style="background:#ffcc00;color:#000;">DHL</span>',
+                  'Estafeta'           => '<span class="badge" style="background:#003087;color:#fff;">Estafeta</span>',
+                  'FedEx'              => '<span class="badge" style="background:#4d148c;color:#fff;">FedEx</span>',
+                  'Paquetería Express' => '<span class="badge" style="background:#28a745;color:#fff;">Paq. Express</span>',
+                  'J&T Express'        => '<span class="badge" style="background:#d40511;color:#fff;">J&T</span>',
+              ];
+              $c = 1; foreach ($ventas_foraneos as $v):
+                $paq   = $v['paqueteria'] ?? '';
+                $bgRow = $colores_paq[$paq] ?? '';
+              ?>
+                <tr <?= $bgRow ? "style=\"background-color:{$bgRow}\"" : '' ?>>
                   <td><?= $c++ ?></td>
                   <td><?= $v['fecha'] ?></td>
                   <td>
@@ -177,6 +221,16 @@ if (!in_array(20, $_SESSION['permisos'])) {
                                                 <?php else: ?>
                                                     <span class="badge badge-warning">Sin referencia</span>
                                                 <?php endif; ?> </td>
+
+                  <td class="text-center">
+                    <?php if ($paq && isset($badges_paq[$paq])): ?>
+                      <?= $badges_paq[$paq] ?>
+                    <?php elseif ($paq): ?>
+                      <span class="badge badge-secondary"><?= htmlspecialchars($paq) ?></span>
+                    <?php else: ?>
+                      <span class="text-muted small">—</span>
+                    <?php endif; ?>
+                  </td>
 
                   <td class="text-center"><?php if (!empty($v['guia_pdf'])): ?>
                      <!-- Vista rápida -->

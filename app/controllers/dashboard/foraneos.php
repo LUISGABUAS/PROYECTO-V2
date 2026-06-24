@@ -1,7 +1,8 @@
 <?php
 
-$desde = $_GET['desde'] ?? date('Y-m-01');
-$hasta = $_GET['hasta'] ?? date('Y-m-d');
+$desde             = $_GET['desde'] ?? date('Y-m-01');
+$hasta             = $_GET['hasta'] ?? date('Y-m-d');
+$paqueteria_filtro = $_GET['paqueteria_filtro'] ?? '';
 
 $permisos   = $_SESSION['permisos'];
 
@@ -21,6 +22,7 @@ $stmt = $pdo->prepare("SELECT
         v.id_pedido,
         v.id_usuario,
         v.guia_pdf AS guia_pdf,
+        v.paqueteria,
         u.nombres AS vendedor
 
     FROM tb_ventas v
@@ -29,11 +31,17 @@ $stmt = $pdo->prepare("SELECT
     LEFT JOIN clientes_direcciones d ON d.id = v.id_direccion_entrega
     WHERE v.envio = 'foraneo'
     AND DATE(v.fecha) BETWEEN :desde AND :hasta
+    <?php if ($paqueteria_filtro === 'sin_paqueteria'): ?>
+    AND (v.paqueteria IS NULL OR v.paqueteria = '')
+    <?php elseif ($paqueteria_filtro): ?>
+    AND v.paqueteria = :paqueteria_filtro
+    <?php endif; ?>
     ORDER BY u.nombres, v.fecha DESC
 ");
 
-$stmt->execute([
-    ':desde' => $desde,
-    ':hasta' => $hasta
-]);
+$params = [':desde' => $desde, ':hasta' => $hasta];
+if ($paqueteria_filtro && $paqueteria_filtro !== 'sin_paqueteria') {
+    $params[':paqueteria_filtro'] = $paqueteria_filtro;
+}
+$stmt->execute($params);
 $ventas_foraneos = $stmt->fetchAll(PDO::FETCH_ASSOC);
