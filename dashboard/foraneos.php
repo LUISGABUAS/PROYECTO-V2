@@ -346,7 +346,42 @@ include('../layout/parte2.php');
 ?>
 
 <script>
-// ELIMINAR GUÍA
+// ELIMINAR GUÍA INDIVIDUAL (tb_ventas_guias)
+$(document).on('click', '.btn-eliminar-guia-individual', function () {
+  const id       = $(this).data('id');
+  const id_venta = $(this).data('venta');
+
+  Swal.fire({
+    title: '¿Eliminar esta guía?',
+    text: 'Esta acción no se puede deshacer',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#dc3545'
+  }).then(result => {
+    if (!result.isConfirmed) return;
+    $.ajax({
+      url: '<?= $URL ?>/app/controllers/dashboard/eliminar_guia_individual.php',
+      type: 'POST',
+      dataType: 'json',
+      data: { id, id_venta },
+      success: function(r) {
+        if (r.success) {
+          Swal.fire({ icon: 'success', title: 'Guía eliminada', timer: 1500, showConfirmButton: false })
+            .then(() => location.reload());
+        } else {
+          Swal.fire('Error', r.msg || 'No se pudo eliminar', 'error');
+        }
+      },
+      error: function() {
+        Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
+      }
+    });
+  });
+});
+
+// ELIMINAR GUÍA (flujo antiguo - compatibilidad)
 $(document).on('click', '.btn-eliminar-guia', function () {
   let id_venta = $(this).data('id');
 
