@@ -109,12 +109,12 @@ $guias_requeridas = $total_pacas * $multiplicador;
   <button onclick="window.close()" style="background:#6c757d;color:#fff;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;font-size:14px;margin-left:8px;">
     ✕ Cerrar
   </button>
-  <?php foreach ($guias as $g): ?>
+  <?php if ($venta['envio'] === 'foraneo'): foreach ($guias as $g): ?>
   <a href="<?= $URL ?>/dashboard/guia_pdf/<?= $g['archivo'] ?>" target="_blank"
      style="display:inline-block;background:#dc3545;color:#fff;padding:8px 18px;border-radius:4px;font-size:14px;text-decoration:none;margin-left:8px;">
     📄 Ver Guía <?= $g['numero'] ?>
   </a>
-  <?php endforeach; ?>
+  <?php endforeach; endif; ?>
 </div>
 
 <div class="header">
@@ -154,7 +154,8 @@ $guias_requeridas = $total_pacas * $multiplicador;
   </div>
 </div>
 
-<!-- GUÍAS -->
+<!-- GUÍAS (solo foráneos) -->
+<?php if ($venta['envio'] === 'foraneo'): ?>
 <?php if (!empty($guias)): ?>
 <div class="guias-section">
   <h4>📄 GUÍAS DE ENVÍO (<?= count($guias) ?> / <?= $guias_requeridas ?> requeridas)</h4>
@@ -171,6 +172,7 @@ $guias_requeridas = $total_pacas * $multiplicador;
 <div style="background:#fff3cd;border:1px solid #ffc107;padding:8px;border-radius:4px;margin-bottom:12px;">
   ⚠️ <strong>Sin guía registrada</strong> — Registrar antes de enviar
 </div>
+<?php endif; ?>
 <?php endif; ?>
 
 <!-- PRODUCTOS -->
@@ -219,7 +221,8 @@ $guias_requeridas = $total_pacas * $multiplicador;
   </tbody>
 </table>
 
-<!-- ASIGNACIÓN PACA → GUÍA -->
+<!-- ASIGNACIÓN PACA → GUÍA (solo foráneos) -->
+<?php if ($venta['envio'] === 'foraneo'): ?>
 <h4 style="margin-bottom:6px;color:#dc3545;">📦 Asignación de guía por paca</h4>
 <table>
   <thead>
@@ -267,6 +270,7 @@ $guias_requeridas = $total_pacas * $multiplicador;
     <?php endif; ?>
   </tbody>
 </table>
+<?php endif; ?>
 
 <div class="footer">
   Generado: <?= date('d/m/Y H:i') ?> — Sistema Pacas Yadira
