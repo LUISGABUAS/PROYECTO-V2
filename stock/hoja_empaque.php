@@ -7,7 +7,7 @@ if (!$id_venta) die('Venta no válida');
 
 // Datos de la venta y cliente
 $stmt = $pdo->prepare("
-    SELECT v.id_venta, v.fecha, v.envio, v.paqueteria,
+    SELECT v.id_venta, v.fecha, v.envio, v.paqueteria, v.notas,
            c.nombre_completo AS cliente, c.telefono,
            COALESCE(d.nombre_destinatario, c.nombre_completo) AS destinatario,
            COALESCE(d.calle_numero, c.calle_numero) AS calle,
@@ -137,6 +137,11 @@ $guias_requeridas = $total_pacas * $multiplicador;
     <h4>👤 Cliente (factura)</h4>
     <p><strong><?= htmlspecialchars($venta['cliente']) ?></strong></p>
     <p><?= htmlspecialchars($venta['telefono']) ?></p>
+    <?php if (!empty($venta['notas'])): ?>
+    <p style="margin-top:6px;padding:5px 8px;background:#fff9c4;border-left:3px solid #f0ad00;border-radius:3px;">
+      <strong>📝 Notas:</strong> <?= nl2br(htmlspecialchars($venta['notas'])) ?>
+    </p>
+    <?php endif; ?>
   </div>
   <div class="info-box" style="border-color:#dc3545;">
     <h4>📦 Destinatario (envío)</h4>
