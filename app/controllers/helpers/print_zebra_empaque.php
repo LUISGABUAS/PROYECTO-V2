@@ -21,7 +21,7 @@ function zt($str) {
 // ── Datos ─────────────────────────────────────────────────────────────
 $stmt = $pdo->prepare("
     SELECT v.id_venta, v.fecha, v.envio, v.paqueteria, v.notas,
-           v.tipo_pago, v.monto_pendiente, v.metodo_pendiente,
+           v.tipo_pago, v.monto_pendiente, v.metodo_pendiente, v.total,
            c.nombre_completo AS cliente, c.telefono,
            COALESCE(d.nombre_destinatario, c.nombre_completo) AS destinatario,
            COALESCE(d.calle_numero, c.calle_numero)  AS calle,
@@ -131,7 +131,8 @@ $vy += 32 + 8;
 $full(32, 18, 'Vendedor: ' . substr(zt($v['vendedor']), 0, 24), 12);
 
 // ── PAGO ─────────────────────────────────────────────────────────────
-$tp = $v['tipo_pago'] ?? '';
+$tp          = $v['tipo_pago'] ?? '';
+$total_fmt   = '$' . number_format((float)$v['total'], 2);
 if ($tp !== 'contra_entrega') {
     $pago_label = match($tp) {
         'efectivo'   => 'PAGO COMPLETO - EFECTIVO',
@@ -139,7 +140,9 @@ if ($tp !== 'contra_entrega') {
         'ambos'      => 'PAGO COMPLETO - EFECTIVO + COMPROBANTE',
         default      => 'PAGO COMPLETO',
     };
-    $full(30, 17, $pago_label, 12);
+    $col(32, 18, $pago_label, $LM);
+    $col(32, 18, $total_fmt, 820);
+    $vy += 32 + 12;
 }
 $sep();
 
@@ -199,33 +202,33 @@ $full(36, 21, 'PRODUCTOS - Total: ' . $total_pacas, 8);
 $thin();
 
 // Columnas (ZPL y = visual_x):
-$C_PROD = $LM;   // producto (izquierda, ancho = C_VEND - LM - 10)
-$C_VEND = 855;
-$C_ENT  = 955;
-$C_EST  = 1045;
+$C_PROD = $LM;
+$C_VEND = 840;
+$C_ENT  = 940;
+$C_EST  = 1035;
+$H_HDR  = 28;
+$H_ROW  = 42;
 
 // Encabezado tabla
-$col(26, 13, 'PRODUCTO', $C_PROD);
-$col(26, 13, 'VEND.', $C_VEND);
-$col(26, 13, 'ENT.', $C_ENT);
-$col(26, 13, 'EST.', $C_EST);
-$vy += 26 + 5;
+$col($H_HDR, 15, 'PRODUCTO', $C_PROD);
+$col($H_HDR, 15, 'VEND.', $C_VEND);
+$col($H_HDR, 15, 'ENT.', $C_ENT);
+$col($H_HDR, 15, 'EST.', $C_EST);
+$vy += $H_HDR + 5;
 $thin();
 
 foreach ($productos as $p) {
-    if ($W - $vy - 30 < 0) break;
-    $nombre = substr(zt($p['producto']), 0, 38);
+    if ($W - $vy - $H_ROW < 0) break;
+    $nombre = substr(zt($p['producto']), 0, 30);
     $ok     = $p['cantidad_entregada'] >= $p['cantidad'];
     $estado = $ok ? 'OK' : ('-' . ($p['cantidad'] - $p['cantidad_entregada']));
     $fw_pr  = $C_VEND - $C_PROD - 10;
-    $col(30, 16, '', $C_PROD); // placeholder para posicion
-    // reemplazar con fb para truncar
-    $zx_r = $W - $vy - 30;
-    $L[count($L)-1] = "^FO{$zx_r},{$C_PROD}^A0B,30,16^FB{$fw_pr},1,0,L^FD{$nombre}^FS";
-    $col(30, 17, (string)$p['cantidad'],             $C_VEND);
-    $col(30, 17, (string)$p['cantidad_entregada'],   $C_ENT);
-    $col(30, 17, $estado,                            $C_EST);
-    $vy += 30 + 8;
+    $zx_r   = $W - $vy - $H_ROW;
+    $L[] = "^FO{$zx_r},{$C_PROD}^A0B,{$H_ROW},22^FB{$fw_pr},1,0,L^FD{$nombre}^FS";
+    $L[] = "^FO{$zx_r},{$C_VEND}^A0B,{$H_ROW},22^FD" . $p['cantidad'] . "^FS";
+    $L[] = "^FO{$zx_r},{$C_ENT}^A0B,{$H_ROW},22^FD" . $p['cantidad_entregada'] . "^FS";
+    $L[] = "^FO{$zx_r},{$C_EST}^A0B,{$H_ROW},22^FD{$estado}^FS";
+    $vy += $H_ROW + 8;
 }
 
 $sep();
