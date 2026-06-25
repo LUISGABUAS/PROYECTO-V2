@@ -84,31 +84,32 @@ if(in_array(15, $_SESSION['permisos'])):
                       <option value="">-- Elige una venta local --</option>
                       <?php
                       $query = "
-                        SELECT v.id_venta, v.fecha, c.nombre_completo 
+                        SELECT v.id_venta, v.fecha, v.created_at, c.nombre_completo
                         FROM tb_ventas v
                         JOIN clientes c ON c.id_cliente = v.cliente
                         WHERE c.tipo_cliente = 'LOCAL'
                       ";
-                      
+
                       $params = [];
                       if(isset($_GET['fecha_inicio']) && !empty($_GET['fecha_inicio'])) {
-                        $query .= " AND DATE(v.fecha) >= ?";
+                        $query .= " AND DATE(v.created_at) >= ?";
                         $params[] = $_GET['fecha_inicio'];
                       }
                       if(isset($_GET['fecha_fin']) && !empty($_GET['fecha_fin'])) {
-                        $query .= " AND DATE(v.fecha) <= ?";
+                        $query .= " AND DATE(v.created_at) <= ?";
                         $params[] = $_GET['fecha_fin'];
                       }
-                      
-                      $query .= " ORDER BY v.id_venta DESC";
-                      
+
+                      $query .= " ORDER BY v.created_at DESC";
+
                       $stmt = $pdo->prepare($query);
                       $stmt->execute($params);
                       $ventas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                      
+
                       foreach($ventas as $v) {
                         $selected = (isset($_GET['id_venta']) && $_GET['id_venta'] == $v['id_venta'] && isset($_GET['tipo']) && $_GET['tipo'] == 'local') ? 'selected' : '';
-                        echo "<option value='{$v['id_venta']}' $selected>{$v['id_venta']} - {$v['nombre_completo']} ({$v['fecha']})</option>";
+                        $hora = $v['created_at'] ? date('H:i', strtotime($v['created_at'])) . ' hrs' : $v['fecha'];
+                        echo "<option value='{$v['id_venta']}' $selected>#{$v['id_venta']} - {$v['nombre_completo']} ({$hora})</option>";
                       }
                       ?>
                     </select>
@@ -131,31 +132,32 @@ if(in_array(15, $_SESSION['permisos'])):
                       <option value="">-- Elige una venta foranea --</option>
                       <?php
                       $query = "
-                        SELECT v.id_venta, v.fecha, c.nombre_completo
+                        SELECT v.id_venta, v.fecha, v.created_at, c.nombre_completo
                         FROM tb_ventas v
                         JOIN clientes c ON c.id_cliente = v.cliente
                         WHERE c.tipo_cliente = 'FORANEO'
                       ";
-                      
+
                       $params = [];
                       if(isset($_GET['fecha_inicio']) && !empty($_GET['fecha_inicio'])) {
-                        $query .= " AND DATE(v.fecha) >= ?";
+                        $query .= " AND DATE(v.created_at) >= ?";
                         $params[] = $_GET['fecha_inicio'];
                       }
                       if(isset($_GET['fecha_fin']) && !empty($_GET['fecha_fin'])) {
-                        $query .= " AND DATE(v.fecha) <= ?";
+                        $query .= " AND DATE(v.created_at) <= ?";
                         $params[] = $_GET['fecha_fin'];
                       }
-                      
-                      $query .= " ORDER BY v.id_venta DESC";
-                      
+
+                      $query .= " ORDER BY v.created_at DESC";
+
                       $stmt = $pdo->prepare($query);
                       $stmt->execute($params);
                       $ventas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                      
+
                       foreach($ventas as $v) {
                         $selected = (isset($_GET['id_venta']) && $_GET['id_venta'] == $v['id_venta'] && isset($_GET['tipo']) && $_GET['tipo'] == 'foraneo') ? 'selected' : '';
-                        echo "<option value='{$v['id_venta']}' $selected>{$v['id_venta']} - {$v['nombre_completo']} ({$v['fecha']})</option>";
+                        $hora = $v['created_at'] ? date('H:i', strtotime($v['created_at'])) . ' hrs' : $v['fecha'];
+                        echo "<option value='{$v['id_venta']}' $selected>#{$v['id_venta']} - {$v['nombre_completo']} ({$hora})</option>";
                       }
                       ?>
                     </select>

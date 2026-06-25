@@ -106,6 +106,10 @@ $guias_requeridas = $total_pacas * $multiplicador;
   <button onclick="window.print()" style="background:#007bff;color:#fff;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;font-size:14px;">
     🖨️ Imprimir hoja de empaque
   </button>
+  <button onclick="imprimirZebra()" id="btn_zebra"
+          style="background:#222;color:#fff;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;font-size:14px;margin-left:8px;">
+    🦓 Enviar a Zebra
+  </button>
   <button onclick="window.close()" style="background:#6c757d;color:#fff;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;font-size:14px;margin-left:8px;">
     ✕ Cerrar
   </button>
@@ -276,5 +280,29 @@ $guias_requeridas = $total_pacas * $multiplicador;
   Generado: <?= date('d/m/Y H:i') ?> — Sistema Pacas Yadira
 </div>
 
+<script>
+function imprimirZebra() {
+  const btn = document.getElementById('btn_zebra');
+  btn.disabled = true;
+  btn.textContent = '⏳ Enviando...';
+  fetch('<?= $URL ?>/app/controllers/helpers/print_zebra_empaque.php?id_venta=<?= $id_venta ?>')
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        btn.style.background = '#28a745';
+        btn.textContent = '✅ Enviada a Zebra';
+      } else {
+        btn.style.background = '#dc3545';
+        btn.textContent = '❌ Error';
+        alert(data.message);
+        btn.disabled = false;
+      }
+    })
+    .catch(() => {
+      btn.textContent = '❌ Error de conexión';
+      btn.disabled = false;
+    });
+}
+</script>
 </body>
 </html>
