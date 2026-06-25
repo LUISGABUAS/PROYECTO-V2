@@ -18,6 +18,10 @@ $fecha                = $_POST['fecha'];
 $cliente              = $_POST['cliente'];
 $envio                = $_POST['envio'];
 $total                = (float)$_POST['total'];
+$tipo_pago            = $_POST['tipo_pago'] ?? 'comprobante';
+$monto_pendiente      = ($tipo_pago === 'contra_entrega') ? (float)($_POST['monto_pendiente'] ?? 0) : 0.00;
+$metodo_pendiente     = ($tipo_pago === 'contra_entrega') ? (trim($_POST['metodo_pendiente'] ?? '')) : null;
+$notas                = trim($_POST['notas'] ?? '') ?: null;
 $id_direccion_entrega = !empty($_POST['id_direccion_entrega']) ? (int)$_POST['id_direccion_entrega'] : null;
 
 $productos  = $_POST['productos'];
@@ -144,10 +148,14 @@ try {
        5️⃣ ACTUALIZAR VENTA
     ========================= */
     $stmt = $pdo->prepare("UPDATE tb_ventas
-        SET fecha = ?, cliente = ?, envio = ?, total = ?, id_direccion_entrega = ?, updated_at = ?
+        SET fecha = ?, cliente = ?, envio = ?, tipo_pago = ?, total = ?,
+            monto_pendiente = ?, metodo_pendiente = ?, notas = ?,
+            id_direccion_entrega = ?, updated_at = ?
         WHERE id_venta = ?
     ");
-    $stmt->execute([$fecha, $cliente, $envio, $total, $id_direccion_entrega, $fechaHora, $id_venta]);
+    $stmt->execute([$fecha, $cliente, $envio, $tipo_pago, $total,
+                    $monto_pendiente, $metodo_pendiente, $notas,
+                    $id_direccion_entrega, $fechaHora, $id_venta]);
 
     /* =========================
        6️⃣ REEMPLAZAR DETALLE

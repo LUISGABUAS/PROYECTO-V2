@@ -284,6 +284,105 @@ if (!in_array(20, $_SESSION['permisos'])) {
       </div>
       <?php endif; ?>
 
+      <!-- COBROS PENDIENTES CONTRA ENTREGA -->
+      <?php if (!empty($cobros_pendientes)): ?>
+      <div class="card card-outline card-danger mb-4">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-exclamation-circle text-danger"></i>
+            Cobros pendientes contra entrega
+            <span class="badge badge-danger ml-2"><?= count($cobros_pendientes) ?></span>
+          </h3>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-bordered table-striped table-sm mb-0">
+            <thead class="thead-light">
+              <tr>
+                <th>#Venta</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <?php if (in_array(24, $_SESSION['permisos'])): ?>
+                <th>Vendedor</th>
+                <?php endif; ?>
+                <th class="text-right">Total</th>
+                <th class="text-right text-danger">Pendiente</th>
+                <th>Método cobro</th>
+                <th>Notas</th>
+                <th class="text-center">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach ($cobros_pendientes as $cp): ?>
+              <tr>
+                <td><strong>#<?= $cp['id_venta'] ?></strong></td>
+                <td><?= $cp['fecha'] ?></td>
+                <td><?= htmlspecialchars($cp['cliente']) ?></td>
+                <?php if (in_array(24, $_SESSION['permisos'])): ?>
+                <td><?= htmlspecialchars($cp['vendedor']) ?></td>
+                <?php endif; ?>
+                <td class="text-right">$<?= number_format($cp['total'], 2) ?></td>
+                <td class="text-right text-danger font-weight-bold">$<?= number_format($cp['monto_pendiente'], 2) ?></td>
+                <td>
+                  <?php if ($cp['metodo_pendiente'] === 'efectivo'): ?>
+                    <span class="badge badge-success">💵 Efectivo</span>
+                  <?php elseif ($cp['metodo_pendiente'] === 'comprobante'): ?>
+                    <span class="badge badge-primary">🧾 Comprobante</span>
+                  <?php else: ?>
+                    <span class="badge badge-secondary">—</span>
+                  <?php endif; ?>
+                </td>
+                <td class="text-muted small"><?= $cp['notas'] ? htmlspecialchars($cp['notas']) : '—' ?></td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-success btn-registrar-cobro"
+                          data-id="<?= $cp['id_venta'] ?>"
+                          data-metodo="<?= htmlspecialchars($cp['metodo_pendiente'] ?? '') ?>"
+                          data-cliente="<?= htmlspecialchars($cp['cliente']) ?>"
+                          data-monto="<?= number_format($cp['monto_pendiente'], 2) ?>">
+                    <i class="fas fa-check-circle"></i> Registrar cobro
+                  </button>
+                </td>
+              </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Modal registrar cobro -->
+      <div class="modal fade" id="modalCobro" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+              <h5 class="modal-title"><i class="fas fa-check-circle"></i> Registrar cobro</h5>
+              <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <?php include_once('../app/controllers/helpers/csrf.php'); ?>
+            <form id="formCobro" enctype="multipart/form-data">
+              <?= csrf_field() ?>
+              <input type="hidden" name="id_venta" id="cobro_id_venta">
+              <div class="modal-body">
+                <div class="alert alert-info" id="cobro_info"></div>
+                <div id="cobro_comprobante_wrap" style="display:none;">
+                  <div class="form-group">
+                    <label><strong>Comprobante de pago <span class="text-danger">*</span></strong></label>
+                    <input type="file" name="comprobante" class="form-control-file"
+                           accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" id="cobro_comprobante_file">
+                    <small class="text-muted">PDF, JPG, PNG, DOC | máx 5MB</small>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success">
+                  <i class="fas fa-check"></i> Confirmar cobro
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <?php endif; ?>
+
       <!-- TABLA DE STOCK -->
       <div class="card card-warning">
         <div class="card-header">
@@ -344,6 +443,56 @@ if (!in_array(20, $_SESSION['permisos'])) {
 include('../layout/mensajes.php');
 include('../layout/parte2.php');
 ?>
+
+<script>
+$(document).on('click', '.btn-registrar-cobro', function () {
+  const id     = $(this).data('id');
+  const metodo = $(this).data('metodo');
+  const client = $(this).data('cliente');
+  const monto  = $(this).data('monto');
+
+  $('#cobro_id_venta').val(id);
+  $('#cobro_info').html(
+    `<strong>Venta #${id}</strong> — ${client}<br>` +
+    `Monto a cobrar: <strong class="text-danger">$${monto}</strong>`
+  );
+
+  if (metodo === 'comprobante') {
+    $('#cobro_comprobante_wrap').show();
+    $('#cobro_comprobante_file').prop('required', true);
+  } else {
+    $('#cobro_comprobante_wrap').hide();
+    $('#cobro_comprobante_file').prop('required', false);
+  }
+
+  $('#modalCobro').modal('show');
+});
+
+$('#formCobro').on('submit', function (e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+
+  $.ajax({
+    url: '<?= $URL ?>/app/controllers/ventas/registrar_cobro_cde.php',
+    method: 'POST',
+    data: formData,
+    processData: false,
+    contentType: false,
+    success: function (r) {
+      if (r.success) {
+        $('#modalCobro').modal('hide');
+        Swal.fire({ icon: 'success', title: '¡Cobro registrado!', text: r.message, timer: 2000, showConfirmButton: false })
+          .then(() => location.reload());
+      } else {
+        Swal.fire({ icon: 'error', title: 'Error', text: r.message });
+      }
+    },
+    error: function () {
+      Swal.fire({ icon: 'error', title: 'Error de conexión' });
+    }
+  });
+});
+</script>
 
 <!-- DATATABLES -->
 <script>

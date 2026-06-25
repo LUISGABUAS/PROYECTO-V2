@@ -172,6 +172,31 @@ if (in_array(24, $permisos)) {
 }
 
 /* =========================
+   🚚 COBROS PENDIENTES CONTRA ENTREGA
+========================= */
+$cobros_pendientes = [];
+
+if (in_array(24, $permisos) || in_array(25, $permisos)) {
+    $sql_cde = "SELECT v.id_venta, v.fecha, v.total, v.monto_pendiente, v.metodo_pendiente, v.notas,
+                       c.nombre_completo AS cliente, u.nombres AS vendedor
+                FROM tb_ventas v
+                JOIN clientes c ON c.id_cliente = v.cliente
+                JOIN tb_usuario u ON u.id = v.id_usuario
+                WHERE v.tipo_pago = 'contra_entrega' AND v.monto_pendiente > 0";
+    $params_cde = [];
+
+    if (in_array(25, $permisos) && !in_array(24, $permisos)) {
+        $sql_cde   .= " AND v.id_usuario = ?";
+        $params_cde[] = $id_usuario;
+    }
+
+    $sql_cde .= " ORDER BY v.fecha ASC";
+    $stmt_cde = $pdo->prepare($sql_cde);
+    $stmt_cde->execute($params_cde);
+    $cobros_pendientes = $stmt_cde->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/* =========================
    📦 ESTADO DE STOCK
 ========================= */
 $stmt = $pdo->prepare("SELECT

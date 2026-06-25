@@ -93,23 +93,35 @@ Swal.fire({
                     </div>
                   </div>
 
-                  <!-- TIPO DE PAGO (solo visible si es local) -->
-                  <div class="col-md-2" id="col_tipo_pago" style="display:none;">
+                  <!-- TIPO DE PAGO -->
+                  <div class="col-md-3" id="col_tipo_pago" style="display:none;">
                     <div class="form-group">
                       <label><strong>Tipo de pago</strong></label>
-                      <input type="hidden" name="tipo_pago" id="tipo_pago" value="efectivo">
-                      <div class="d-flex gap-2">
+                      <input type="hidden" name="tipo_pago" id="tipo_pago" value="">
+                      <div class="row" style="margin:0; gap:4px;">
                         <button type="button" id="btn_efectivo"
                                 onclick="seleccionarPago('efectivo')"
-                                class="btn btn-success flex-fill py-2"
-                                style="border-radius:10px; font-size:13px;">
+                                class="btn btn-outline-success py-2"
+                                style="border-radius:10px; font-size:12px; flex:1;">
                           💵<br><small>Efectivo</small>
                         </button>
                         <button type="button" id="btn_comprobante"
                                 onclick="seleccionarPago('comprobante')"
-                                class="btn btn-outline-primary flex-fill py-2"
-                                style="border-radius:10px; font-size:13px;">
+                                class="btn btn-outline-primary py-2"
+                                style="border-radius:10px; font-size:12px; flex:1;">
                           🧾<br><small>Comprobante</small>
+                        </button>
+                        <button type="button" id="btn_ambos"
+                                onclick="seleccionarPago('ambos')"
+                                class="btn btn-outline-warning py-2"
+                                style="border-radius:10px; font-size:12px; flex:1;">
+                          💵🧾<br><small>Ambos</small>
+                        </button>
+                        <button type="button" id="btn_contra_entrega"
+                                onclick="seleccionarPago('contra_entrega')"
+                                class="btn btn-outline-danger py-2"
+                                style="border-radius:10px; font-size:12px; flex:1;">
+                          🚚<br><small>C. Entrega</small>
                         </button>
                       </div>
                     </div>
@@ -154,10 +166,44 @@ Swal.fire({
 
                 <hr class="my-3">
 
+                <!-- CONTRA ENTREGA: MONTO PENDIENTE -->
+                <div class="row mb-3" id="fila_contra_entrega" style="display:none;">
+                  <div class="col-md-3">
+                    <div class="form-group">
+                      <label><strong><i class="fas fa-clock text-danger"></i> Monto a cobrar en entrega</strong></label>
+                      <div class="input-group">
+                        <div class="input-group-prepend"><span class="input-group-text">$</span></div>
+                        <input type="number" name="monto_pendiente" id="monto_pendiente"
+                               class="form-control" step="0.01" min="0.01" placeholder="0.00">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-group">
+                      <label><strong>Cobrar mediante</strong></label>
+                      <input type="hidden" name="metodo_pendiente" id="metodo_pendiente" value="">
+                      <div class="d-flex gap-2">
+                        <button type="button" id="btn_mp_efectivo"
+                                onclick="seleccionarMetodoPendiente('efectivo')"
+                                class="btn btn-outline-success flex-fill py-2"
+                                style="border-radius:10px; font-size:13px;">
+                          💵<br><small>Efectivo</small>
+                        </button>
+                        <button type="button" id="btn_mp_comprobante"
+                                onclick="seleccionarMetodoPendiente('comprobante')"
+                                class="btn btn-outline-primary flex-fill py-2"
+                                style="border-radius:10px; font-size:13px;">
+                          🧾<br><small>Comprobante</small>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- COMPROBANTE(S) -->
-                <div class="row mb-4" id="fila_comprobante">
+                <div class="row mb-4" id="fila_comprobante" style="display:none;">
                   <div class="col-md-12">
-                    <label class="mb-1"><strong><i class="fa fa-file-pdf text-danger"></i> Comprobante(s) <span class="text-danger">*</span></strong></label>
+                    <label class="mb-1" id="label_comprobante"><strong><i class="fa fa-file-pdf text-danger"></i> Comprobante(s) <span class="text-danger" id="asterisco_comprobante">*</span></strong></label>
                     <div id="slots_comprobantes" class="row" style="margin:0;"></div>
                     <button type="button" class="btn btn-outline-secondary btn-sm mt-3" id="btn_agregar_comprobante" onclick="agregarSlotComprobante()">
                       <i class="fa fa-plus"></i> Agregar otro comprobante
@@ -226,6 +272,17 @@ Swal.fire({
                     <div class="form-group">
                       <label><strong>Total $</strong></label>
                       <input type="number" name="total" id="total_venta" class="form-control form-control-lg text-center font-weight-bold text-success" readonly>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- NOTAS -->
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="form-group">
+                      <label><strong><i class="fas fa-sticky-note text-warning"></i> Notas / Observaciones</strong></label>
+                      <textarea name="notas" class="form-control" rows="2"
+                                placeholder="Notas adicionales sobre la venta (opcional)..."></textarea>
                     </div>
                   </div>
                 </div>
@@ -387,33 +444,59 @@ function eliminarFila(btn){
 <script>
 // ============ TIPO DE PAGO Y COMPROBANTE ============
 
-// 🎨 Selector visual de tipo de pago
-function seleccionarPago(tipo){
+const _btnsPago = {
+  efectivo:       { id: 'btn_efectivo',       base: 'btn-outline-success', active: 'btn-success'   },
+  comprobante:    { id: 'btn_comprobante',     base: 'btn-outline-primary', active: 'btn-primary'   },
+  ambos:          { id: 'btn_ambos',           base: 'btn-outline-warning', active: 'btn-warning'   },
+  contra_entrega: { id: 'btn_contra_entrega',  base: 'btn-outline-danger',  active: 'btn-danger'    },
+};
+
+function seleccionarPago(tipo) {
   document.getElementById('tipo_pago').value = tipo;
 
-  const btnEfectivo    = document.getElementById('btn_efectivo');
-  const btnComprobante = document.getElementById('btn_comprobante');
+  Object.entries(_btnsPago).forEach(([t, cfg]) => {
+    const btn = document.getElementById(cfg.id);
+    if (!btn) return;
+    const isActive = t === tipo;
+    btn.className = btn.className
+      .replace(cfg.base, '').replace(cfg.active, '').trim();
+    btn.className += ' ' + (isActive ? cfg.active : cfg.base);
+  });
 
-  if(tipo === 'efectivo'){
-    btnEfectivo.className    = 'btn btn-success flex-fill py-2';
-    btnComprobante.className = 'btn btn-outline-primary flex-fill py-2';
-  } else {
-    btnEfectivo.className    = 'btn btn-outline-success flex-fill py-2';
-    btnComprobante.className = 'btn btn-primary flex-fill py-2';
-  }
+  const filaComprobante   = document.getElementById('fila_comprobante');
+  const filaContraEntrega = document.getElementById('fila_contra_entrega');
+  const labelComp         = document.getElementById('label_comprobante');
+  const asterisco         = document.getElementById('asterisco_comprobante');
+  const inputPendiente    = document.getElementById('monto_pendiente');
 
-  actualizarComprobante();
-}
+  // Reset
+  filaContraEntrega.style.display = 'none';
+  inputPendiente.required = false;
 
-function actualizarComprobante(){
-  const pago            = document.getElementById('tipo_pago').value;
-  const filaComprobante = document.getElementById('fila_comprobante');
-
-  if(pago === 'efectivo'){
+  if (tipo === 'efectivo') {
     filaComprobante.style.display = 'none';
     document.querySelectorAll('[name="comprobantes[]"]').forEach(fi => fi.value = '');
-  } else {
+  } else if (tipo === 'comprobante' || tipo === 'ambos') {
     filaComprobante.style.display = 'block';
+    labelComp.innerHTML = '<strong><i class="fa fa-file-pdf text-danger"></i> Comprobante(s) <span class="text-danger">*</span></strong>';
+  } else if (tipo === 'contra_entrega') {
+    filaContraEntrega.style.display = 'flex';
+    filaComprobante.style.display   = 'block';
+    labelComp.innerHTML = '<strong><i class="fa fa-file-pdf text-secondary"></i> Comprobante de anticipo <small class="text-muted">(opcional)</small></strong>';
+    inputPendiente.required = true;
+  }
+}
+
+function seleccionarMetodoPendiente(metodo) {
+  document.getElementById('metodo_pendiente').value = metodo;
+  const btnEf = document.getElementById('btn_mp_efectivo');
+  const btnCo = document.getElementById('btn_mp_comprobante');
+  if (metodo === 'efectivo') {
+    btnEf.className = btnEf.className.replace('btn-outline-success', 'btn-success');
+    btnCo.className = btnCo.className.replace('btn-primary', 'btn-outline-primary');
+  } else {
+    btnCo.className = btnCo.className.replace('btn-outline-primary', 'btn-primary');
+    btnEf.className = btnEf.className.replace('btn-success', 'btn-outline-success');
   }
 }
 </script>
@@ -570,16 +653,37 @@ document.addEventListener('DOMContentLoaded', () => agregarSlotComprobante());
 // ============ VALIDACIÓN FINAL ANTES DE ENVIAR ============
 document.getElementById('form_venta').addEventListener('submit', function(e) {
 
-  // ✅ Validar comprobante (solo si no es efectivo)
-  const tipoPagoVal = document.getElementById('tipo_pago')?.value || 'comprobante';
-  const esEfectivo  = tipoPagoVal === 'efectivo';
+  // ✅ Validar tipo de pago seleccionado
+  const tipoPagoVal = document.getElementById('tipo_pago')?.value || '';
+  if (!tipoPagoVal) {
+    e.preventDefault();
+    Swal.fire({ icon: 'error', title: 'Tipo de pago', text: 'Debe seleccionar un tipo de pago' });
+    return false;
+  }
 
-  if (!esEfectivo) {
-    const inputs   = document.querySelectorAll('[name="comprobantes[]"]');
+  // ✅ Validar comprobante (obligatorio para comprobante y ambos, opcional para contra_entrega)
+  if (tipoPagoVal === 'comprobante' || tipoPagoVal === 'ambos') {
+    const inputs    = document.querySelectorAll('[name="comprobantes[]"]');
     const hayAlguno = Array.from(inputs).some(fi => fi.files.length > 0);
     if (!hayAlguno) {
       e.preventDefault();
       Swal.fire({ icon: 'error', title: 'Falta comprobante', text: 'Debe adjuntar al menos un comprobante' });
+      return false;
+    }
+  }
+
+  // ✅ Validar contra entrega: monto y método
+  if (tipoPagoVal === 'contra_entrega') {
+    const monto   = parseFloat(document.getElementById('monto_pendiente')?.value || 0);
+    const metodo  = document.getElementById('metodo_pendiente')?.value || '';
+    if (!monto || monto <= 0) {
+      e.preventDefault();
+      Swal.fire({ icon: 'error', title: 'Contra entrega', text: 'Debe indicar el monto pendiente a cobrar en entrega' });
+      return false;
+    }
+    if (!metodo) {
+      e.preventDefault();
+      Swal.fire({ icon: 'error', title: 'Contra entrega', text: 'Debe seleccionar el método de cobro en entrega (Efectivo o Comprobante)' });
       return false;
     }
   }
@@ -685,9 +789,8 @@ $(document).ready(function(){
     } else if(envio === 'foraneo'){
       displayField.value     = 'Foráneo';
       displayField.className = 'form-control bg-light';
-      colTipoPago.style.display     = 'none';
-      filaComprobante.style.display = 'block';
-      document.getElementById('tipo_pago').value = 'comprobante';
+      colTipoPago.style.display = 'block';
+      seleccionarPago('comprobante');
     }
 
     cargarDireccionesCliente(this.value);

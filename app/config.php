@@ -54,6 +54,7 @@ require_once __DIR__ . '/database/migrations/add_nombre_destinatario_to_direccio
 require_once __DIR__ . '/database/migrations/create_pedidos_table.php';
 require_once __DIR__ . '/database/migrations/add_paqueteria_to_ventas.php';
 require_once __DIR__ . '/database/migrations/create_ventas_guias_table.php';
+require_once __DIR__ . '/database/migrations/add_pago_pendiente_notas_to_ventas.php';
 
 // ================================================
 // LOGGING CENTRALIZADO

@@ -17,12 +17,15 @@ try {
     /* ======================
        DATOS GENERALES
     ====================== */
-    $id_usuario          = $_POST['id_usuario'];
-    $fecha               = $_POST['fecha'];
-    $cliente             = $_POST['cliente'];
-    $envio               = $_POST['envio'];
-    $total               = (float)$_POST['total'];
-    $tipo_pago           = $_POST['tipo_pago'] ?? 'comprobante';
+    $id_usuario           = $_POST['id_usuario'];
+    $fecha                = $_POST['fecha'];
+    $cliente              = $_POST['cliente'];
+    $envio                = $_POST['envio'];
+    $total                = (float)$_POST['total'];
+    $tipo_pago            = $_POST['tipo_pago'] ?? 'comprobante';
+    $monto_pendiente      = ($tipo_pago === 'contra_entrega') ? (float)($_POST['monto_pendiente'] ?? 0) : 0.00;
+    $metodo_pendiente     = ($tipo_pago === 'contra_entrega') ? (trim($_POST['metodo_pendiente'] ?? '')) : null;
+    $notas                = trim($_POST['notas'] ?? '') ?: null;
     $id_direccion_entrega = !empty($_POST['id_direccion_entrega']) ? (int)$_POST['id_direccion_entrega'] : null;
 
     $productos  = $_POST['productos'];
@@ -47,7 +50,8 @@ try {
         }
     }
 
-    if (empty($indicesValidos) && $tipo_pago !== 'efectivo') {
+    $requiere_comprobante = in_array($tipo_pago, ['comprobante', 'ambos']);
+    if (empty($indicesValidos) && $requiere_comprobante) {
         throw new Exception("❌ Debe adjuntar al menos un comprobante");
     }
 
@@ -82,10 +86,10 @@ try {
        INSERTAR VENTA (PADRE)
     ====================== */
     $stmt = $pdo->prepare("
-        INSERT INTO tb_ventas (fecha, cliente, envio, tipo_pago, total, comprobante, id_usuario, id_direccion_entrega)
-        VALUES (?, ?, ?, ?, ?, NULL, ?, ?)
+        INSERT INTO tb_ventas (fecha, cliente, envio, tipo_pago, total, monto_pendiente, metodo_pendiente, notas, comprobante, id_usuario, id_direccion_entrega)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
     ");
-    $stmt->execute([$fecha, $cliente, $envio, $tipo_pago, $total, $id_usuario, $id_direccion_entrega]);
+    $stmt->execute([$fecha, $cliente, $envio, $tipo_pago, $total, $monto_pendiente, $metodo_pendiente, $notas, $id_usuario, $id_direccion_entrega]);
 
     $id_venta = $pdo->lastInsertId();
 

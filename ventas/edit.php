@@ -83,23 +83,32 @@ Swal.fire({
                 </div>
               </div>
 
-              <!-- TIPO DE PAGO (solo local) -->
-              <div class="col-md-2" id="col_tipo_pago" style="<?= $venta['envio']!='local' ? 'display:none;' : '' ?>">
+              <!-- TIPO DE PAGO -->
+              <?php $tp = $venta['tipo_pago'] ?? 'comprobante'; ?>
+              <div class="col-md-3" id="col_tipo_pago">
                 <div class="form-group">
                   <label><strong>Tipo de pago</strong></label>
-                  <input type="hidden" name="tipo_pago" id="tipo_pago" value="<?= htmlspecialchars($venta['tipo_pago'] ?? 'comprobante') ?>">
-                  <div class="d-flex gap-2">
-                    <button type="button" id="btn_efectivo"
-                            onclick="seleccionarPago('efectivo')"
-                            class="btn flex-fill py-2 <?= ($venta['tipo_pago'] ?? '') === 'efectivo' ? 'btn-success' : 'btn-outline-success' ?>"
-                            style="border-radius:10px; font-size:13px;">
+                  <input type="hidden" name="tipo_pago" id="tipo_pago" value="<?= htmlspecialchars($tp) ?>">
+                  <div class="row" style="margin:0; gap:4px;">
+                    <button type="button" id="btn_efectivo" onclick="seleccionarPago('efectivo')"
+                            class="btn py-2 <?= $tp==='efectivo' ? 'btn-success' : 'btn-outline-success' ?>"
+                            style="border-radius:10px; font-size:12px; flex:1;">
                       💵<br><small>Efectivo</small>
                     </button>
-                    <button type="button" id="btn_comprobante"
-                            onclick="seleccionarPago('comprobante')"
-                            class="btn flex-fill py-2 <?= ($venta['tipo_pago'] ?? 'comprobante') !== 'efectivo' ? 'btn-primary' : 'btn-outline-primary' ?>"
-                            style="border-radius:10px; font-size:13px;">
+                    <button type="button" id="btn_comprobante" onclick="seleccionarPago('comprobante')"
+                            class="btn py-2 <?= $tp==='comprobante' ? 'btn-primary' : 'btn-outline-primary' ?>"
+                            style="border-radius:10px; font-size:12px; flex:1;">
                       🧾<br><small>Comprobante</small>
+                    </button>
+                    <button type="button" id="btn_ambos" onclick="seleccionarPago('ambos')"
+                            class="btn py-2 <?= $tp==='ambos' ? 'btn-warning' : 'btn-outline-warning' ?>"
+                            style="border-radius:10px; font-size:12px; flex:1;">
+                      💵🧾<br><small>Ambos</small>
+                    </button>
+                    <button type="button" id="btn_contra_entrega" onclick="seleccionarPago('contra_entrega')"
+                            class="btn py-2 <?= $tp==='contra_entrega' ? 'btn-danger' : 'btn-outline-danger' ?>"
+                            style="border-radius:10px; font-size:12px; flex:1;">
+                      🚚<br><small>C. Entrega</small>
                     </button>
                   </div>
                 </div>
@@ -134,10 +143,45 @@ Swal.fire({
               </div>
             </div>
 
+            <!-- CONTRA ENTREGA -->
+            <?php $tp = $venta['tipo_pago'] ?? 'comprobante'; ?>
+            <div class="row mb-3" id="fila_contra_entrega" style="<?= $tp !== 'contra_entrega' ? 'display:none;' : '' ?>">
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label><strong><i class="fas fa-clock text-danger"></i> Monto pendiente en entrega</strong></label>
+                  <div class="input-group">
+                    <div class="input-group-prepend"><span class="input-group-text">$</span></div>
+                    <input type="number" name="monto_pendiente" id="monto_pendiente"
+                           class="form-control" step="0.01" min="0"
+                           value="<?= htmlspecialchars($venta['monto_pendiente'] ?? 0) ?>">
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label><strong>Cobrar mediante</strong></label>
+                  <?php $mp = $venta['metodo_pendiente'] ?? ''; ?>
+                  <input type="hidden" name="metodo_pendiente" id="metodo_pendiente" value="<?= htmlspecialchars($mp) ?>">
+                  <div class="d-flex gap-2">
+                    <button type="button" id="btn_mp_efectivo" onclick="seleccionarMetodoPendiente('efectivo')"
+                            class="btn flex-fill py-2 <?= $mp==='efectivo' ? 'btn-success' : 'btn-outline-success' ?>"
+                            style="border-radius:10px; font-size:13px;">
+                      💵<br><small>Efectivo</small>
+                    </button>
+                    <button type="button" id="btn_mp_comprobante" onclick="seleccionarMetodoPendiente('comprobante')"
+                            class="btn flex-fill py-2 <?= $mp==='comprobante' ? 'btn-primary' : 'btn-outline-primary' ?>"
+                            style="border-radius:10px; font-size:13px;">
+                      🧾<br><small>Comprobante</small>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <hr class="my-3">
 
             <!-- COMPROBANTES -->
-            <div id="fila_comprobante" style="<?= ($venta['tipo_pago'] ?? 'comprobante') === 'efectivo' ? 'display:none;' : '' ?>">
+            <div id="fila_comprobante" style="<?= $tp === 'efectivo' ? 'display:none;' : '' ?>">
 
               <h6 class="mb-2"><i class="fa fa-file-pdf text-danger"></i> Comprobantes</h6>
 
@@ -286,6 +330,17 @@ Swal.fire({
               </div>
             </div>
 
+            <!-- NOTAS -->
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label><strong><i class="fas fa-sticky-note text-warning"></i> Notas / Observaciones</strong></label>
+                  <textarea name="notas" class="form-control" rows="2"
+                            placeholder="Notas adicionales sobre la venta (opcional)..."><?= htmlspecialchars($venta['notas'] ?? '') ?></textarea>
+                </div>
+              </div>
+            </div>
+
           </div>
 
           <div class="card-footer">
@@ -311,32 +366,51 @@ Swal.fire({
 /* =========================
    TIPO DE PAGO Y COMPROBANTE
 ========================= */
-function seleccionarPago(tipo){
+const _btnsPago = {
+  efectivo:       { id: 'btn_efectivo',      base: 'btn-outline-success', active: 'btn-success'  },
+  comprobante:    { id: 'btn_comprobante',    base: 'btn-outline-primary', active: 'btn-primary'  },
+  ambos:          { id: 'btn_ambos',          base: 'btn-outline-warning', active: 'btn-warning'  },
+  contra_entrega: { id: 'btn_contra_entrega', base: 'btn-outline-danger',  active: 'btn-danger'   },
+};
+
+function seleccionarPago(tipo) {
   document.getElementById('tipo_pago').value = tipo;
 
-  const btnEfectivo    = document.getElementById('btn_efectivo');
-  const btnComprobante = document.getElementById('btn_comprobante');
+  Object.entries(_btnsPago).forEach(([t, cfg]) => {
+    const btn = document.getElementById(cfg.id);
+    if (!btn) return;
+    btn.className = btn.className.replace(cfg.base,'').replace(cfg.active,'').trim()
+      + ' ' + (t === tipo ? cfg.active : cfg.base);
+  });
 
-  if(tipo === 'efectivo'){
-    btnEfectivo.className    = 'btn btn-success flex-fill py-2';
-    btnComprobante.className = 'btn btn-outline-primary flex-fill py-2';
-  } else {
-    btnEfectivo.className    = 'btn btn-outline-success flex-fill py-2';
-    btnComprobante.className = 'btn btn-primary flex-fill py-2';
+  const filaComprobante   = document.getElementById('fila_comprobante');
+  const filaContraEntrega = document.getElementById('fila_contra_entrega');
+  const inputPendiente    = document.getElementById('monto_pendiente');
+
+  filaContraEntrega.style.display = 'none';
+  inputPendiente.required = false;
+
+  if (tipo === 'efectivo') {
+    filaComprobante.style.display = 'none';
+  } else if (tipo === 'comprobante' || tipo === 'ambos') {
+    filaComprobante.style.display = 'block';
+  } else if (tipo === 'contra_entrega') {
+    filaContraEntrega.style.display = 'flex';
+    filaComprobante.style.display   = 'block';
+    inputPendiente.required = true;
   }
-
-  actualizarComprobante();
 }
 
-function actualizarComprobante(){
-  const pago            = document.getElementById('tipo_pago').value;
-  const filaComprobante = document.getElementById('fila_comprobante');
-
-  if(pago === 'efectivo'){
-    filaComprobante.style.display = 'none';
-    document.querySelectorAll('[name="comprobantes[]"]').forEach(fi => fi.value = '');
+function seleccionarMetodoPendiente(metodo) {
+  document.getElementById('metodo_pendiente').value = metodo;
+  const btnEf = document.getElementById('btn_mp_efectivo');
+  const btnCo = document.getElementById('btn_mp_comprobante');
+  if (metodo === 'efectivo') {
+    btnEf.className = btnEf.className.replace('btn-outline-success','btn-success');
+    btnCo.className = btnCo.className.replace('btn-primary','btn-outline-primary');
   } else {
-    filaComprobante.style.display = 'block';
+    btnCo.className = btnCo.className.replace('btn-outline-primary','btn-primary');
+    btnEf.className = btnEf.className.replace('btn-success','btn-outline-success');
   }
 }
 
