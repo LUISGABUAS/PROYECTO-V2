@@ -85,7 +85,7 @@ Swal.fire({
 
               <!-- TIPO DE PAGO -->
               <?php $tp = $venta['tipo_pago'] ?? 'comprobante'; ?>
-              <div class="col-md-3" id="col_tipo_pago">
+              <div class="col-md-3" id="col_tipo_pago" style="<?= $venta['envio'] !== 'local' ? 'display:none;' : '' ?>">
                 <div class="form-group">
                   <label><strong>Tipo de pago</strong></label>
                   <input type="hidden" name="tipo_pago" id="tipo_pago" value="<?= htmlspecialchars($tp) ?>">

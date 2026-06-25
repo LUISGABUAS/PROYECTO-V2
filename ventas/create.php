@@ -452,6 +452,9 @@ const _btnsPago = {
 };
 
 function seleccionarPago(tipo) {
+  const envioActual = document.getElementById('tipo_envio')?.value || '';
+  if (envioActual === 'foraneo' && tipo !== 'comprobante') return;
+
   document.getElementById('tipo_pago').value = tipo;
 
   Object.entries(_btnsPago).forEach(([t, cfg]) => {
