@@ -180,7 +180,8 @@ if (!empty($v['notas'])) {
     $thin();
     $full(26, 14, 'NOTAS:', 4);
     $nota = str_replace(["\r\n","\r","\n"], ' ', zt($v['notas']));
-    foreach (str_split($nota, 44) as $ln) $full(30, 17, $ln, 4);
+    foreach (explode("\n", wordwrap($nota, 44, "\n", true)) as $ln)
+        $full(30, 17, trim($ln), 4);
 }
 $sep();
 
@@ -196,7 +197,8 @@ if (!empty($v['referencias'])) {
     $thin();
     $full(26, 14, 'REFERENCIAS:', 4);
     $ref = str_replace(["\r\n","\r","\n"], ' ', zt($v['referencias']));
-    foreach (str_split($ref, 44) as $ln) $full(30, 17, $ln, 4);
+    foreach (explode("\n", wordwrap($ref, 44, "\n", true)) as $ln)
+        $full(30, 17, trim($ln), 4);
 }
 $sep();
 
@@ -212,17 +214,34 @@ $n_escaneadas = count($pacas);
 $full(36, 21, 'PACAS (' . $n_escaneadas . ' de ' . $total_pacas . '):', 8);
 $thin();
 
-$H_ROW = 42;
-foreach ($pacas as $p) {
-    if ($W - $vy - $H_ROW < 0) break;
-    $codigo  = zt($p['codigo_unico']);
-    $prod    = substr(zt($p['producto']), 0, 28);
-    $zx_r    = $W - $vy - $H_ROW;
-    $fw_cod  = 500;
-    $fw_prod = $LL - $LM - 510;
-    $L[] = "^FO{$zx_r},{$LM}^A0B,{$H_ROW},22^FB{$fw_cod},1,0,L^FD{$codigo}^FS";
-    $L[] = "^FO{$zx_r},530^A0B,{$H_ROW},22^FB{$fw_prod},1,0,L^FD{$prod}^FS";
-    $vy += $H_ROW + 6;
+// Dos columnas de pacas para aprovechar espacio
+// Columna izq: zy=LM(25), columna der: zy=570
+$H_PACA  = 28;
+$SP_PACA = 4;
+$COL2    = 570;
+$FW_COD  = 200;
+$FW_PRD  = $COL2 - $LM - $FW_COD - 10;
+
+$chunks = array_chunk($pacas, 2); // pares de pacas por fila
+foreach ($chunks as $par) {
+    if ($W - $vy - $H_PACA < 0) break;
+    $zx_r = $W - $vy - $H_PACA;
+
+    // Primera paca (izquierda)
+    $c1 = zt($par[0]['codigo_unico']);
+    $p1 = substr(zt($par[0]['producto']), 0, 18);
+    $L[] = "^FO{$zx_r},{$LM}^A0B,{$H_PACA},14^FD{$c1}^FS";
+    $L[] = "^FO{$zx_r}," . ($LM + 230) . "^A0B,{$H_PACA},14^FD{$p1}^FS";
+
+    // Segunda paca (derecha) si existe
+    if (isset($par[1])) {
+        $c2 = zt($par[1]['codigo_unico']);
+        $p2 = substr(zt($par[1]['producto']), 0, 18);
+        $L[] = "^FO{$zx_r},{$COL2}^A0B,{$H_PACA},14^FD{$c2}^FS";
+        $L[] = "^FO{$zx_r}," . ($COL2 + 230) . "^A0B,{$H_PACA},14^FD{$p2}^FS";
+    }
+
+    $vy += $H_PACA + $SP_PACA;
 }
 
 $sep();
