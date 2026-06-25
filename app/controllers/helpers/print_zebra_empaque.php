@@ -31,6 +31,7 @@ $stmt = $pdo->prepare("
            COALESCE(d.municipio, c.municipio)         AS municipio,
            COALESCE(d.estado,   c.estado)             AS estado,
            COALESCE(d.cp,       c.cp)                 AS cp,
+           COALESCE(d.referencias, c.referencias)     AS referencias,
            u.nombres AS vendedor
     FROM tb_ventas v
     JOIN clientes c  ON c.id_cliente = v.cliente
@@ -66,108 +67,128 @@ if ($v['envio'] === 'foraneo') {
 $total_pacas      = array_sum(array_column($productos, 'cantidad'));
 $total_entregadas = array_sum(array_column($productos, 'cantidad_entregada'));
 
-// ── Constructor ZPL ──────────────────────────────────────────────────
-// Label: 839 dots ancho (4"), altura dinámica, 8 dpmm
-$W  = 839;
-$LM = 20;           // margen izquierdo
-$y  = 15;           // cursor Y
-$L  = [];           // líneas ZPL
+// ── Constructor ZPL HORIZONTAL (landscape 6"×4" = 1239×839 dots a 8dpmm) ──
+$W   = 1239;  // ancho = 6"
+$LM  = 25;    // margen izquierdo
+$MID = 640;   // inicio columna derecha
+$y   = 18;    // cursor Y
+$L   = [];    // líneas ZPL
 
 $sep = function() use (&$L, &$y, $W, $LM) {
     $L[] = "^FO{$LM},{$y}^GB" . ($W - $LM * 2) . ",2,2^FS";
     $y  += 10;
 };
+$sep_thin = function() use (&$L, &$y, $W, $LM) {
+    $L[] = "^FO{$LM},{$y}^GB" . ($W - $LM * 2) . ",1,1^FS";
+    $y  += 6;
+};
 
-// ── CABECERA ─────────────────────────────────────────────────────────
-$L[] = "^FO{$LM},{$y}^A0N,40,26^FDHOJA DE EMPAQUE^FS";
-$L[] = "^FO620,{$y}^A0N,40,24^FD#" . $id_venta . "^FS";
-$y  += 48;
+// ── CABECERA ────────────────────────────────────────────────────────
+$L[] = "^FO{$LM},{$y}^A0N,48,30^FDHOJA DE EMPAQUE^FS";
+$L[] = "^FO900,{$y}^A0N,48,30^FD#" . $id_venta . "^FS";
+$y  += 56;
 $sep();
 
-// Fecha / Vendedor
-$L[] = "^FO{$LM},{$y}^A0N,23,13^FDFecha: " . zt($v['fecha']) . "^FS";
-$L[] = "^FO430,{$y}^A0N,23,13^FDVendedor: " . substr(zt($v['vendedor']), 0, 17) . "^FS";
-$y  += 30;
-
-// Envío / Paquetería
-$L[] = "^FO{$LM},{$y}^A0N,23,13^FDEnvio: " . strtoupper(zt($v['envio'])) . "^FS";
+// Fecha | Vendedor | Envío | Paquetería
+$L[] = "^FO{$LM},{$y}^A0N,26,15^FDFecha: " . zt($v['fecha']) . "^FS";
+$L[] = "^FO370,{$y}^A0N,26,15^FDVendedor: " . substr(zt($v['vendedor']), 0, 20) . "^FS";
+$L[] = "^FO780,{$y}^A0N,26,15^FDEnvio: " . strtoupper(zt($v['envio'])) . "^FS";
 if ($v['paqueteria']) {
-    $L[] = "^FO430,{$y}^A0N,23,13^FDPaqueteria: " . zt($v['paqueteria']) . "^FS";
+    $L[] = "^FO1000,{$y}^A0N,26,15^FD" . zt($v['paqueteria']) . "^FS";
 }
-$y += 30;
+$y  += 34;
 $sep();
 
-// ── CLIENTE ──────────────────────────────────────────────────────────
-$L[] = "^FO{$LM},{$y}^A0N,26,15^FDCLIENTE: " . substr(zt($v['cliente']), 0, 33) . "^FS";
-$y  += 32;
-$L[] = "^FO{$LM},{$y}^A0N,22,12^FDTel: " . zt($v['telefono']) . "^FS";
-$y  += 28;
+// ── DOS COLUMNAS: CLIENTE (izq) | DESTINO A ENTREGAR (der) ──────────
+$y_col = $y;  // Y de inicio de columnas
+
+// --- Columna izquierda: CLIENTE ---
+$L[] = "^FO{$LM},{$y_col}^A0N,24,14^FD-- CLIENTE --^FS";
+$y_col += 30;
+$L[] = "^FO{$LM},{$y_col}^A0N,30,18^FD" . substr(zt($v['cliente']), 0, 35) . "^FS";
+$y_col += 36;
+$L[] = "^FO{$LM},{$y_col}^A0N,26,15^FDTel: " . zt($v['telefono']) . "^FS";
+$y_col += 32;
 
 if (!empty($v['notas'])) {
-    $nota_lines = str_split(zt($v['notas']), 55);
-    $L[] = "^FO{$LM},{$y}^A0N,20,11^FDNotas: " . $nota_lines[0] . "^FS";
-    $y  += 24;
-    if (isset($nota_lines[1])) {
-        $L[] = "^FO{$LM},{$y}^A0N,20,11^FD       " . $nota_lines[1] . "^FS";
-        $y  += 24;
+    $L[] = "^FO{$LM},{$y_col}^A0N,24,14^FD-- NOTAS --^FS";
+    $y_col += 28;
+    $nota = str_replace(["\r\n", "\r", "\n"], ' ', zt($v['notas']));
+    foreach (str_split($nota, 38) as $linea) {
+        $L[] = "^FO{$LM},{$y_col}^A0N,26,15^FD{$linea}^FS";
+        $y_col += 30;
     }
 }
+
+// --- Columna derecha: DESTINO ---
+$y_der = $y;
+$L[] = "^FO{$MID},{$y_der}^A0N,24,14^FD-- UBICACION A ENTREGAR --^FS";
+$y_der += 30;
+$L[] = "^FO{$MID},{$y_der}^A0N,30,18^FD" . substr(zt($v['destinatario']), 0, 32) . "^FS";
+$y_der += 36;
+$L[] = "^FO{$MID},{$y_der}^A0N,26,15^FD" . substr(zt($v['calle']), 0, 38) . "^FS";
+$y_der += 30;
+$L[] = "^FO{$MID},{$y_der}^A0N,26,15^FD" . substr(zt($v['colonia']), 0, 38) . "^FS";
+$y_der += 30;
+$L[] = "^FO{$MID},{$y_der}^A0N,26,15^FD" . substr(zt($v['municipio'] . ', ' . $v['estado']), 0, 38) . "^FS";
+$y_der += 30;
+$L[] = "^FO{$MID},{$y_der}^A0N,26,15^FDCP " . zt($v['cp']) . "^FS";
+$y_der += 32;
+
+if (!empty($v['referencias'])) {
+    $L[] = "^FO{$MID},{$y_der}^A0N,24,14^FD-- REFERENCIAS --^FS";
+    $y_der += 28;
+    $ref = str_replace(["\r\n", "\r", "\n"], ' ', zt($v['referencias']));
+    foreach (str_split($ref, 32) as $linea) {
+        $L[] = "^FO{$MID},{$y_der}^A0N,26,15^FD{$linea}^FS";
+        $y_der += 30;
+    }
+}
+
+// Línea divisoria entre columnas
+$y_max = max($y_col, $y_der);
+$L[] = "^FO" . ($MID - 8) . ",{$y}^GB2," . ($y_max - $y + 10) . ",2^FS";
+
+$y = $y_max + 6;
 $sep();
 
-// ── DESTINATARIO (solo foráneo) ───────────────────────────────────────
-if ($v['envio'] === 'foraneo') {
-    $L[] = "^FO{$LM},{$y}^A0N,26,15^FDDESTINO: " . substr(zt($v['destinatario']), 0, 33) . "^FS";
-    $y  += 32;
-    $dir1 = substr(zt($v['calle'] . ', ' . $v['colonia']), 0, 52);
-    $L[] = "^FO{$LM},{$y}^A0N,21,12^FD{$dir1}^FS";
-    $y  += 26;
-    $dir2 = substr(zt($v['municipio'] . ', ' . $v['estado'] . ' CP ' . $v['cp']), 0, 52);
-    $L[] = "^FO{$LM},{$y}^A0N,21,12^FD{$dir2}^FS";
-    $y  += 26;
-    $sep();
-}
-
-// ── GUÍAS (solo foráneo) ──────────────────────────────────────────────
+// ── GUÍAS (solo foráneo) ─────────────────────────────────────────────
 if (!empty($guias)) {
-    $nums  = implode(', ', array_column($guias, 'numero'));
-    $L[]   = "^FO{$LM},{$y}^A0N,23,13^FDGUIAS (" . count($guias) . "): " . $nums . "^FS";
-    $y    += 30;
+    $nums = implode('  ', array_map(fn($g) => 'Guia ' . $g['numero'], $guias));
+    $L[]  = "^FO{$LM},{$y}^A0N,28,16^FDGUIAS DE ENVIO (" . count($guias) . "): " . $nums . "^FS";
+    $y   += 36;
     $sep();
 }
 
-// ── PRODUCTOS ─────────────────────────────────────────────────────────
-$L[] = "^FO{$LM},{$y}^A0N,26,15^FDPRODUCTOS^FS";
-$L[] = "^FO660,{$y}^A0N,23,13^FDTotal: {$total_pacas}^FS";
-$y  += 32;
+// ── PRODUCTOS ────────────────────────────────────────────────────────
+$L[] = "^FO{$LM},{$y}^A0N,30,18^FDPRODUCTOS  —  Total: {$total_pacas} pacas^FS";
+$y  += 36;
 
 // Encabezado tabla
-$L[] = "^FO{$LM},{$y}^GB" . ($W - $LM * 2) . ",1,1^FS";
-$y  += 4;
-$L[] = "^FO{$LM},{$y}^A0N,20,11^FDPRODUCTO^FS";
-$L[] = "^FO570,{$y}^A0N,20,11^FDVEND.^FS";
-$L[] = "^FO650,{$y}^A0N,20,11^FDENT.^FS";
-$L[] = "^FO730,{$y}^A0N,20,11^FDEST.^FS";
-$y  += 22;
-$L[] = "^FO{$LM},{$y}^GB" . ($W - $LM * 2) . ",1,1^FS";
-$y  += 4;
+$sep_thin();
+$L[] = "^FO{$LM},{$y}^A0N,23,13^FDPRODUCTO^FS";
+$L[] = "^FO860,{$y}^A0N,23,13^FDVENDIDAS^FS";
+$L[] = "^FO1000,{$y}^A0N,23,13^FDENTREG.^FS";
+$L[] = "^FO1140,{$y}^A0N,23,13^FDEST.^FS";
+$y  += 28;
+$sep_thin();
 
 foreach ($productos as $p) {
-    $nombre  = substr(zt($p['producto']), 0, 32);
-    $ok      = $p['cantidad_entregada'] >= $p['cantidad'];
-    $estado  = $ok ? 'OK' : '-' . ($p['cantidad'] - $p['cantidad_entregada']);
-
-    $L[] = "^FO{$LM},{$y}^A0N,22,12^FD{$nombre}^FS";
-    $L[] = "^FO570,{$y}^A0N,22,13^FD" . $p['cantidad'] . "^FS";
-    $L[] = "^FO650,{$y}^A0N,22,13^FD" . $p['cantidad_entregada'] . "^FS";
-    $L[] = "^FO730,{$y}^A0N,22,12^FD{$estado}^FS";
-    $y  += 28;
+    $nombre = substr(zt($p['producto']), 0, 45);
+    $ok     = $p['cantidad_entregada'] >= $p['cantidad'];
+    $estado = $ok ? 'OK' : '-' . ($p['cantidad'] - $p['cantidad_entregada']);
+    $L[] = "^FO{$LM},{$y}^A0N,26,14^FD{$nombre}^FS";
+    $L[] = "^FO860,{$y}^A0N,26,15^FD" . $p['cantidad'] . "^FS";
+    $L[] = "^FO1000,{$y}^A0N,26,15^FD" . $p['cantidad_entregada'] . "^FS";
+    $L[] = "^FO1140,{$y}^A0N,26,14^FD{$estado}^FS";
+    $y  += 32;
 }
 
-// ── PIE ───────────────────────────────────────────────────────────────
-$y  += 5;
+// ── PIE ──────────────────────────────────────────────────────────────
+$y += 5;
 $sep();
-$L[] = "^FO{$LM},{$y}^A0N,19,11^FDGenerado: " . date('d/m/Y H:i') . "^FS";
-$y  += 26;
+$L[] = "^FO{$LM},{$y}^A0N,21,12^FDGenerado: " . date('d/m/Y H:i') . "^FS";
+$y  += 28;
 
 // ── ARMAR ZPL ────────────────────────────────────────────────────────
 $ll  = $y + 30;
