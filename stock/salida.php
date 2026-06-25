@@ -169,7 +169,7 @@ if(in_array(15, $_SESSION['permisos'])):
 
                 // Datos del cliente
                 $stmt = $pdo->prepare("
-                  SELECT c.*, v.envio, v.total, v.guia_pdf
+                  SELECT c.*, v.envio, v.total, v.guia_pdf, v.notas
                   FROM tb_ventas v
                   JOIN clientes c ON c.id_cliente = v.cliente
                   WHERE v.id_venta = ?
@@ -193,6 +193,11 @@ if(in_array(15, $_SESSION['permisos'])):
                 <strong>Teléfono:</strong> <?= htmlspecialchars($cliente['telefono']) ?><br>
                 <strong>Envio:</strong> <?= htmlspecialchars(strtoupper($cliente['envio'])) ?><br>
                 <strong>Total:</strong> $<?= number_format($cliente['total'],2) ?>
+                <?php if (!empty($cliente['notas'])): ?>
+                <br><hr class="my-1">
+                <strong><i class="fas fa-sticky-note text-warning"></i> Notas:</strong>
+                <span class="text-dark"><?= nl2br(htmlspecialchars($cliente['notas'])) ?></span>
+                <?php endif; ?>
               </div>
 
               <!-- Guías (solo foráneos) -->
