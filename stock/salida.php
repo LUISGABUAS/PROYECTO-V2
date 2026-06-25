@@ -370,101 +370,101 @@ if(in_array(15, $_SESSION['permisos'])):
         </div>
       </div>
 
-      <!-- VENTAS PENDIENTES -->
+      <!-- VENTAS DEL DÍA -->
       <div class="row mt-4">
         <div class="col-md-12">
-          <div class="card card-outline card-warning">
+          <div class="card card-outline card-secondary">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-clock text-warning"></i> Ventas pendientes de entrega</h3>
+              <h3 class="card-title"><i class="fas fa-list text-secondary"></i> Ventas del período</h3>
             </div>
             <div class="card-body p-0">
               <?php
-              $sql_pend  = "SELECT v.id_venta, v.fecha, v.created_at, v.envio,
-                              c.nombre_completo AS cliente,
-                              SUM(vd.cantidad)                         AS total_pacas,
-                              SUM(vd.cantidad_entregada)               AS entregadas,
-                              SUM(vd.cantidad - vd.cantidad_entregada) AS pendientes
-                            FROM tb_ventas v
-                            JOIN clientes c ON c.id_cliente = v.cliente
-                            JOIN tb_ventas_detalle vd ON vd.id_venta = v.id_venta
-                            WHERE vd.cantidad_entregada < vd.cantidad";
-              $params_pend = [];
+              $sql_ventas = "
+                SELECT v.id_venta, v.created_at, v.envio,
+                       c.nombre_completo AS cliente,
+                       SUM(vd.cantidad)             AS total_pacas,
+                       SUM(vd.cantidad_entregada)   AS entregadas,
+                       MAX(vs.fecha_scan)            AS ultima_scan
+                FROM tb_ventas v
+                JOIN clientes c ON c.id_cliente = v.cliente
+                JOIN tb_ventas_detalle vd ON vd.id_venta = v.id_venta
+                LEFT JOIN tb_ventas_stock vs ON vs.id_venta = v.id_venta
+                WHERE 1=1";
+              $params_v = [];
               if ($fecha_inicio) {
-                  $sql_pend .= " AND DATE(v.created_at) >= ?";
-                  $params_pend[] = $fecha_inicio;
+                  $sql_ventas .= " AND DATE(v.created_at) >= ?";
+                  $params_v[] = $fecha_inicio;
               }
               if ($fecha_fin) {
                   if ($hora_hasta) {
-                      $sql_pend .= " AND v.created_at <= ?";
-                      $params_pend[] = $fecha_fin . ' ' . $hora_hasta . ':00';
+                      $sql_ventas .= " AND v.created_at <= ?";
+                      $params_v[] = $fecha_fin . ' ' . $hora_hasta . ':00';
                   } else {
-                      $sql_pend .= " AND DATE(v.created_at) <= ?";
-                      $params_pend[] = $fecha_fin;
+                      $sql_ventas .= " AND DATE(v.created_at) <= ?";
+                      $params_v[] = $fecha_fin;
                   }
               }
-              $sql_pend .= " GROUP BY v.id_venta ORDER BY v.created_at ASC";
-              $stmt_pend = $pdo->prepare($sql_pend);
-              $stmt_pend->execute($params_pend);
-              $ventas_pendientes = $stmt_pend->fetchAll(PDO::FETCH_ASSOC);
+              $sql_ventas .= " GROUP BY v.id_venta ORDER BY v.created_at ASC";
+              $stmt_v = $pdo->prepare($sql_ventas);
+              $stmt_v->execute($params_v);
+              $ventas_lista = $stmt_v->fetchAll(PDO::FETCH_ASSOC);
               ?>
 
-              <?php if (empty($ventas_pendientes)): ?>
-              <div class="alert alert-success m-3">
-                <i class="fas fa-check-circle"></i> No hay ventas pendientes de entrega.
+              <?php if (empty($ventas_lista)): ?>
+              <div class="alert alert-info m-3">
+                <i class="fas fa-info-circle"></i> No hay ventas en este período.
               </div>
               <?php else: ?>
-              <table class="table table-bordered table-striped table-sm mb-0">
+              <table class="table table-bordered table-sm mb-0">
                 <thead class="thead-light">
                   <tr>
                     <th>#Venta</th>
-                    <th>Fecha</th>
                     <th>Cliente</th>
                     <th>Tipo</th>
-                    <th class="text-center">Total pacas</th>
-                    <th class="text-center">Entregadas</th>
-                    <th class="text-center">Pendientes</th>
-                    <th class="text-center">Progreso</th>
+                    <th class="text-center">Hora creación</th>
+                    <th class="text-center">Estado / Hora escaneada</th>
                     <th class="text-center">Acción</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <?php foreach ($ventas_pendientes as $vp):
-                    $pct = $vp['total_pacas'] > 0 ? round(($vp['entregadas'] / $vp['total_pacas']) * 100) : 0;
-                    $tipo_link = $vp['envio'] === 'foraneo' ? 'foraneo' : 'local';
+                  <?php foreach ($ventas_lista as $vl):
+                    $completada  = $vl['entregadas'] >= $vl['total_pacas'];
+                    $tipo_link   = $vl['envio'] === 'foraneo' ? 'foraneo' : 'local';
+                    $hora_creacion = $vl['created_at'] ? date('H:i', strtotime($vl['created_at'])) : '—';
                   ?>
-                  <tr>
-                    <td><strong><?= $vp['id_venta'] ?></strong></td>
+                  <tr class="<?= $completada ? 'table-success' : '' ?>">
+                    <td><strong>#<?= $vl['id_venta'] ?></strong></td>
+                    <td><?= htmlspecialchars($vl['cliente']) ?></td>
                     <td>
-                      <?= $vp['fecha'] ?>
-                      <?php if ($vp['created_at']): ?>
-                      <br><small class="text-muted"><?= date('H:i', strtotime($vp['created_at'])) ?> hrs</small>
-                      <?php endif; ?>
-                    </td>
-                    <td><?= htmlspecialchars($vp['cliente']) ?></td>
-                    <td>
-                      <?php if ($vp['envio'] === 'foraneo'): ?>
+                      <?php if ($vl['envio'] === 'foraneo'): ?>
                         <span class="badge badge-info"><i class="fas fa-truck"></i> Foráneo</span>
                       <?php else: ?>
                         <span class="badge badge-primary"><i class="fas fa-home"></i> Local</span>
                       <?php endif; ?>
                     </td>
-                    <td class="text-center"><?= $vp['total_pacas'] ?></td>
-                    <td class="text-center text-success"><strong><?= $vp['entregadas'] ?></strong></td>
-                    <td class="text-center text-danger"><strong><?= $vp['pendientes'] ?></strong></td>
-                    <td style="min-width:120px;">
-                      <div class="progress" style="height:18px;">
-                        <div class="progress-bar <?= $pct > 0 ? 'bg-warning' : 'bg-danger' ?>"
-                             style="width:<?= $pct ?>%;">
-                          <?= $pct ?>%
-                        </div>
-                      </div>
+                    <td class="text-center">
+                      <strong><?= $hora_creacion ?> hrs</strong>
                     </td>
                     <td class="text-center">
-                      <a href="salida.php?id_venta=<?= $vp['id_venta'] ?>&tipo=<?= $tipo_link ?>&fecha_inicio=<?= urlencode($fecha_inicio) ?>&fecha_fin=<?= urlencode($fecha_fin) ?><?= $hora_hasta ? '&hora_hasta=' . urlencode($hora_hasta) : '' ?>"
+                      <?php if ($completada && $vl['ultima_scan']): ?>
+                        <span class="badge badge-success" style="font-size:.9em;">
+                          <i class="fas fa-check-circle"></i>
+                          <?= date('H:i', strtotime($vl['ultima_scan'])) ?> hrs
+                        </span>
+                      <?php elseif ($completada): ?>
+                        <span class="badge badge-success"><i class="fas fa-check-circle"></i> Completada</span>
+                      <?php else: ?>
+                        <span class="badge badge-warning"><i class="fas fa-clock"></i> Pendiente</span>
+                      <?php endif; ?>
+                    </td>
+                    <td class="text-center">
+                      <?php if (!$completada): ?>
+                      <a href="salida.php?id_venta=<?= $vl['id_venta'] ?>&tipo=<?= $tipo_link ?>&fecha_inicio=<?= urlencode($fecha_inicio) ?>&fecha_fin=<?= urlencode($fecha_fin) ?><?= $hora_hasta ? '&hora_hasta=' . urlencode($hora_hasta) : '' ?>"
                          class="btn btn-sm btn-danger">
                         <i class="fas fa-barcode"></i> Procesar
                       </a>
-                      <a href="hoja_empaque.php?id=<?= $vp['id_venta'] ?>" target="_blank"
+                      <?php endif; ?>
+                      <a href="hoja_empaque.php?id=<?= $vl['id_venta'] ?>" target="_blank"
                          class="btn btn-sm btn-outline-dark ml-1" title="Hoja de empaque">
                         <i class="fas fa-print"></i>
                       </a>
