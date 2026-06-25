@@ -68,7 +68,6 @@ if ($v['envio'] === 'foraneo') {
     $guias = $stmt3->fetchAll(PDO::FETCH_ASSOC);
 }
 
-$total_pacas = array_sum(array_column($productos, 'cantidad'));
 
 // ── ZPL con rotacion B ────────────────────────────────────────────────
 // Fisico: 839 dots ancho (4") × LL dots largo
