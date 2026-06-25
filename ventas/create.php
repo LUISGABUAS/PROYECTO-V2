@@ -789,7 +789,7 @@ $(document).ready(function(){
     } else if(envio === 'foraneo'){
       displayField.value     = 'Foráneo';
       displayField.className = 'form-control bg-light';
-      colTipoPago.style.display = 'block';
+      colTipoPago.style.display = 'none';
       seleccionarPago('comprobante');
     }
 
