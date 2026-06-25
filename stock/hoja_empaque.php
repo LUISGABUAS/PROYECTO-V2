@@ -110,6 +110,11 @@ $guias_requeridas = $total_pacas * $multiplicador;
           style="background:#222;color:#fff;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;font-size:14px;margin-left:8px;">
     🦓 Enviar a Zebra
   </button>
+  <a href="<?= $URL ?>/app/controllers/helpers/print_zebra_empaque.php?id_venta=<?= $id_venta ?>&preview=1"
+     target="_blank"
+     style="display:inline-block;background:#6f42c1;color:#fff;padding:8px 18px;border-radius:4px;font-size:14px;text-decoration:none;margin-left:8px;">
+    👁️ Preview Zebra
+  </a>
   <button onclick="window.close()" style="background:#6c757d;color:#fff;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;font-size:14px;margin-left:8px;">
     ✕ Cerrar
   </button>

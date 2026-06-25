@@ -175,6 +175,31 @@ $zpl = "^XA\n^PW{$W}\n^LL{$ll}\n^LS0\n"
      . implode("\n", $L)
      . "\n^XZ";
 
+// ── MODO PREVIEW (Labelary → PDF) ────────────────────────────────────
+if (isset($_GET['preview'])) {
+    $ch = curl_init("https://api.labelary.com/v1/printers/8dpmm/labels/4x6/");
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $zpl,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 30,
+        CURLOPT_HTTPHEADER     => ["Accept: application/pdf"],
+    ]);
+    $pdf  = curl_exec($ch);
+    $http = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($http === 200) {
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: inline; filename="empaque_preview_' . $id_venta . '.pdf"');
+        echo $pdf;
+    } else {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => "Labelary error HTTP $http", 'zpl_size' => strlen($zpl)]);
+    }
+    exit;
+}
+
 // ── INSERTAR EN COLA ─────────────────────────────────────────────────
 try {
     $pdo->prepare("INSERT INTO print_queue (zpl, status, created_at) VALUES (?, 'pendiente', NOW())")
