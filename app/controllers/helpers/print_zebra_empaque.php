@@ -41,14 +41,25 @@ $stmt->execute([$id_venta]);
 $v = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$v) { echo json_encode(['success' => false, 'message' => 'Venta no encontrada']); exit; }
 
+// Pacas escaneadas (codigo_unico de cada paca de la venta)
 $stmt2 = $pdo->prepare("
-    SELECT a.nombre AS producto, vd.cantidad, vd.cantidad_entregada
-    FROM tb_ventas_detalle vd
-    JOIN tb_almacen a ON a.id_producto = vd.id_producto
-    WHERE vd.id_venta = ? ORDER BY a.nombre
+    SELECT s.codigo_unico, a.nombre AS producto
+    FROM tb_ventas_stock vs
+    JOIN stock s      ON s.id_stock    = vs.id_stock
+    JOIN tb_almacen a ON a.id_producto = s.id_producto
+    WHERE vs.id_venta = ?
+    ORDER BY a.nombre ASC, s.codigo_unico ASC
 ");
 $stmt2->execute([$id_venta]);
-$productos = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+$pacas = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+
+// Detalle para total de pacas vendidas
+$stmt2b = $pdo->prepare("
+    SELECT SUM(vd.cantidad) AS total_vendidas
+    FROM tb_ventas_detalle vd WHERE vd.id_venta = ?
+");
+$stmt2b->execute([$id_venta]);
+$total_pacas = (int)$stmt2b->fetchColumn();
 
 $guias = [];
 if ($v['envio'] === 'foraneo') {
@@ -197,38 +208,22 @@ if (!empty($guias)) {
     $sep();
 }
 
-// ── PRODUCTOS ─────────────────────────────────────────────────────────
-$full(36, 21, 'PRODUCTOS - Total: ' . $total_pacas, 8);
+// ── PACAS ─────────────────────────────────────────────────────────────
+$n_escaneadas = count($pacas);
+$full(36, 21, 'PACAS (' . $n_escaneadas . ' de ' . $total_pacas . '):', 8);
 $thin();
 
-// Columnas (ZPL y = visual_x):
-$C_PROD = $LM;
-$C_VEND = 840;
-$C_ENT  = 940;
-$C_EST  = 1035;
-$H_HDR  = 28;
-$H_ROW  = 42;
-
-// Encabezado tabla
-$col($H_HDR, 15, 'PRODUCTO', $C_PROD);
-$col($H_HDR, 15, 'VEND.', $C_VEND);
-$col($H_HDR, 15, 'ENT.', $C_ENT);
-$col($H_HDR, 15, 'EST.', $C_EST);
-$vy += $H_HDR + 5;
-$thin();
-
-foreach ($productos as $p) {
+$H_ROW = 42;
+foreach ($pacas as $p) {
     if ($W - $vy - $H_ROW < 0) break;
-    $nombre = substr(zt($p['producto']), 0, 30);
-    $ok     = $p['cantidad_entregada'] >= $p['cantidad'];
-    $estado = $ok ? 'OK' : ('-' . ($p['cantidad'] - $p['cantidad_entregada']));
-    $fw_pr  = $C_VEND - $C_PROD - 10;
-    $zx_r   = $W - $vy - $H_ROW;
-    $L[] = "^FO{$zx_r},{$C_PROD}^A0B,{$H_ROW},22^FB{$fw_pr},1,0,L^FD{$nombre}^FS";
-    $L[] = "^FO{$zx_r},{$C_VEND}^A0B,{$H_ROW},22^FD" . $p['cantidad'] . "^FS";
-    $L[] = "^FO{$zx_r},{$C_ENT}^A0B,{$H_ROW},22^FD" . $p['cantidad_entregada'] . "^FS";
-    $L[] = "^FO{$zx_r},{$C_EST}^A0B,{$H_ROW},22^FD{$estado}^FS";
-    $vy += $H_ROW + 8;
+    $codigo  = zt($p['codigo_unico']);
+    $prod    = substr(zt($p['producto']), 0, 28);
+    $zx_r    = $W - $vy - $H_ROW;
+    $fw_cod  = 500;
+    $fw_prod = $LL - $LM - 510;
+    $L[] = "^FO{$zx_r},{$LM}^A0B,{$H_ROW},22^FB{$fw_cod},1,0,L^FD{$codigo}^FS";
+    $L[] = "^FO{$zx_r},530^A0B,{$H_ROW},22^FB{$fw_prod},1,0,L^FD{$prod}^FS";
+    $vy += $H_ROW + 6;
 }
 
 $sep();
