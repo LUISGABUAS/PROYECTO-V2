@@ -235,20 +235,20 @@ foreach ($items_a_imprimir as $t_idx => $paca) {
         $prod    = substr(zt($paca['producto']), 0, 30);
         $num     = ($t_idx + 1) . ' de ' . $N_ESCANEADAS;
 
-        // Número de paca
+        // Número de empaque
         $x = $vy; if ($x + 26 <= $W)
             $L[] = "^FO{$x},{$LM}^A0B,26,15^FDEmpaque {$num}^FS";
         $vy += 26 + 6;
 
-        // Código grande
-        $x = $vy; if ($x + 52 <= $W)
-            $L[] = "^FO{$x},{$LM}^A0B,52,30^FB{$FW},1,0,L^FD{$codigo}^FS";
-        $vy += 52 + 8;
+        // Nombre del producto — grande arriba
+        $x = $vy; if ($x + 55 <= $W)
+            $L[] = "^FO{$x},{$LM}^A0B,55,32^FB{$FW},1,0,L^FD{$prod}^FS";
+        $vy += 55 + 6;
 
-        // Nombre del producto
-        $x = $vy; if ($x + 36 <= $W)
-            $L[] = "^FO{$x},{$LM}^A0B,36,22^FB{$FW},1,0,L^FD{$prod}^FS";
-        $vy += 36 + 10;
+        // Código — más chico, a la izquierda del mismo renglón que el nombre
+        $x = $vy; if ($x + 30 <= $W)
+            $L[] = "^FO{$x},{$LM}^A0B,30,17^FD{$codigo}^FS";
+        $vy += 30 + 10;
     } else {
         $x = $vy; if ($x + 36 <= $W)
             $L[] = "^FO{$x},{$LM}^A0B,36,20^FDSIN PACAS ESCANEADAS^FS";
