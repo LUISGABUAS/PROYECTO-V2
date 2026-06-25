@@ -5,25 +5,23 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 header('Content-Type: application/json');
 
 if (empty($_SESSION['permisos'])) {
-    echo json_encode(['success' => false, 'message' => 'Sin sesión']);
-    exit;
+    echo json_encode(['success' => false, 'message' => 'Sin sesion']); exit;
 }
 
 $id_venta = intval($_GET['id_venta'] ?? 0);
 if (!$id_venta) {
-    echo json_encode(['success' => false, 'message' => 'Venta inválida']);
-    exit;
+    echo json_encode(['success' => false, 'message' => 'Venta invalida']); exit;
 }
 
-// Transliterar UTF-8 → ASCII para ZPL seguro
 function zt($str) {
     $out = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', (string)$str);
     return ($out !== false) ? $out : preg_replace('/[^\x20-\x7E]/', '?', (string)$str);
 }
 
-// ── Datos de la venta ────────────────────────────────────────────────
+// ── Datos ─────────────────────────────────────────────────────────────
 $stmt = $pdo->prepare("
     SELECT v.id_venta, v.fecha, v.envio, v.paqueteria, v.notas,
+           v.tipo_pago, v.monto_pendiente, v.metodo_pendiente,
            c.nombre_completo AS cliente, c.telefono,
            COALESCE(d.nombre_destinatario, c.nombre_completo) AS destinatario,
            COALESCE(d.calle_numero, c.calle_numero)  AS calle,
@@ -41,12 +39,8 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$id_venta]);
 $v = $stmt->fetch(PDO::FETCH_ASSOC);
-if (!$v) {
-    echo json_encode(['success' => false, 'message' => 'Venta no encontrada']);
-    exit;
-}
+if (!$v) { echo json_encode(['success' => false, 'message' => 'Venta no encontrada']); exit; }
 
-// Productos
 $stmt2 = $pdo->prepare("
     SELECT a.nombre AS producto, vd.cantidad, vd.cantidad_entregada
     FROM tb_ventas_detalle vd
@@ -56,7 +50,6 @@ $stmt2 = $pdo->prepare("
 $stmt2->execute([$id_venta]);
 $productos = $stmt2->fetchAll(PDO::FETCH_ASSOC);
 
-// Guías (solo foráneo)
 $guias = [];
 if ($v['envio'] === 'foraneo') {
     $stmt3 = $pdo->prepare("SELECT numero FROM tb_ventas_guias WHERE id_venta = ? ORDER BY numero ASC");
@@ -64,134 +57,189 @@ if ($v['envio'] === 'foraneo') {
     $guias = $stmt3->fetchAll(PDO::FETCH_ASSOC);
 }
 
-$total_pacas      = array_sum(array_column($productos, 'cantidad'));
-$total_entregadas = array_sum(array_column($productos, 'cantidad_entregada'));
+$total_pacas = array_sum(array_column($productos, 'cantidad'));
 
-// ── Constructor ZPL VERTICAL (portrait 4"×dinámica = 839 dots ancho) ──
-$W  = 839;   // ancho 4"
-$LM = 20;    // margen izquierdo
-$y  = 18;    // cursor Y
-$L  = [];    // líneas ZPL
+// ── ZPL con rotacion B ────────────────────────────────────────────────
+// Fisico: 839 dots ancho (4") × LL dots largo
+// Para leer: girar 90°CW → LL wide × 839 tall
+//
+// Coordenadas en lectura:
+//   visual_y (arriba-abajo)  = vy cursor  →  ZPL x = W - vy - h
+//   visual_x (izq-derecha)   = ZPL y      →  columnas fijas
+//
+// Fuentes ^A0B,h,w:
+//   h = altura del caracter (en ZPL x → visual_y)
+//   w = ancho del caracter  (en ZPL y → visual_x, fluye derecha)
 
-$sep = function() use (&$L, &$y, $W, $LM) {
-    $L[] = "^FO{$LM},{$y}^GB" . ($W - $LM * 2) . ",2,2^FS";
-    $y  += 10;
+$W   = 839;   // ancho fisico = altura visual
+$LL  = 1100;  // largo fisico = ancho visual (columnas hasta ~1080)
+$LM  = 25;    // margen izq visual = ZPL y minimo
+$FW  = $LL - $LM - 15;  // ancho maximo de campo full-width
+$vy  = 12;    // cursor visual Y
+$L   = [];    // comandos ZPL
+
+// Helpers
+$zx = fn($h) => $W - $vy - $h;  // ZPL x para font height h
+
+// Texto completo (toda la anchura visual)
+$full = function($h, $w, $text, $sp = 10, $just = 'L')
+        use (&$L, &$vy, $W, $LM, $FW) {
+    $x = $W - $vy - $h;
+    if ($x >= 0)
+        $L[] = "^FO{$x},{$LM}^A0B,{$h},{$w}^FB{$FW},1,0,{$just}^FD{$text}^FS";
+    $vy += $h + $sp;
 };
-$sep_thin = function() use (&$L, &$y, $W, $LM) {
-    $L[] = "^FO{$LM},{$y}^GB" . ($W - $LM * 2) . ",1,1^FS";
-    $y  += 5;
+
+// Texto en columna especifica (mismo vy, distinto ZPL y)
+$col = function($h, $w, $text, $zy) use (&$L, &$vy, $W) {
+    $x = $W - $vy - $h;
+    if ($x >= 0)
+        $L[] = "^FO{$x},{$zy}^A0B,{$h},{$w}^FD{$text}^FS";
+    // NO incrementa vy — llamar manualmente $vy +=
 };
 
-// ── CABECERA ────────────────────────────────────────────────────────
-$L[] = "^FO{$LM},{$y}^A0N,38,24^FDHOJA DE EMPAQUE^FS";
-$L[] = "^FO640,{$y}^A0N,38,24^FD#" . $id_venta . "^FS";
-$y  += 46;
+// Separador grueso
+$sep = function($sp = 14) use (&$L, &$vy, $W, $LM, $LL) {
+    $x = $W - $vy - 2;
+    if ($x >= 0)
+        $L[] = "^FO{$x},{$LM}^GB2," . ($LL - $LM - 15) . ",2^FS";
+    $vy += 2 + $sp;
+};
+
+// Separador delgado
+$thin = function($sp = 8) use (&$L, &$vy, $W, $LM, $LL) {
+    $x = $W - $vy - 1;
+    if ($x >= 0)
+        $L[] = "^FO{$x},{$LM}^GB1," . ($LL - $LM - 15) . ",1^FS";
+    $vy += 1 + $sp;
+};
+
+// ── CABECERA ──────────────────────────────────────────────────────────
+// "HOJA DE EMPAQUE" izquierda  |  "#148" derecha
+$col(55, 32, 'HOJA DE EMPAQUE', $LM);
+$col(55, 32, '#' . $id_venta, 820);
+$vy += 55 + 12;
 $sep();
 
-$L[] = "^FO{$LM},{$y}^A0N,26,15^FDFecha: " . zt($v['fecha']) . "^FS";
-$L[] = "^FO440,{$y}^A0N,26,15^FDEnvio: " . strtoupper(zt($v['envio'])) . "^FS";
-$y  += 32;
-$L[] = "^FO{$LM},{$y}^A0N,26,15^FDVendedor: " . substr(zt($v['vendedor']), 0, 28) . "^FS";
-if ($v['paqueteria']) {
-    $L[] = "^FO440,{$y}^A0N,26,15^FD" . zt($v['paqueteria']) . "^FS";
-}
-$y  += 34;
-$sep();
+// Fecha + Envio en misma fila
+$col(32, 18, 'Fecha: ' . zt($v['fecha']), $LM);
+$col(32, 18, 'Envio: ' . strtoupper(zt($v['envio'])), 580);
+if ($v['paqueteria']) $col(32, 18, zt($v['paqueteria']), 820);
+$vy += 32 + 8;
 
-// ── CLIENTE ─────────────────────────────────────────────────────────
-$L[] = "^FO{$LM},{$y}^A0N,24,14^FDCLIENTE^FS";
-$y  += 28;
-$L[] = "^FO{$LM},{$y}^A0N,30,18^FD" . substr(zt($v['cliente']), 0, 38) . "^FS";
-$y  += 36;
-$L[] = "^FO{$LM},{$y}^A0N,26,15^FDTel: " . zt($v['telefono']) . "^FS";
-$y  += 32;
+// Vendedor
+$full(32, 18, 'Vendedor: ' . substr(zt($v['vendedor']), 0, 24), 12);
 
-if (!empty($v['notas'])) {
-    $sep_thin();
-    $L[] = "^FO{$LM},{$y}^A0N,24,14^FDNOTAS:^FS";
-    $y  += 28;
-    $nota = str_replace(["\r\n", "\r", "\n"], ' ', zt($v['notas']));
-    foreach (str_split($nota, 48) as $ln) {
-        $L[] = "^FO{$LM},{$y}^A0N,26,15^FD{$ln}^FS";
-        $y  += 30;
-    }
-}
-$sep();
-
-// ── UBICACIÓN A ENTREGAR ─────────────────────────────────────────────
-$L[] = "^FO{$LM},{$y}^A0N,24,14^FDUBICACION A ENTREGAR^FS";
-$y  += 28;
-$L[] = "^FO{$LM},{$y}^A0N,30,18^FD" . substr(zt($v['destinatario']), 0, 38) . "^FS";
-$y  += 36;
-$L[] = "^FO{$LM},{$y}^A0N,26,15^FD" . substr(zt($v['calle']), 0, 48) . "^FS";
-$y  += 30;
-$L[] = "^FO{$LM},{$y}^A0N,26,15^FD" . substr(zt($v['colonia']), 0, 48) . "^FS";
-$y  += 30;
-$L[] = "^FO{$LM},{$y}^A0N,26,15^FD" . substr(zt($v['municipio'] . ', ' . $v['estado']), 0, 48) . "^FS";
-$y  += 30;
-$L[] = "^FO{$LM},{$y}^A0N,26,15^FDCP " . zt($v['cp']) . "^FS";
-$y  += 32;
-
-if (!empty($v['referencias'])) {
-    $sep_thin();
-    $L[] = "^FO{$LM},{$y}^A0N,24,14^FDREFERENCIAS:^FS";
-    $y  += 28;
-    $ref = str_replace(["\r\n", "\r", "\n"], ' ', zt($v['referencias']));
-    foreach (str_split($ref, 48) as $ln) {
-        $L[] = "^FO{$LM},{$y}^A0N,26,15^FD{$ln}^FS";
-        $y  += 30;
-    }
+// ── PAGO ─────────────────────────────────────────────────────────────
+$tp = $v['tipo_pago'] ?? '';
+if ($tp !== 'contra_entrega') {
+    $pago_label = match($tp) {
+        'efectivo'   => 'PAGO COMPLETO - EFECTIVO',
+        'comprobante'=> 'PAGO COMPLETO - COMPROBANTE',
+        'ambos'      => 'PAGO COMPLETO - EFECTIVO + COMPROBANTE',
+        default      => 'PAGO COMPLETO',
+    };
+    $full(30, 17, $pago_label, 12);
 }
 $sep();
 
-// ── GUÍAS (solo foráneo) ─────────────────────────────────────────────
-if (!empty($guias)) {
-    $L[] = "^FO{$LM},{$y}^A0N,26,15^FDGUIAS (" . count($guias) . "):^FS";
-    $y  += 30;
-    foreach ($guias as $g) {
-        $L[] = "^FO{$LM},{$y}^A0N,26,15^FD  Guia " . $g['numero'] . "^FS";
-        $y  += 30;
+// ── CONTRA ENTREGA (caja negra destacada) ─────────────────────────────
+if ($tp === 'contra_entrega' && $v['monto_pendiente'] > 0) {
+    $ce_h  = 52;
+    $monto = '$' . number_format((float)$v['monto_pendiente'], 2);
+    $met   = strtoupper(zt($v['metodo_pendiente'] ?? ''));
+    $zx_ce = $W - $vy - $ce_h;
+    if ($zx_ce >= 0) {
+        $L[] = "^FO{$zx_ce},{$LM}^GB{$ce_h}," . ($LL - $LM - 15) . ",{$ce_h}^FS";
+        $L[] = "^FO{$zx_ce},{$LM}^FR^A0B,{$ce_h},30^FB{$FW},1,0,L"
+             . "^FD  COBRAR EN ENTREGA: {$monto}  ({$met})^FS";
     }
+    $vy += $ce_h + 12;
     $sep();
 }
 
-// ── PRODUCTOS ────────────────────────────────────────────────────────
-$L[] = "^FO{$LM},{$y}^A0N,28,16^FDPRODUCTOS - Total: {$total_pacas}^FS";
-$y  += 34;
-$sep_thin();
-$L[] = "^FO{$LM},{$y}^A0N,22,12^FDPRODUCTO^FS";
-$L[] = "^FO530,{$y}^A0N,22,12^FDVEND.^FS";
-$L[] = "^FO630,{$y}^A0N,22,12^FDENT.^FS";
-$L[] = "^FO730,{$y}^A0N,22,12^FDEST.^FS";
-$y  += 26;
-$sep_thin();
+// ── CLIENTE ───────────────────────────────────────────────────────────
+$full(26, 14, 'CLIENTE:', 5);
+$full(44, 27, substr(zt($v['cliente']), 0, 28), 6);
+$full(32, 18, 'Tel: ' . zt($v['telefono']), 10);
 
-foreach ($productos as $p) {
-    $nombre = substr(zt($p['producto']), 0, 34);
-    $ok     = $p['cantidad_entregada'] >= $p['cantidad'];
-    $estado = $ok ? 'OK' : '-' . ($p['cantidad'] - $p['cantidad_entregada']);
-    $L[] = "^FO{$LM},{$y}^A0N,26,14^FD{$nombre}^FS";
-    $L[] = "^FO530,{$y}^A0N,26,15^FD" . $p['cantidad'] . "^FS";
-    $L[] = "^FO630,{$y}^A0N,26,15^FD" . $p['cantidad_entregada'] . "^FS";
-    $L[] = "^FO730,{$y}^A0N,26,14^FD{$estado}^FS";
-    $y  += 32;
+if (!empty($v['notas'])) {
+    $thin();
+    $full(26, 14, 'NOTAS:', 4);
+    $nota = str_replace(["\r\n","\r","\n"], ' ', zt($v['notas']));
+    foreach (str_split($nota, 44) as $ln) $full(30, 17, $ln, 4);
+}
+$sep();
+
+// ── UBICACION A ENTREGAR ──────────────────────────────────────────────
+$full(26, 14, 'UBICACION A ENTREGAR:', 5);
+$full(42, 26, substr(zt($v['destinatario']), 0, 28), 5);
+$full(30, 17, substr(zt($v['calle']), 0, 43), 4);
+$full(30, 17, substr(zt($v['colonia']), 0, 43), 4);
+$full(30, 17, substr(zt($v['municipio'] . ', ' . $v['estado']), 0, 43), 4);
+$full(30, 17, 'CP ' . zt($v['cp']), 10);
+
+if (!empty($v['referencias'])) {
+    $thin();
+    $full(26, 14, 'REFERENCIAS:', 4);
+    $ref = str_replace(["\r\n","\r","\n"], ' ', zt($v['referencias']));
+    foreach (str_split($ref, 44) as $ln) $full(30, 17, $ln, 4);
+}
+$sep();
+
+// ── GUIAS ─────────────────────────────────────────────────────────────
+if (!empty($guias)) {
+    $nums = implode('  ', array_map(fn($g) => 'Guia ' . $g['numero'], $guias));
+    $full(32, 18, 'GUIAS (' . count($guias) . '): ' . $nums, 10);
+    $sep();
 }
 
-// ── PIE ──────────────────────────────────────────────────────────────
-$y += 5;
-$sep();
-$L[] = "^FO{$LM},{$y}^A0N,20,11^FDGenerado: " . date('d/m/Y H:i') . "^FS";
-$y  += 26;
+// ── PRODUCTOS ─────────────────────────────────────────────────────────
+$full(36, 21, 'PRODUCTOS - Total: ' . $total_pacas, 8);
+$thin();
 
-// ── ARMAR ZPL ────────────────────────────────────────────────────────
-$ll  = $y + 30;
-$zpl = "^XA\n^PW{$W}\n^LL{$ll}\n^LS0\n"
+// Columnas (ZPL y = visual_x):
+$C_PROD = $LM;   // producto (izquierda, ancho = C_VEND - LM - 10)
+$C_VEND = 855;
+$C_ENT  = 955;
+$C_EST  = 1045;
+
+// Encabezado tabla
+$col(26, 13, 'PRODUCTO', $C_PROD);
+$col(26, 13, 'VEND.', $C_VEND);
+$col(26, 13, 'ENT.', $C_ENT);
+$col(26, 13, 'EST.', $C_EST);
+$vy += 26 + 5;
+$thin();
+
+foreach ($productos as $p) {
+    if ($W - $vy - 30 < 0) break;
+    $nombre = substr(zt($p['producto']), 0, 38);
+    $ok     = $p['cantidad_entregada'] >= $p['cantidad'];
+    $estado = $ok ? 'OK' : ('-' . ($p['cantidad'] - $p['cantidad_entregada']));
+    $fw_pr  = $C_VEND - $C_PROD - 10;
+    $col(30, 16, '', $C_PROD); // placeholder para posicion
+    // reemplazar con fb para truncar
+    $zx_r = $W - $vy - 30;
+    $L[count($L)-1] = "^FO{$zx_r},{$C_PROD}^A0B,30,16^FB{$fw_pr},1,0,L^FD{$nombre}^FS";
+    $col(30, 17, (string)$p['cantidad'],             $C_VEND);
+    $col(30, 17, (string)$p['cantidad_entregada'],   $C_ENT);
+    $col(30, 17, $estado,                            $C_EST);
+    $vy += 30 + 8;
+}
+
+$sep();
+$full(22, 12, 'Generado: ' . date('d/m/Y H:i'), 0);
+
+// ── ARMAR ZPL ─────────────────────────────────────────────────────────
+$zpl = "^XA\n^PW{$W}\n^LL{$LL}\n^LS0\n"
      . implode("\n", $L)
      . "\n^XZ";
 
-// ── MODO PREVIEW (Labelary → PDF) ────────────────────────────────────
+// ── PREVIEW via Labelary ──────────────────────────────────────────────
 if (isset($_GET['preview'])) {
-    $ch = curl_init("https://api.labelary.com/v1/printers/8dpmm/labels/4x6/");
+    $h_in = round($LL / 203, 1);
+    $ch   = curl_init("https://api.labelary.com/v1/printers/8dpmm/labels/4x{$h_in}/");
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => $zpl,
@@ -202,23 +250,22 @@ if (isset($_GET['preview'])) {
     $pdf  = curl_exec($ch);
     $http = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
-
     if ($http === 200) {
         header('Content-Type: application/pdf');
-        header('Content-Disposition: inline; filename="empaque_preview_' . $id_venta . '.pdf"');
+        header('Content-Disposition: inline; filename="empaque_' . $id_venta . '.pdf"');
         echo $pdf;
     } else {
         header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => "Labelary error HTTP $http", 'zpl_size' => strlen($zpl)]);
+        echo json_encode(['success' => false, 'http' => $http, 'zpl_len' => strlen($zpl)]);
     }
     exit;
 }
 
-// ── INSERTAR EN COLA ─────────────────────────────────────────────────
+// ── COLA ──────────────────────────────────────────────────────────────
 try {
     $pdo->prepare("INSERT INTO print_queue (zpl, status, created_at) VALUES (?, 'pendiente', NOW())")
         ->execute([$zpl]);
     echo json_encode(['success' => true, 'message' => "Hoja de empaque #$id_venta enviada a la Zebra"]);
 } catch (PDOException $e) {
-    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
