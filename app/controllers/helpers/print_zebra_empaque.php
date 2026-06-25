@@ -210,75 +210,58 @@ if (!empty($guias)) {
     $sep();
 }
 
-// ── SNAPSHOT del header (antes de las pacas) ─────────────────────────
-// Guardamos el estado para reutilizarlo en cada ticket
+// ── SNAPSHOT del header ───────────────────────────────────────────────
 $L_header  = $L;
 $vy_header = $vy;
-
-// Espacio que ocupa el pie (sep + generado + pagina)
-$FOOTER_H  = 2 + 14 + 22 + 8 + 22 + 8;   // ~76 dots
-$H_PACA    = 38;
-$SP_PACA   = 5;
-$COL2      = 570;
 $N_ESCANEADAS = count($pacas);
+$total_tickets = max(1, $N_ESCANEADAS);
 
-// Calcular cuántos pares de pacas caben en el espacio restante
-$espacio_pacas   = $W - $vy_header - 36 - 8 - 1 - 8 - $FOOTER_H; // header_pacas + thin + footer
-$pares_por_ticket = max(1, (int)floor($espacio_pacas / ($H_PACA + $SP_PACA)));
-$pacas_por_ticket = $pares_por_ticket * 2;
-
-// Dividir pacas en chunks para múltiples tickets
-$chunks_ticket = array_chunk($pacas, $pacas_por_ticket);
-$total_tickets = count($chunks_ticket);
-if ($total_tickets === 0) $total_tickets = 1; // si no hay pacas, igual generar 1 ticket
-
-// ── GENERAR UN ^XA...^XZ POR TICKET ──────────────────────────────────
+// ── UN TICKET POR PACA ────────────────────────────────────────────────
 $zpl = '';
 
-foreach ($chunks_ticket as $t_idx => $chunk_pacas) {
-    // Restaurar estado del header
+// Si no hay pacas escaneadas aún, generar 1 ticket sin código de paca
+$items_a_imprimir = !empty($pacas) ? $pacas : [null];
+
+foreach ($items_a_imprimir as $t_idx => $paca) {
     $L  = $L_header;
     $vy = $vy_header;
 
-    // Encabezado de pacas
-    $n_inicio     = $t_idx * $pacas_por_ticket + 1;
-    $n_fin        = min($n_inicio + count($chunk_pacas) - 1, $N_ESCANEADAS);
-    $titulo_pacas = 'PACAS ' . $n_inicio . '-' . $n_fin . ' de ' . $N_ESCANEADAS;
-    $x = $vy; if ($x + 36 <= $W) $L[] = "^FO{$x},{$LM}^A0B,36,21^FB{$FW},1,0,L^FD{$titulo_pacas}^FS";
-    $vy += 36 + 8;
-    $x = $vy; if ($x + 1 <= $W) $L[] = "^FO{$x},{$LM}^GB1," . ($LL - $LM - 15) . ",1^FS";
-    $vy += 1 + 8;
+    // ── SECCIÓN PACA DESTACADA ────────────────────────────────────────
+    $x = $vy; if ($x + 2 <= $W) $L[] = "^FO{$x},{$LM}^GB2," . ($LL - $LM - 15) . ",2^FS";
+    $vy += 2 + 10;
 
-    // Pacas en 2 columnas con font grande
-    foreach (array_chunk($chunk_pacas, 2) as $par) {
-        if ($vy + $H_PACA > $W) break;
-        $zx_r = $vy;
+    if ($paca !== null) {
+        $codigo  = zt($paca['codigo_unico']);
+        $prod    = substr(zt($paca['producto']), 0, 30);
+        $num     = ($t_idx + 1) . ' de ' . $N_ESCANEADAS;
 
-        $c1 = zt($par[0]['codigo_unico']);
-        $p1 = substr(zt($par[0]['producto']), 0, 16);
-        $L[] = "^FO{$zx_r},{$LM}^A0B,{$H_PACA},20^FD{$c1}^FS";
-        $L[] = "^FO{$zx_r}," . ($LM + 310) . "^A0B,{$H_PACA},20^FD{$p1}^FS";
+        // Número de paca
+        $x = $vy; if ($x + 26 <= $W)
+            $L[] = "^FO{$x},{$LM}^A0B,26,15^FDEmpaque {$num}^FS";
+        $vy += 26 + 6;
 
-        if (isset($par[1])) {
-            $c2 = zt($par[1]['codigo_unico']);
-            $p2 = substr(zt($par[1]['producto']), 0, 16);
-            $L[] = "^FO{$zx_r},{$COL2}^A0B,{$H_PACA},20^FD{$c2}^FS";
-            $L[] = "^FO{$zx_r}," . ($COL2 + 310) . "^A0B,{$H_PACA},20^FD{$p2}^FS";
-        }
+        // Código grande
+        $x = $vy; if ($x + 52 <= $W)
+            $L[] = "^FO{$x},{$LM}^A0B,52,30^FB{$FW},1,0,L^FD{$codigo}^FS";
+        $vy += 52 + 8;
 
-        $vy += $H_PACA + $SP_PACA;
+        // Nombre del producto
+        $x = $vy; if ($x + 36 <= $W)
+            $L[] = "^FO{$x},{$LM}^A0B,36,22^FB{$FW},1,0,L^FD{$prod}^FS";
+        $vy += 36 + 10;
+    } else {
+        $x = $vy; if ($x + 36 <= $W)
+            $L[] = "^FO{$x},{$LM}^A0B,36,20^FDSIN PACAS ESCANEADAS^FS";
+        $vy += 36 + 10;
     }
 
-    // Pie de cada ticket
+    // Pie
     $x = $vy; if ($x + 2 <= $W) $L[] = "^FO{$x},{$LM}^GB2," . ($LL - $LM - 15) . ",2^FS";
-    $vy += 2 + 14;
-
-    $gen_txt = 'Generado: ' . date('d/m/Y H:i');
-    $x = $vy;
-    if ($x + 22 <= $W) {
-        $L[] = "^FO{$x},{$LM}^A0B,22,12^FD{$gen_txt}^FS";
-        if ($total_tickets > 1)
-            $L[] = "^FO{$x},820^A0B,22,12^FDTicket " . ($t_idx + 1) . " de {$total_tickets}^FS";
+    $vy += 2 + 10;
+    $x = $vy; if ($x + 22 <= $W) {
+        $L[] = "^FO{$x},{$LM}^A0B,22,12^FDGenerado: " . date('d/m/Y H:i') . "^FS";
+        if ($N_ESCANEADAS > 1)
+            $L[] = "^FO{$x},820^A0B,22,12^FDEmpaque " . ($t_idx + 1) . " de {$N_ESCANEADAS}^FS";
     }
     $vy += 22 + 8;
 
@@ -316,7 +299,7 @@ try {
     $pdo->prepare("INSERT INTO print_queue (zpl, status, created_at) VALUES (?, 'pendiente', NOW())")
         ->execute([$zpl]);
     $msg = $total_tickets > 1
-        ? "Hoja de empaque #$id_venta — $total_tickets tickets enviados a la Zebra"
+        ? "Venta #$id_venta — $total_tickets hojas enviadas ({$N_ESCANEADAS} pacas)"
         : "Hoja de empaque #$id_venta enviada a la Zebra";
     echo json_encode(['success' => true, 'message' => $msg, 'tickets' => $total_tickets]);
 } catch (PDOException $e) {
