@@ -209,56 +209,90 @@ if (!empty($guias)) {
     $sep();
 }
 
-// ── PACAS ─────────────────────────────────────────────────────────────
-$n_escaneadas = count($pacas);
-$full(36, 21, 'PACAS (' . $n_escaneadas . ' de ' . $total_pacas . '):', 8);
-$thin();
+// ── SNAPSHOT del header (antes de las pacas) ─────────────────────────
+// Guardamos el estado para reutilizarlo en cada ticket
+$L_header  = $L;
+$vy_header = $vy;
 
-// Dos columnas de pacas para aprovechar espacio
-// Columna izq: zy=LM(25), columna der: zy=570
-$H_PACA  = 28;
-$SP_PACA = 4;
-$COL2    = 570;
-$FW_COD  = 200;
-$FW_PRD  = $COL2 - $LM - $FW_COD - 10;
+// Espacio que ocupa el pie (sep + generado + pagina)
+$FOOTER_H  = 2 + 14 + 22 + 8 + 22 + 8;   // ~76 dots
+$H_PACA    = 28;
+$SP_PACA   = 4;
+$COL2      = 570;
+$N_ESCANEADAS = count($pacas);
 
-$chunks = array_chunk($pacas, 2); // pares de pacas por fila
-foreach ($chunks as $par) {
-    if ($W - $vy - $H_PACA < 0) break;
-    $zx_r = $W - $vy - $H_PACA;
+// Calcular cuántos pares de pacas caben en el espacio restante
+$espacio_pacas   = $W - $vy_header - 36 - 8 - 1 - 8 - $FOOTER_H; // header_pacas + thin + footer
+$pares_por_ticket = max(1, (int)floor($espacio_pacas / ($H_PACA + $SP_PACA)));
+$pacas_por_ticket = $pares_por_ticket * 2;
 
-    // Primera paca (izquierda)
-    $c1 = zt($par[0]['codigo_unico']);
-    $p1 = substr(zt($par[0]['producto']), 0, 18);
-    $L[] = "^FO{$zx_r},{$LM}^A0B,{$H_PACA},14^FD{$c1}^FS";
-    $L[] = "^FO{$zx_r}," . ($LM + 230) . "^A0B,{$H_PACA},14^FD{$p1}^FS";
+// Dividir pacas en chunks para múltiples tickets
+$chunks_ticket = array_chunk($pacas, $pacas_por_ticket);
+$total_tickets = count($chunks_ticket);
+if ($total_tickets === 0) $total_tickets = 1; // si no hay pacas, igual generar 1 ticket
 
-    // Segunda paca (derecha) si existe
-    if (isset($par[1])) {
-        $c2 = zt($par[1]['codigo_unico']);
-        $p2 = substr(zt($par[1]['producto']), 0, 18);
-        $L[] = "^FO{$zx_r},{$COL2}^A0B,{$H_PACA},14^FD{$c2}^FS";
-        $L[] = "^FO{$zx_r}," . ($COL2 + 230) . "^A0B,{$H_PACA},14^FD{$p2}^FS";
+// ── GENERAR UN ^XA...^XZ POR TICKET ──────────────────────────────────
+$zpl = '';
+
+foreach ($chunks_ticket as $t_idx => $chunk_pacas) {
+    // Restaurar estado del header
+    $L  = $L_header;
+    $vy = $vy_header;
+
+    // Encabezado de pacas
+    $n_inicio = $t_idx * $pacas_por_ticket + 1;
+    $n_fin    = min($n_inicio + count($chunk_pacas) - 1, $N_ESCANEADAS);
+    $titulo_pacas = 'PACAS ' . $n_inicio . '-' . $n_fin . ' de ' . $N_ESCANEADAS;
+    // Usar helpers con referencias actuales
+    $x = $W - $vy - 36; if ($x >= 0) $L[] = "^FO{$x},{$LM}^A0B,36,21^FB{$FW},1,0,L^FD{$titulo_pacas}^FS";
+    $vy += 36 + 8;
+    $x = $W - $vy - 1; if ($x >= 0) $L[] = "^FO{$x},{$LM}^GB1," . ($LL - $LM - 15) . ",1^FS";
+    $vy += 1 + 8;
+
+    // Pacas en 2 columnas
+    foreach (array_chunk($chunk_pacas, 2) as $par) {
+        if ($W - $vy - $H_PACA < 5) break;
+        $zx_r = $W - $vy - $H_PACA;
+
+        $c1 = zt($par[0]['codigo_unico']);
+        $p1 = substr(zt($par[0]['producto']), 0, 18);
+        $L[] = "^FO{$zx_r},{$LM}^A0B,{$H_PACA},14^FD{$c1}^FS";
+        $L[] = "^FO{$zx_r}," . ($LM + 230) . "^A0B,{$H_PACA},14^FD{$p1}^FS";
+
+        if (isset($par[1])) {
+            $c2 = zt($par[1]['codigo_unico']);
+            $p2 = substr(zt($par[1]['producto']), 0, 18);
+            $L[] = "^FO{$zx_r},{$COL2}^A0B,{$H_PACA},14^FD{$c2}^FS";
+            $L[] = "^FO{$zx_r}," . ($COL2 + 230) . "^A0B,{$H_PACA},14^FD{$p2}^FS";
+        }
+
+        $vy += $H_PACA + $SP_PACA;
     }
 
-    $vy += $H_PACA + $SP_PACA;
+    // Pie de cada ticket
+    $x = $W - $vy - 2; if ($x >= 0) $L[] = "^FO{$x},{$LM}^GB2," . ($LL - $LM - 15) . ",2^FS";
+    $vy += 2 + 14;
+
+    $gen_txt = 'Generado: ' . date('d/m/Y H:i');
+    $x = $W - $vy - 22; if ($x >= 0) $L[] = "^FO{$x},{$LM}^A0B,22,12^FD{$gen_txt}^FS";
+
+    if ($total_tickets > 1) {
+        $pag_txt = 'Ticket ' . ($t_idx + 1) . ' de ' . $total_tickets;
+        if ($x >= 0) $L[] = "^FO{$x},820^A0B,22,12^FD{$pag_txt}^FS";
+    }
+    $vy += 22 + 8;
+
+    $zpl .= "^XA\n^PW{$W}\n^LL{$LL}\n^LS0\n" . implode("\n", $L) . "\n^XZ\n";
 }
 
-$sep();
-$full(22, 12, 'Generado: ' . date('d/m/Y H:i'), 0);
-
-// ── ARMAR ZPL ─────────────────────────────────────────────────────────
-$zpl = "^XA\n^PW{$W}\n^LL{$LL}\n^LS0\n"
-     . implode("\n", $L)
-     . "\n^XZ";
-
-// ── PREVIEW via Labelary ──────────────────────────────────────────────
+// ── PREVIEW via Labelary (solo primer ticket) ─────────────────────────
 if (isset($_GET['preview'])) {
-    $h_in = round($LL / 203, 1);
-    $ch   = curl_init("https://api.labelary.com/v1/printers/8dpmm/labels/4x{$h_in}/");
+    $h_in   = round($LL / 203, 1);
+    $zpl_1  = explode("^XZ\n", $zpl)[0] . "^XZ"; // solo el primer label
+    $ch     = curl_init("https://api.labelary.com/v1/printers/8dpmm/labels/4x{$h_in}/");
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
-        CURLOPT_POSTFIELDS     => $zpl,
+        CURLOPT_POSTFIELDS     => $zpl_1,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 30,
         CURLOPT_HTTPHEADER     => ["Accept: application/pdf"],
@@ -272,16 +306,19 @@ if (isset($_GET['preview'])) {
         echo $pdf;
     } else {
         header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'http' => $http, 'zpl_len' => strlen($zpl)]);
+        echo json_encode(['success' => false, 'http' => $http, 'tickets' => $total_tickets]);
     }
     exit;
 }
 
-// ── COLA ──────────────────────────────────────────────────────────────
+// ── COLA (un job con todos los tickets concatenados) ──────────────────
 try {
     $pdo->prepare("INSERT INTO print_queue (zpl, status, created_at) VALUES (?, 'pendiente', NOW())")
         ->execute([$zpl]);
-    echo json_encode(['success' => true, 'message' => "Hoja de empaque #$id_venta enviada a la Zebra"]);
+    $msg = $total_tickets > 1
+        ? "Hoja de empaque #$id_venta — $total_tickets tickets enviados a la Zebra"
+        : "Hoja de empaque #$id_venta enviada a la Zebra";
+    echo json_encode(['success' => true, 'message' => $msg, 'tickets' => $total_tickets]);
 } catch (PDOException $e) {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
