@@ -74,22 +74,31 @@ function markDone(id) {
 }
 
 function printJob(job) {
-    const client = new net.Socket();
+    return new Promise((resolve) => {
+        const client = new net.Socket();
 
-    client.connect(CONFIG.PRINTER_PORT, CONFIG.PRINTER_IP, () => {
-        log(`Imprimiendo job #${job.id}...`);
-        client.write(job.zpl);
-        client.destroy();
-        markDone(job.id);
-    });
+        client.connect(CONFIG.PRINTER_PORT, CONFIG.PRINTER_IP, () => {
+            log(`Imprimiendo job #${job.id}...`);
+            client.write(job.zpl, () => {
+                client.end();
+            });
+        });
 
-    client.on('error', (err) => {
-        log(`Error en impresora: ${err.message}`);
+        client.on('close', () => {
+            markDone(job.id);
+            resolve();
+        });
+
+        client.on('error', (err) => {
+            log(`Error en impresora job #${job.id}: ${err.message}`);
+            client.destroy();
+            resolve();
+        });
     });
 }
 
 function fetchAndPrint() {
-    request('get_queue.php', (jobs) => {
+    request('get_queue.php', async (jobs) => {
         if (jobs === null) {
             log('Error conectando al servidor');
             return;
@@ -99,11 +108,12 @@ function fetchAndPrint() {
             return;
         }
         if (jobs.length === 0) {
-            // sin trabajos, silencioso para no llenar el log
             return;
         }
         log(`${jobs.length} trabajo(s) en cola`);
-        jobs.forEach(job => printJob(job));
+        for (const job of jobs) {
+            await printJob(job);
+        }
     });
 }
 
