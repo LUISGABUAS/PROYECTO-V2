@@ -92,34 +92,35 @@ $L   = [];    // comandos ZPL
 $zx = fn($h) => $W - $vy - $h;  // ZPL x para font height h
 
 // Texto completo (toda la anchura visual)
+// Con rotacion B: x = vy (primer contenido en x pequeño = arriba al leer)
 $full = function($h, $w, $text, $sp = 10, $just = 'L')
         use (&$L, &$vy, $W, $LM, $FW) {
-    $x = $W - $vy - $h;
-    if ($x >= 0)
+    $x = $vy;
+    if ($x + $h <= $W)
         $L[] = "^FO{$x},{$LM}^A0B,{$h},{$w}^FB{$FW},1,0,{$just}^FD{$text}^FS";
     $vy += $h + $sp;
 };
 
 // Texto en columna especifica (mismo vy, distinto ZPL y)
 $col = function($h, $w, $text, $zy) use (&$L, &$vy, $W) {
-    $x = $W - $vy - $h;
-    if ($x >= 0)
+    $x = $vy;
+    if ($x + $h <= $W)
         $L[] = "^FO{$x},{$zy}^A0B,{$h},{$w}^FD{$text}^FS";
     // NO incrementa vy — llamar manualmente $vy +=
 };
 
 // Separador grueso
 $sep = function($sp = 14) use (&$L, &$vy, $W, $LM, $LL) {
-    $x = $W - $vy - 2;
-    if ($x >= 0)
+    $x = $vy;
+    if ($x + 2 <= $W)
         $L[] = "^FO{$x},{$LM}^GB2," . ($LL - $LM - 15) . ",2^FS";
     $vy += 2 + $sp;
 };
 
 // Separador delgado
 $thin = function($sp = 8) use (&$L, &$vy, $W, $LM, $LL) {
-    $x = $W - $vy - 1;
-    if ($x >= 0)
+    $x = $vy;
+    if ($x + 1 <= $W)
         $L[] = "^FO{$x},{$LM}^GB1," . ($LL - $LM - 15) . ",1^FS";
     $vy += 1 + $sp;
 };
@@ -161,8 +162,8 @@ if ($tp === 'contra_entrega' && $v['monto_pendiente'] > 0) {
     $ce_h  = 52;
     $monto = '$' . number_format((float)$v['monto_pendiente'], 2);
     $met   = strtoupper(zt($v['metodo_pendiente'] ?? ''));
-    $zx_ce = $W - $vy - $ce_h;
-    if ($zx_ce >= 0) {
+    $zx_ce = $vy;
+    if ($zx_ce + $ce_h <= $W) {
         $L[] = "^FO{$zx_ce},{$LM}^GB{$ce_h}," . ($LL - $LM - 15) . ",{$ce_h}^FS";
         $L[] = "^FO{$zx_ce},{$LM}^FR^A0B,{$ce_h},30^FB{$FW},1,0,L"
              . "^FD  COBRAR EN ENTREGA: {$monto}  ({$met})^FS";
@@ -216,8 +217,8 @@ $vy_header = $vy;
 
 // Espacio que ocupa el pie (sep + generado + pagina)
 $FOOTER_H  = 2 + 14 + 22 + 8 + 22 + 8;   // ~76 dots
-$H_PACA    = 28;
-$SP_PACA   = 4;
+$H_PACA    = 38;
+$SP_PACA   = 5;
 $COL2      = 570;
 $N_ESCANEADAS = count($pacas);
 
@@ -240,45 +241,44 @@ foreach ($chunks_ticket as $t_idx => $chunk_pacas) {
     $vy = $vy_header;
 
     // Encabezado de pacas
-    $n_inicio = $t_idx * $pacas_por_ticket + 1;
-    $n_fin    = min($n_inicio + count($chunk_pacas) - 1, $N_ESCANEADAS);
+    $n_inicio     = $t_idx * $pacas_por_ticket + 1;
+    $n_fin        = min($n_inicio + count($chunk_pacas) - 1, $N_ESCANEADAS);
     $titulo_pacas = 'PACAS ' . $n_inicio . '-' . $n_fin . ' de ' . $N_ESCANEADAS;
-    // Usar helpers con referencias actuales
-    $x = $W - $vy - 36; if ($x >= 0) $L[] = "^FO{$x},{$LM}^A0B,36,21^FB{$FW},1,0,L^FD{$titulo_pacas}^FS";
+    $x = $vy; if ($x + 36 <= $W) $L[] = "^FO{$x},{$LM}^A0B,36,21^FB{$FW},1,0,L^FD{$titulo_pacas}^FS";
     $vy += 36 + 8;
-    $x = $W - $vy - 1; if ($x >= 0) $L[] = "^FO{$x},{$LM}^GB1," . ($LL - $LM - 15) . ",1^FS";
+    $x = $vy; if ($x + 1 <= $W) $L[] = "^FO{$x},{$LM}^GB1," . ($LL - $LM - 15) . ",1^FS";
     $vy += 1 + 8;
 
-    // Pacas en 2 columnas
+    // Pacas en 2 columnas con font grande
     foreach (array_chunk($chunk_pacas, 2) as $par) {
-        if ($W - $vy - $H_PACA < 5) break;
-        $zx_r = $W - $vy - $H_PACA;
+        if ($vy + $H_PACA > $W) break;
+        $zx_r = $vy;
 
         $c1 = zt($par[0]['codigo_unico']);
-        $p1 = substr(zt($par[0]['producto']), 0, 18);
-        $L[] = "^FO{$zx_r},{$LM}^A0B,{$H_PACA},14^FD{$c1}^FS";
-        $L[] = "^FO{$zx_r}," . ($LM + 230) . "^A0B,{$H_PACA},14^FD{$p1}^FS";
+        $p1 = substr(zt($par[0]['producto']), 0, 16);
+        $L[] = "^FO{$zx_r},{$LM}^A0B,{$H_PACA},20^FD{$c1}^FS";
+        $L[] = "^FO{$zx_r}," . ($LM + 310) . "^A0B,{$H_PACA},20^FD{$p1}^FS";
 
         if (isset($par[1])) {
             $c2 = zt($par[1]['codigo_unico']);
-            $p2 = substr(zt($par[1]['producto']), 0, 18);
-            $L[] = "^FO{$zx_r},{$COL2}^A0B,{$H_PACA},14^FD{$c2}^FS";
-            $L[] = "^FO{$zx_r}," . ($COL2 + 230) . "^A0B,{$H_PACA},14^FD{$p2}^FS";
+            $p2 = substr(zt($par[1]['producto']), 0, 16);
+            $L[] = "^FO{$zx_r},{$COL2}^A0B,{$H_PACA},20^FD{$c2}^FS";
+            $L[] = "^FO{$zx_r}," . ($COL2 + 310) . "^A0B,{$H_PACA},20^FD{$p2}^FS";
         }
 
         $vy += $H_PACA + $SP_PACA;
     }
 
     // Pie de cada ticket
-    $x = $W - $vy - 2; if ($x >= 0) $L[] = "^FO{$x},{$LM}^GB2," . ($LL - $LM - 15) . ",2^FS";
+    $x = $vy; if ($x + 2 <= $W) $L[] = "^FO{$x},{$LM}^GB2," . ($LL - $LM - 15) . ",2^FS";
     $vy += 2 + 14;
 
     $gen_txt = 'Generado: ' . date('d/m/Y H:i');
-    $x = $W - $vy - 22; if ($x >= 0) $L[] = "^FO{$x},{$LM}^A0B,22,12^FD{$gen_txt}^FS";
-
-    if ($total_tickets > 1) {
-        $pag_txt = 'Ticket ' . ($t_idx + 1) . ' de ' . $total_tickets;
-        if ($x >= 0) $L[] = "^FO{$x},820^A0B,22,12^FD{$pag_txt}^FS";
+    $x = $vy;
+    if ($x + 22 <= $W) {
+        $L[] = "^FO{$x},{$LM}^A0B,22,12^FD{$gen_txt}^FS";
+        if ($total_tickets > 1)
+            $L[] = "^FO{$x},820^A0B,22,12^FDTicket " . ($t_idx + 1) . " de {$total_tickets}^FS";
     }
     $vy += 22 + 8;
 
