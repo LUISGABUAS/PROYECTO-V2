@@ -54,8 +54,8 @@ Swal.fire({
               <div class="col-md-3">
                 <div class="form-group">
                   <label><strong>Fecha</strong></label>
-                  <input type="date" name="fecha" class="form-control"
-                         value="<?= date('Y-m-d', strtotime($venta['fecha'])) ?>" required>
+                  <input type="datetime-local" name="fecha" class="form-control"
+                         value="<?= date('Y-m-d\TH:i', strtotime($venta['fecha'])) ?>" required>
                 </div>
               </div>
 

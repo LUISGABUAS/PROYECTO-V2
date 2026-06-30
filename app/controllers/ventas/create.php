@@ -6,8 +6,10 @@ require_once(dirname(__DIR__, 2) . '/config.php');
 include(__DIR__ . '/../helpers/csrf.php');
 csrf_verify();
 
+header('Content-Type: application/json');
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header("Location: ../../../ventas");
+    echo json_encode(['success' => false, 'message' => 'Método no permitido']);
     exit;
 }
 
@@ -18,7 +20,7 @@ try {
        DATOS GENERALES
     ====================== */
     $id_usuario           = $_POST['id_usuario'];
-    $fecha                = $_POST['fecha'];
+    $fecha                = date('Y-m-d H:i:s'); // hora exacta del servidor (America/Mexico_City)
     $cliente              = $_POST['cliente'];
     $envio                = $_POST['envio'];
     $total                = (float)$_POST['total'];
@@ -129,15 +131,13 @@ try {
     include('../helpers/auditoria.php');
     registrarAuditoria($pdo, $id_usuario, null, 'CREAR VENTA', 'tb_ventas', $id_venta, "Venta #$id_venta — Cliente: $cliente — Total: $total");
 
-    $_SESSION['mensaje'] = "✅ Venta #$id_venta creada correctamente";
-    header("Location: ../../../ventas");
+    echo json_encode(['success' => true, 'message' => "✅ Venta #$id_venta creada correctamente", 'id_venta' => $id_venta]);
     exit;
 
 } catch (Exception $e) {
 
-    $pdo->rollBack();
+    if ($pdo->inTransaction()) $pdo->rollBack();
 
-    // Eliminar archivos subidos si hubo error posterior
     if (!empty($rutas_comprobantes) && isset($carpeta)) {
         foreach ($rutas_comprobantes as $ruta) {
             $archivo = $carpeta . basename($ruta);
@@ -145,7 +145,6 @@ try {
         }
     }
 
-    $_SESSION['mensaje'] = $e->getMessage();
-    header("Location: ../../../ventas/create.php");
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     exit;
 }

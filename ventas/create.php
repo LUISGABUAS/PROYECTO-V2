@@ -58,14 +58,6 @@ Swal.fire({
                 <!-- DATOS PRINCIPALES -->
                 <div class="row mb-4">
 
-                  <!-- FECHA -->
-                  <div class="col-md-2">
-                    <div class="form-group">
-                      <label><strong>Fecha</strong></label>
-                      <input type="date" name="fecha" class="form-control" value="<?= date('Y-m-d') ?>" required>
-                    </div>
-                  </div>
-
                   <!-- CLIENTES -->
                   <div class="col-md-4">
                     <div class="form-group">
@@ -708,13 +700,56 @@ document.getElementById('form_venta').addEventListener('submit', function(e) {
     return false;
   }
 
-  // ✅ Todo correcto - mostrar loading
+  // ✅ Todo correcto — envío AJAX con progreso
+  e.preventDefault();
+
+  const formData = new FormData(document.getElementById('form_venta'));
+
+  // Barra de progreso
   Swal.fire({
-    title: 'Guardando venta...',
-    text: 'Por favor espere',
+    title: 'Subiendo venta...',
+    html: `
+      <div class="progress mt-2" style="height:20px;">
+        <div id="swal_progress" class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+             style="width:0%;transition:width .3s ease;"></div>
+      </div>
+      <p id="swal_pct" class="mt-2 mb-0 font-weight-bold text-success">0%</p>
+    `,
     allowOutsideClick: false,
-    didOpen: () => Swal.showLoading()
+    showConfirmButton: false,
   });
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '<?= $URL ?>/app/controllers/ventas/create.php');
+
+  xhr.upload.addEventListener('progress', function(ev) {
+    if (!ev.lengthComputable) return;
+    const pct = Math.round((ev.loaded / ev.total) * 100);
+    const bar = document.getElementById('swal_progress');
+    const lbl = document.getElementById('swal_pct');
+    if (bar) bar.style.width = pct + '%';
+    if (lbl) lbl.textContent = pct + '%';
+  });
+
+  xhr.addEventListener('load', function() {
+    let res;
+    try { res = JSON.parse(xhr.responseText); } catch(err) {
+      Swal.fire({ icon: 'error', title: 'Error inesperado', text: xhr.responseText.substring(0, 200) });
+      return;
+    }
+    if (res.success) {
+      Swal.fire({ icon: 'success', title: '¡Venta guardada!', text: res.message, timer: 2000, showConfirmButton: false })
+        .then(() => { window.location = '<?= $URL ?>/ventas/'; });
+    } else {
+      Swal.fire({ icon: 'error', title: 'Error', text: res.message });
+    }
+  });
+
+  xhr.addEventListener('error', function() {
+    Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'No se pudo conectar con el servidor' });
+  });
+
+  xhr.send(formData);
 });
 </script>
 
