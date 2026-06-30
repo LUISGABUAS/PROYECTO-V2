@@ -4,8 +4,6 @@
    Temas: dark (default) | light | rose
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 /* ── Variables por tema ────────────────────────────────────────── */
 :root,
 [data-theme="dark"] {
