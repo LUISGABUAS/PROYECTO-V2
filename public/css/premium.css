@@ -75,22 +75,15 @@
 }
 
 /* ── Base ──────────────────────────────────────────────────────── */
-body {
+/* IMPORTANTE: nunca poner font-family en selectores que incluyan <i>
+   para no interferir con Font Awesome */
+body, p, h1, h2, h3, h4, h5, h6,
+input, textarea, select,
+td, th, label, button,
+.card-title, .nav-link p, .brand-text,
+.content-header h1, .form-control, .btn, .badge,
+.alert, .modal-title {
   font-family: 'Inter', 'Source Sans Pro', sans-serif !important;
-}
-
-/* Restaurar Font Awesome ANTES que cualquier otra regla de fuente */
-.fa, .fas, .far, .fab, .fal, .fad,
-i[class*="fa-"], span[class*="fa-"] {
-  font-family: 'Font Awesome 5 Free' !important;
-  font-weight: 900 !important;
-}
-.fab, i.fab, span.fab {
-  font-family: 'Font Awesome 5 Brands' !important;
-  font-weight: 400 !important;
-}
-.far, i.far, span.far {
-  font-weight: 400 !important;
 }
 
 body {
