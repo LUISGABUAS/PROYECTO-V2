@@ -50,8 +50,10 @@ if (in_array(37, $_SESSION['permisos'] ?? [])) {
 
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-  <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="<?php echo $URL?>/public/templates/AdminLTE-3.2.0/plugins/fontawesome-free/css/all.min.css">
+  <!-- Font Awesome Icons (CDN para garantizar carga de fuentes) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+        integrity="sha512-1ycn6IcaQQ40/MKBW37l/MaKQTBQd6VBKF8hXDd3SHOXJJpz/Jv8B4VbBbH8GV6gL9NtdCPrJzRoRDvfKfg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- DataTables -->
   <link rel="stylesheet" href="<?php echo $URL?>/public/templates/AdminLTE-3.2.0/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
   <link rel="stylesheet" href="<?php echo $URL?>/public/templates/AdminLTE-3.2.0/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
