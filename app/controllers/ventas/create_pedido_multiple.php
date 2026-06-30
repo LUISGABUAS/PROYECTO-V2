@@ -27,27 +27,39 @@ if (!$envios || !is_array($envios) || count($envios) === 0) {
     exit;
 }
 
-// Subir comprobante
-$ruta_comprobante = null;
-if (isset($_FILES['comprobante']) && $_FILES['comprobante']['error'] === UPLOAD_ERR_OK) {
-    $carpeta    = __DIR__ . '/../../comprobantes/';
-    $permitidas = ['pdf','jpg','jpeg','png','doc','docx'];
-    $ext        = strtolower(pathinfo($_FILES['comprobante']['name'], PATHINFO_EXTENSION));
+// Subir comprobantes (múltiples)
+$rutas_comprobantes = [];
+$carpeta    = __DIR__ . '/../../comprobantes/';
+$permitidas = ['pdf','jpg','jpeg','png','doc','docx'];
 
+$hayArchivos    = isset($_FILES['comprobantes']) && is_array($_FILES['comprobantes']['name']);
+$indicesValidos = [];
+if ($hayArchivos) {
+    foreach ($_FILES['comprobantes']['error'] as $i => $err) {
+        if ($err === UPLOAD_ERR_OK) $indicesValidos[] = $i;
+    }
+}
+
+if (empty($indicesValidos)) {
+    $_SESSION['mensaje'] = '❌ Debe adjuntar al menos un comprobante';
+    header("Location: ../../../ventas/pedido_multiple.php");
+    exit;
+}
+
+if (!is_dir($carpeta)) mkdir($carpeta, 0755, true);
+foreach ($indicesValidos as $i) {
+    $ext = strtolower(pathinfo($_FILES['comprobantes']['name'][$i], PATHINFO_EXTENSION));
     if (!in_array($ext, $permitidas)) {
-        $_SESSION['mensaje'] = '❌ Formato de comprobante no permitido';
-        header("Location: ../../../ventas/pedido_multiple.php");
-        exit;
+        $_SESSION['mensaje'] = '❌ Formato no permitido: ' . htmlspecialchars($_FILES['comprobantes']['name'][$i]);
+        header("Location: ../../../ventas/pedido_multiple.php"); exit;
     }
-    if ($_FILES['comprobante']['size'] > 5 * 1024 * 1024) {
-        $_SESSION['mensaje'] = '❌ El comprobante supera 5MB';
-        header("Location: ../../../ventas/pedido_multiple.php");
-        exit;
+    if ($_FILES['comprobantes']['size'][$i] > 5 * 1024 * 1024) {
+        $_SESSION['mensaje'] = '❌ Un comprobante supera 5MB';
+        header("Location: ../../../ventas/pedido_multiple.php"); exit;
     }
-    if (!is_dir($carpeta)) mkdir($carpeta, 0755, true);
     $nombre_archivo = date('Y-m-d_H-i-s') . '_pedido_' . uniqid() . '.' . $ext;
-    move_uploaded_file($_FILES['comprobante']['tmp_name'], $carpeta . $nombre_archivo);
-    $ruta_comprobante = 'app/comprobantes/' . $nombre_archivo;
+    move_uploaded_file($_FILES['comprobantes']['tmp_name'][$i], $carpeta . $nombre_archivo);
+    $rutas_comprobantes[] = 'app/comprobantes/' . $nombre_archivo;
 }
 
 try {
@@ -64,7 +76,7 @@ try {
     // Insertar pedido padre
     $stmt = $pdo->prepare("INSERT INTO tb_pedidos (id_cliente, id_usuario, fecha, comprobante, total)
                            VALUES (?, ?, ?, ?, ?)");
-    $stmt->execute([$id_cliente, $id_usuario, $fecha, $ruta_comprobante, $total_general]);
+    $stmt->execute([$id_cliente, $id_usuario, $fecha, $rutas_comprobantes[0] ?? null, $total_general]);
     $id_pedido = $pdo->lastInsertId();
 
     // Crear una venta por cada envío
@@ -82,10 +94,10 @@ try {
         $stmt_v->execute([$id_pedido, $fecha, $id_cliente, $total_envio, $id_usuario, $id_direccion]);
         $id_venta = $pdo->lastInsertId();
 
-        // Guardar comprobante en tb_ventas_comprobantes
-        if ($ruta_comprobante) {
+        // Guardar todos los comprobantes en tb_ventas_comprobantes
+        foreach ($rutas_comprobantes as $ruta) {
             $pdo->prepare("INSERT INTO tb_ventas_comprobantes (id_venta, ruta) VALUES (?, ?)")
-                ->execute([$id_venta, $ruta_comprobante]);
+                ->execute([$id_venta, $ruta]);
         }
 
         // Detalle de productos

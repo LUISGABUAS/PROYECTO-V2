@@ -78,19 +78,14 @@ Swal.fire({
                 </div>
               </div>
 
-              <div class="col-md-3">
+              <div class="col-md-12 mt-2">
                 <div class="form-group">
-                  <label><strong>Comprobante de pago <span class="text-danger">*</span></strong></label>
-                  <div id="zona_comprobante"
-                       style="border:2px dashed #aaa;border-radius:8px;padding:18px;text-align:center;cursor:pointer;background:#f9f9f9;"
-                       onclick="document.getElementById('file_comprobante').click()">
-                    <i class="fa fa-cloud-upload-alt fa-lg text-muted"></i>
-                    <p class="mb-0 small text-muted mt-1">Arrastra o <strong>haz clic</strong><br>
-                    <small>PDF, JPG, PNG | 5MB</small></p>
-                  </div>
-                  <input type="file" name="comprobante" id="file_comprobante"
-                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none;">
-                  <div id="prev_comprobante" class="mt-2" style="display:none;"></div>
+                  <label><strong><i class="fa fa-file-pdf text-danger"></i> Comprobante(s) <span class="text-danger">*</span></strong></label>
+                  <div id="slots_comprobantes" class="row" style="margin:0;"></div>
+                  <button type="button" class="btn btn-outline-secondary btn-sm mt-2"
+                          onclick="agregarSlotComprobante()">
+                    <i class="fa fa-plus"></i> Agregar otro comprobante
+                  </button>
                 </div>
               </div>
 
@@ -170,22 +165,118 @@ const PRODUCTOS   = <?= json_encode(array_map(fn($p) => [
 let _envioIdx   = 0;
 let _dirsByCliente = [];
 
-// ── Comprobante ──────────────────────────────────────────────────────────────
-const zonaComp = document.getElementById('zona_comprobante');
-const fileComp = document.getElementById('file_comprobante');
-zonaComp.addEventListener('dragover',  e => { e.preventDefault(); zonaComp.style.background='#e8f4ff'; });
-zonaComp.addEventListener('dragleave', ()=> zonaComp.style.background='#f9f9f9');
-zonaComp.addEventListener('drop', e => {
-  e.preventDefault(); zonaComp.style.background='#f9f9f9';
-  if (e.dataTransfer.files[0]) mostrarComprobante(e.dataTransfer.files[0]);
-});
-fileComp.addEventListener('change', function(){ if(this.files[0]) mostrarComprobante(this.files[0]); });
+// ── Multi-comprobante (slots) ────────────────────────────────────────────────
+let _slotIdx = 0;
 
-function mostrarComprobante(file) {
-  const dt = new DataTransfer(); dt.items.add(file); fileComp.files = dt.files;
-  zonaComp.innerHTML = `<i class="fa fa-check-circle text-success"></i>
-    <p class="mb-0 small text-success font-weight-bold mt-1">${file.name}</p>
-    <small class="text-muted">${(file.size/1024).toFixed(1)} KB</small>`;
+function _htmlSlot(idx) {
+  return `
+  <div class="col-md-4 mb-3 comprobante-slot" id="cslot_${idx}">
+    <div class="card border h-100">
+      <div class="card-body p-2">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <small class="text-muted font-weight-bold numero-slot"></small>
+          <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarSlot('cslot_${idx}')">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+        <div id="cdz_${idx}"
+             onclick="document.getElementById('cfile_${idx}').click()"
+             style="border:2px dashed #aaa;border-radius:8px;padding:20px;text-align:center;cursor:pointer;background:#f9f9f9;">
+          <i class="fa fa-cloud-upload-alt fa-lg text-muted mb-1"></i>
+          <p class="mb-0 small text-muted">Arrastra o <strong>haz clic</strong></p>
+          <small class="text-muted">PDF, JPG, PNG | 5MB</small>
+        </div>
+        <input type="file" name="comprobantes[]" id="cfile_${idx}"
+               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none;">
+        <div id="cprev_${idx}" style="display:none;" class="mt-2">
+          <div id="cpcont_${idx}" class="border rounded p-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function agregarSlotComprobante() {
+  _slotIdx++;
+  const idx = _slotIdx;
+  document.getElementById('slots_comprobantes').insertAdjacentHTML('beforeend', _htmlSlot(idx));
+  _renumerarSlots();
+  const dz = document.getElementById('cdz_' + idx);
+  const fi = document.getElementById('cfile_' + idx);
+  dz.addEventListener('dragover',  e => { e.preventDefault(); dz.style.background='#e8f4ff'; });
+  dz.addEventListener('dragleave', () => dz.style.background='#f9f9f9');
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.style.background='#f9f9f9';
+    if (e.dataTransfer.files[0]) _procesarArchivoSlot(e.dataTransfer.files[0], idx);
+  });
+  fi.addEventListener('change', function() {
+    if (this.files[0]) _procesarArchivoSlot(this.files[0], idx);
+  });
+}
+
+function eliminarSlot(slotId) {
+  if (document.querySelectorAll('.comprobante-slot').length === 1) {
+    Swal.fire({ icon:'warning', title:'Atención', text:'Debe haber al menos un comprobante' });
+    return;
+  }
+  document.getElementById(slotId).remove();
+  _renumerarSlots();
+}
+
+function _renumerarSlots() {
+  document.querySelectorAll('.comprobante-slot .numero-slot').forEach((el, i) => {
+    el.textContent = 'Comprobante #' + (i + 1);
+  });
+}
+
+async function comprimirImagen(file, maxWidth = 1200, quality = 0.82) {
+  return new Promise(resolve => {
+    if (!file.type.startsWith('image/')) { resolve(file); return; }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const { width } = img;
+        if (width <= maxWidth && file.size < 500*1024) { resolve(file); return; }
+        const scale = width > maxWidth ? maxWidth / width : 1;
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.width  * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(blob => {
+          const res = blob && blob.size < file.size
+            ? new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type:'image/jpeg', lastModified:Date.now() })
+            : file;
+          resolve(res);
+        }, 'image/jpeg', quality);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function _procesarArchivoSlot(file, idx) {
+  const dz = document.getElementById('cdz_' + idx);
+  const fi = document.getElementById('cfile_' + idx);
+  dz.innerHTML = `<div class="spinner-border spinner-border-sm text-primary"></div> <span class="small">Procesando...</span>`;
+  const opt = await comprimirImagen(file);
+  const dt = new DataTransfer(); dt.items.add(opt); fi.files = dt.files;
+  const prev = document.getElementById('cprev_' + idx);
+  const cont = document.getElementById('cpcont_' + idx);
+  cont.innerHTML = ''; prev.style.display = 'none';
+  if (opt.size > 5*1024*1024) { dz.innerHTML='<small class="text-danger">❌ Máximo 5MB</small>'; fi.value=''; return; }
+  dz.innerHTML = `<i class="fa fa-check-circle fa-lg text-success mb-1"></i>
+    <p class="mb-0 text-success small font-weight-bold">${opt.name}</p>
+    <small class="text-muted">${(opt.size/1024).toFixed(1)} KB</small>`;
+  if (opt.type.startsWith('image/')) {
+    const r = new FileReader();
+    r.onload = e => { cont.innerHTML=`<img src="${e.target.result}" class="img-fluid rounded" style="max-height:100px;">`; prev.style.display='block'; };
+    r.readAsDataURL(opt);
+  } else if (opt.type === 'application/pdf') {
+    cont.innerHTML = `<embed src="${URL.createObjectURL(opt)}" type="application/pdf" width="100%" height="100px">`;
+    prev.style.display = 'block';
+  }
 }
 
 // ── Cargar direcciones del cliente ───────────────────────────────────────────
@@ -373,8 +464,10 @@ document.getElementById('form_pedido').addEventListener('submit', function(e) {
   e.preventDefault();
 
   // Validar comprobante
-  if (!fileComp.files || !fileComp.files[0]) {
-    Swal.fire('Falta comprobante', 'Debes adjuntar el comprobante de pago antes de guardar', 'warning');
+  const hayComprobante = Array.from(document.querySelectorAll('[name="comprobantes[]"]'))
+                              .some(fi => fi.files.length > 0);
+  if (!hayComprobante) {
+    Swal.fire('Falta comprobante', 'Debes adjuntar al menos un comprobante de pago', 'warning');
     return;
   }
 
@@ -418,8 +511,11 @@ document.getElementById('form_pedido').addEventListener('submit', function(e) {
   }).then(r => { if (r.isConfirmed) this.submit(); });
 });
 
-// Iniciar con un envío
-document.addEventListener('DOMContentLoaded', () => agregarEnvio());
+// Iniciar con un envío y un slot de comprobante
+document.addEventListener('DOMContentLoaded', () => {
+  agregarEnvio();
+  agregarSlotComprobante();
+});
 </script>
 
 <?php include('../layout/parte2.php'); ?>
