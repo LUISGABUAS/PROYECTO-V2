@@ -7,6 +7,8 @@ include('layout/parte1.php');
 include('app/controllers/usuarios/listado_de_usuarios.php');
 include('app/controllers/almacen/list_almacen.php');
 include('app/controllers/provedores/list_provedores.php');
+$_GET['desde'] = date('Y-m-01');
+$_GET['hasta']  = date('Y-m-d');
 include('app/controllers/ventas/reporte_ventas.php');
 ?>
   <!-- Content Wrapper. Contains page content -->
@@ -118,16 +120,8 @@ include('app/controllers/ventas/reporte_ventas.php');
             <!-- small box -->
             <div class="small-box bg-success">
               <div class="inner">
-                <?php 
-                $contador_de_ventas = 0;
-                foreach($ventas_grafica_total as $fila){
-                  // Aquí podrías procesar cada usuario si es necesario
-                  $contador_de_ventas += $fila['total'];
-                }
-                ?>
-                <h3><?php echo $contador_de_ventas;?></h3>
-
-                <p>Ventas Totales</p>
+                <h3>$<?php echo number_format($ventas_generales['monto_total'] ?? 0, 0, '.', ','); ?></h3>
+                <p>Ventas del mes</p>
               </div>
               
                 <div class="icon">
