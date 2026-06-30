@@ -104,6 +104,41 @@ try {
     }
 
     /* ======================
+       VALIDAR STOCK (servidor, con bloqueo FOR UPDATE)
+       Previene que dos ventas simultáneas vendan la misma pieza
+    ====================== */
+    foreach ($productos as $i => $id_producto) {
+        $cantidad = (int)$cantidades[$i];
+
+        // Bloquea las filas EN BODEGA — transacciones concurrentes esperan aquí
+        $stmt_lock = $pdo->prepare("
+            SELECT COUNT(*) FROM stock
+            WHERE id_producto = ? AND estado = 'EN BODEGA'
+            FOR UPDATE
+        ");
+        $stmt_lock->execute([$id_producto]);
+        $en_bodega = (int)$stmt_lock->fetchColumn();
+
+        // Stock comprometido en ventas pendientes de entrega
+        $stmt_pend = $pdo->prepare("
+            SELECT COALESCE(SUM(cantidad - cantidad_entregada), 0)
+            FROM tb_ventas_detalle
+            WHERE id_producto = ? AND cantidad_entregada < cantidad
+        ");
+        $stmt_pend->execute([$id_producto]);
+        $pendiente = (int)$stmt_pend->fetchColumn();
+
+        $disponible = $en_bodega - $pendiente;
+
+        if ($cantidad > $disponible) {
+            $stmt_nom = $pdo->prepare("SELECT nombre FROM tb_almacen WHERE id_producto = ?");
+            $stmt_nom->execute([$id_producto]);
+            $nombre = $stmt_nom->fetchColumn() ?: "Producto #$id_producto";
+            throw new Exception("❌ Stock insuficiente para \"$nombre\": pedido $cantidad, disponible $disponible");
+        }
+    }
+
+    /* ======================
        INSERTAR DETALLE
     ====================== */
     foreach ($productos as $i => $id_producto) {

@@ -101,12 +101,29 @@ try {
                 ->execute([$id_venta, $ruta]);
         }
 
-        // Detalle de productos
+        // Validar y registrar detalle de productos
         foreach ($envio['productos'] as $prod) {
             $id_prod  = (int)$prod['id_producto'];
             $cantidad = (int)$prod['cantidad'];
             $precio   = (float)$prod['precio'];
             $subtotal = $cantidad * $precio;
+
+            // Bloqueo FOR UPDATE — previene doble venta simultánea
+            $stmt_lock = $pdo->prepare("SELECT COUNT(*) FROM stock WHERE id_producto = ? AND estado = 'EN BODEGA' FOR UPDATE");
+            $stmt_lock->execute([$id_prod]);
+            $en_bodega = (int)$stmt_lock->fetchColumn();
+
+            $stmt_pend = $pdo->prepare("SELECT COALESCE(SUM(cantidad - cantidad_entregada), 0) FROM tb_ventas_detalle WHERE id_producto = ? AND cantidad_entregada < cantidad");
+            $stmt_pend->execute([$id_prod]);
+            $pendiente = (int)$stmt_pend->fetchColumn();
+
+            $disponible = $en_bodega - $pendiente;
+            if ($cantidad > $disponible) {
+                $nombre = $pdo->prepare("SELECT nombre FROM tb_almacen WHERE id_producto = ?");
+                $nombre->execute([$id_prod]);
+                $nom = $nombre->fetchColumn() ?: "Producto #$id_prod";
+                throw new Exception("❌ Stock insuficiente para \"$nom\": pedido $cantidad, disponible $disponible");
+            }
 
             $pdo->prepare("INSERT INTO tb_ventas_detalle (id_venta, id_producto, cantidad, precio, subtotal)
                            VALUES (?, ?, ?, ?, ?)")
