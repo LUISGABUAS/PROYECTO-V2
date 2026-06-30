@@ -73,7 +73,7 @@ if (isset($_SESSION['mensaje'])) {
           <form method="get" class="row align-items-end">
             <div class="col-md-4">
               <label>Proveedor:</label>
-              <select name="proveedor" class="form-control">
+              <select name="proveedor" class="form-control" onchange="this.form.submit()">
                 <option value="">— Todos los proveedores —</option>
                 <?php foreach ($proveedores_lista as $prov): ?>
                   <option value="<?= $prov['id_proovedor'] ?>"
@@ -84,12 +84,7 @@ if (isset($_SESSION['mensaje'])) {
               </select>
             </div>
             <div class="col-md-2">
-              <button type="submit" class="btn btn-primary btn-block">
-                <i class="fa fa-filter"></i> Filtrar
-              </button>
-            </div>
-            <div class="col-md-2">
-              <a href="?" class="btn btn-secondary btn-block">
+              <a href="?" class="btn btn-secondary btn-block mt-4">
                 <i class="fa fa-redo"></i> Limpiar
               </a>
             </div>

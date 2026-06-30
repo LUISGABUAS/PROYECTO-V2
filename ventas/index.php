@@ -133,23 +133,16 @@ if (!in_array(20, $_SESSION['permisos'])) {
           <h3 class="card-title"><i class="fa fa-calendar-alt"></i> Filtrar por Fecha</h3>
         </div>
         <div class="card-body">
-          <form method="get" class="row">
+          <form method="get" class="row align-items-end">
             <div class="col-md-3">
               <label>Desde:</label>
-              <input type="datetime-local" name="desde" class="form-control" value="<?= date('Y-m-d\TH:i', strtotime($desde)) ?>" required>
+              <input type="datetime-local" name="desde" class="form-control" value="<?= date('Y-m-d\TH:i', strtotime($desde)) ?>" onchange="this.form.submit()" required>
             </div>
             <div class="col-md-3">
               <label>Hasta:</label>
-              <input type="datetime-local" name="hasta" class="form-control" value="<?= date('Y-m-d\TH:i', strtotime($hasta)) ?>" required>
+              <input type="datetime-local" name="hasta" class="form-control" value="<?= date('Y-m-d\TH:i', strtotime($hasta)) ?>" onchange="this.form.submit()" required>
             </div>
             <div class="col-md-2">
-              <label>&nbsp;</label>
-              <button type="submit" class="btn btn-primary btn-block">
-                <i class="fa fa-filter"></i> Filtrar
-              </button>
-            </div>
-            <div class="col-md-2">
-              <label>&nbsp;</label>
               <a href="?" class="btn btn-secondary btn-block">
                 <i class="fa fa-redo"></i> Resetear
               </a>
