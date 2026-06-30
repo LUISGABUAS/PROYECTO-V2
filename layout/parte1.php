@@ -58,6 +58,15 @@ if (in_array(37, $_SESSION['permisos'] ?? [])) {
   <link rel="stylesheet" href="<?php echo $URL?>/public/templates/AdminLTE-3.2.0/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
   <!-- Theme style -->
   <link rel="stylesheet" href="<?php echo $URL?>/public/templates/AdminLTE-3.2.0/dist/css/adminlte.min.css">
+  <!-- Premium theme -->
+  <link rel="stylesheet" href="<?php echo $URL?>/public/css/premium.css">
+  <script>
+    // Aplicar tema antes del render para evitar flash
+    (function(){
+      var t = localStorage.getItem('py_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <!-- jQuery -->
@@ -522,6 +531,25 @@ if (in_array(37, $_SESSION['permisos'] ?? [])) {
                   <label for="password_confirmacion">Confirmar Contraseña</label>
                   <input type="password" class="form-control" id="password_confirmacion" name="password_confirmacion" autocomplete="new-password">
                 </div>
+
+                <hr style="border-color:var(--py-card-border);">
+                <div class="form-group mb-0">
+                  <label><i class="fas fa-palette mr-1" style="color:var(--py-accent)"></i> Apariencia</label>
+                  <div class="mt-2">
+                    <button type="button" class="theme-option" onclick="aplicarTema('dark')" id="theme-dark">
+                      <span class="theme-dot theme-dot-dark"></span>
+                      <span>🌙 Oscuro Elegante</span>
+                    </button>
+                    <button type="button" class="theme-option" onclick="aplicarTema('light')" id="theme-light">
+                      <span class="theme-dot theme-dot-light"></span>
+                      <span>☀️ Claro Moderno</span>
+                    </button>
+                    <button type="button" class="theme-option" onclick="aplicarTema('rose')" id="theme-rose">
+                      <span class="theme-dot theme-dot-rose"></span>
+                      <span>🌸 Rosa Pasión</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -543,7 +571,23 @@ if (in_array(37, $_SESSION['permisos'] ?? [])) {
       abrirModalPerfil();
     });
 
+    // ── Tema ──────────────────────────────────────────────────────
+    function aplicarTema(tema) {
+      document.documentElement.setAttribute('data-theme', tema);
+      localStorage.setItem('py_theme', tema);
+      document.querySelectorAll('.theme-option').forEach(btn => btn.classList.remove('active'));
+      const btn = document.getElementById('theme-' + tema);
+      if (btn) btn.classList.add('active');
+    }
+    function sincronizarBotonesTema() {
+      const actual = localStorage.getItem('py_theme') || 'dark';
+      document.querySelectorAll('.theme-option').forEach(btn => btn.classList.remove('active'));
+      const btn = document.getElementById('theme-' + actual);
+      if (btn) btn.classList.add('active');
+    }
+
     function abrirModalPerfil() {
+      sincronizarBotonesTema();
       fetch('<?php echo $URL; ?>/app/controllers/usuarios/get_perfil.php')
         .then(response => response.json())
         .then(data => {
