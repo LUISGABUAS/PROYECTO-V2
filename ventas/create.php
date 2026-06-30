@@ -230,16 +230,7 @@ Swal.fire({
                     <tbody id="detalle_venta">
                       <tr>
                         <td>
-                          <select name="productos[]" class="form-control form-control-sm producto select2-producto" required onchange="asignarPrecio(this)">
-                            <option value="">Seleccione</option>
-                            <?php foreach($datos_productos as $p): ?>
-                              <option value="<?= $p['id_producto'] ?>"
-                                      data-precio="<?= $p['precio_venta'] ?>"
-                                      data-stock="<?= $p['stock_disponible'] ?>">
-                                <?= $p['codigo'] ?> - <?= $p['nombre'] ?> (<?= $p['proveedor'] ?>) (<?= $p['stock_disponible'] ?> disp.)
-                              </option>
-                            <?php endforeach; ?>
-                          </select>
+                          <select name="productos[]" class="form-control form-control-sm producto select2-producto" required></select>
                         </td>
                         <td>
                           <input type="number" name="cantidades[]" class="form-control form-control-sm text-center cantidad" min="1" value="1" oninput="calcularFila(this)" required>
@@ -266,7 +257,18 @@ Swal.fire({
 
                 <hr class="my-3">
 
-                <!-- TOTAL -->
+                <!-- COSTO DE ENVÍO + TOTAL -->
+                <div class="row justify-content-end">
+                  <div class="col-md-3">
+                    <div class="form-group">
+                      <label><strong><i class="fa fa-truck text-info"></i> Costo de envío $</strong></label>
+                      <input type="number" name="costo_envio" id="costo_envio"
+                             class="form-control form-control text-center"
+                             min="0" step="0.01" value="0" placeholder="0.00"
+                             oninput="calcularTotal()">
+                    </div>
+                  </div>
+                </div>
                 <div class="row justify-content-end">
                   <div class="col-md-3">
                     <div class="form-group">
@@ -314,92 +316,68 @@ Swal.fire({
 <!-- ========================================= -->
 
 <script>
-// ============ GESTIÓN DE FILAS DE PRODUCTOS ============
-function agregarFila(){
-  let fila = `
-  <tr>
-    <td>
-      <select name="productos[]"
-              class="form-control form-control-sm producto select2-producto"
-              required
-              onchange="asignarPrecio(this)">
-        <option value="">Seleccione</option>
-        <?php foreach($datos_productos as $p){ ?>
-          <option value="<?= $p['id_producto'] ?>"
-                  data-precio="<?= $p['precio_venta'] ?>"
-                  data-stock="<?= $p['stock_disponible'] ?>">
-            <?= $p['codigo'] ?> - <?= $p['nombre'] ?> (<?= $p['proveedor'] ?>) (<?= $p['stock_disponible'] ?> disp.)
-          </option>
-        <?php } ?>
-      </select>
-    </td>
-    <td>
-      <input type="number"
-             name="cantidades[]"
-             class="form-control form-control-sm text-center cantidad"
-             min="1" value="1"
-             oninput="calcularFila(this)" required>
-    </td>
-    <td>
-      <input type="number"
-             name="precios[]"
-             class="form-control form-control-sm text-center precio"
-             step="0.01" readonly>
-    </td>
-    <td>
-      <input type="number"
-             class="form-control form-control-sm text-center subtotal"
-             step="0.01" readonly>
-    </td>
-    <td class="text-center">
-      <button type="button" class="btn btn-danger btn-sm"
-              onclick="eliminarFila(this)">
-        <i class="fa fa-trash"></i>
-      </button>
-    </td>
-  </tr>`;
+// ============ DATOS DE PRODUCTOS (JSON — sin opciones duplicadas en HTML) ============
+const PRODUCTOS_DATA = <?= json_encode(array_values(array_map(function($p){
+  return [
+    'id'     => (string)$p['id_producto'],
+    'text'   => $p['codigo'] . ' — ' . $p['nombre'] . ' (' . $p['proveedor'] . ') [' . (int)$p['stock_disponible'] . ' disp.]',
+    'precio' => (float)$p['precio_venta'],
+    'stock'  => (int)$p['stock_disponible'],
+  ];
+}, $datos_productos)), JSON_UNESCAPED_UNICODE) ?>;
+const PRODUCTOS_MAP = Object.fromEntries(PRODUCTOS_DATA.map(p => [p.id, p]));
 
-  document.getElementById('detalle_venta').insertAdjacentHTML('beforeend', fila);
-  // Inicializar Select2 en el nuevo select
-  const nuevaFila = document.querySelector('#detalle_venta tr:last-child');
-  $(nuevaFila.querySelector('.select2-producto')).select2({
+// ============ INICIALIZAR SELECT2 DE PRODUCTO ============
+function initProductoSelect(el) {
+  $(el).select2({
     theme: 'bootstrap4',
     placeholder: 'Buscar por nombre, código o proveedor...',
+    data: PRODUCTOS_DATA,
     width: '100%'
   }).on('change', function(){ asignarPrecio(this); });
 }
 
+// ============ GESTIÓN DE FILAS DE PRODUCTOS ============
+function agregarFila(){
+  const fila = `
+  <tr>
+    <td><select name="productos[]" class="form-control form-control-sm producto select2-producto" required></select></td>
+    <td><input type="number" name="cantidades[]" class="form-control form-control-sm text-center cantidad" min="1" value="1" oninput="calcularFila(this)" required></td>
+    <td><input type="number" name="precios[]" class="form-control form-control-sm text-center precio" step="0.01" readonly></td>
+    <td><input type="number" class="form-control form-control-sm text-center subtotal" step="0.01" readonly></td>
+    <td class="text-center"><button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)"><i class="fa fa-trash"></i></button></td>
+  </tr>`;
+
+  document.getElementById('detalle_venta').insertAdjacentHTML('beforeend', fila);
+  const nuevaFila = document.querySelector('#detalle_venta tr:last-child');
+  initProductoSelect(nuevaFila.querySelector('.select2-producto'));
+}
+
 function asignarPrecio(select){
-  const producto = select.value;
-  const selects  = document.querySelectorAll('.producto');
+  const val = select.value;
+  if (!val) return;
 
+  const selects = document.querySelectorAll('.producto');
   let repetidos = 0;
-  selects.forEach(s => { if(s.value === producto) repetidos++; });
-
+  selects.forEach(s => { if(s.value === val) repetidos++; });
   if(repetidos > 1){
     Swal.fire({ icon:'warning', title:'Producto duplicado', text:'Este producto ya fue agregado' });
-    select.value = '';
+    $(select).val('').trigger('change');
     return;
   }
 
-  const opt    = select.options[select.selectedIndex];
-  const precio = opt.dataset.precio || 0;
-  const stock  = parseInt(opt.dataset.stock ?? 0);
-  const fila   = select.closest('tr');
+  const prod  = PRODUCTOS_MAP[val];
+  if (!prod) return;
+  const fila  = select.closest('tr');
 
-  // ✅ Bloquear si no hay stock
-  if(stock <= 0){
-    Swal.fire({
-      icon: 'warning',
-      title: 'Sin stock',
-      text: 'Este producto no tiene unidades disponibles en bodega'
-    });
-    select.value = '';
+  if(prod.stock <= 0){
+    Swal.fire({ icon:'warning', title:'Sin stock', text:'Este producto no tiene unidades disponibles en bodega' });
+    $(select).val('').trigger('change');
     return;
   }
 
-  fila.querySelector('.precio').value    = precio;
-  fila.querySelector('.cantidad').max    = stock;
+  fila.querySelector('.precio').value   = prod.precio;
+  fila.querySelector('.cantidad').max   = prod.stock;
   calcularFila(select);
 }
 
@@ -410,15 +388,10 @@ function calcularFila(elemento){
   const maxStock      = parseInt(inputCantidad.max || 0);
   let   cantidad      = parseFloat(inputCantidad.value || 0);
 
-  // ✅ Corregir si supera el stock
   if(maxStock > 0 && cantidad > maxStock){
     inputCantidad.value = maxStock;
     cantidad = maxStock;
-    Swal.fire({
-      icon: 'warning',
-      title: 'Stock insuficiente',
-      text: `Solo hay ${maxStock} unidad(es) disponibles en bodega`
-    });
+    Swal.fire({ icon:'warning', title:'Stock insuficiente', text:`Solo hay ${maxStock} unidad(es) disponibles en bodega` });
   }
 
   fila.querySelector('.subtotal').value = (cantidad * precio).toFixed(2);
@@ -427,9 +400,8 @@ function calcularFila(elemento){
 
 function calcularTotal(){
   let total = 0;
-  document.querySelectorAll('.subtotal').forEach(sub => {
-    total += parseFloat(sub.value || 0);
-  });
+  document.querySelectorAll('.subtotal').forEach(sub => { total += parseFloat(sub.value || 0); });
+  total += parseFloat(document.getElementById('costo_envio').value || 0);
   document.getElementById('total_venta').value = total.toFixed(2);
 }
 
@@ -711,10 +683,10 @@ document.getElementById('form_venta').addEventListener('submit', function(e) {
     const inputCant  = fila.querySelector('.cantidad');
     if(!selectProd || !selectProd.value) return;
 
-    const opt      = selectProd.options[selectProd.selectedIndex];
-    const stock    = parseInt(opt.dataset.stock ?? 0);
+    const prod     = PRODUCTOS_MAP[selectProd.value] || {};
+    const stock    = prod.stock ?? 0;
     const cantidad = parseInt(inputCant.value || 0);
-    const nombre   = opt.text.split('(')[0].trim();
+    const nombre   = prod.text ? prod.text.split('—')[1]?.split('(')[0]?.trim() : selectProd.value;
 
     if(cantidad > stock){
       stockOk      = false;
@@ -763,11 +735,7 @@ Swal.fire({
 <script src="<?= $URL ?>/public/templates/AdminLTE-3.2.0/plugins/select2/js/select2.full.min.js"></script>
 <script>
 $(document).ready(function(){
-  $('.select2-producto').select2({
-    theme: 'bootstrap4',
-    placeholder: 'Buscar por nombre, código o proveedor...',
-    width: '100%'
-  }).on('change', function(){ asignarPrecio(this); });
+  document.querySelectorAll('.select2-producto').forEach(el => initProductoSelect(el));
 
   $('#select_cliente').select2({
     theme: 'bootstrap4',

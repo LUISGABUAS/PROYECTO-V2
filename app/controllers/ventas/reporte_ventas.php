@@ -98,7 +98,7 @@ if (in_array(24, $permisos)) {
         LEFT JOIN tb_ventas_detalle vd ON v.id_venta = vd.id_venta
         WHERE v.fecha BETWEEN :desde AND :hasta
         GROUP BY v.id_venta
-        ORDER BY v.fecha DESC
+        ORDER BY v.fecha DESC, v.id_venta DESC
     ");
     $stmt->execute([
         ':desde' => $desde,
@@ -125,7 +125,7 @@ if (in_array(25, $permisos)) {
         WHERE v.id_usuario = :usuario
         AND v.fecha BETWEEN :desde AND :hasta
         GROUP BY v.id_venta
-        ORDER BY v.fecha DESC
+        ORDER BY v.fecha DESC, v.id_venta DESC
     ");
     $stmt->execute([
         ':usuario' => $id_usuario,
