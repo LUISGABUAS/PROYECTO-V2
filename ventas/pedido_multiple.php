@@ -44,13 +44,6 @@ Swal.fire({
           <div class="card-body">
             <div class="row">
 
-              <div class="col-md-2">
-                <div class="form-group">
-                  <label><strong>Fecha</strong></label>
-                  <input type="date" name="fecha" class="form-control" value="<?= date('Y-m-d') ?>" required>
-                </div>
-              </div>
-
               <div class="col-md-4">
                 <div class="form-group">
                   <label><strong>Cliente</strong></label>
@@ -128,18 +121,7 @@ Swal.fire({
 <!-- TEMPLATE DE PRODUCTO (oculto) -->
 <template id="tpl_producto">
   <tr class="fila-prod">
-    <td>
-      <select name="_prod_" class="form-control form-control-sm sel-producto" required>
-        <option value="">Seleccione...</option>
-        <?php foreach($datos_productos as $p): ?>
-          <option value="<?= $p['id_producto'] ?>"
-                  data-precio="<?= $p['precio_venta'] ?>"
-                  data-stock="<?= $p['stock_disponible'] ?>">
-            <?= htmlspecialchars($p['codigo'] . ' - ' . $p['nombre']) ?> (<?= $p['stock_disponible'] ?> disp.)
-          </option>
-        <?php endforeach; ?>
-      </select>
-    </td>
+    <td><select class="form-control form-control-sm sel-producto" required></select></td>
     <td><input type="number" class="form-control form-control-sm inp-cantidad" min="1" value="1"></td>
     <td><input type="number" class="form-control form-control-sm inp-precio" step="0.01" readonly></td>
     <td><input type="number" class="form-control form-control-sm inp-subtotal" readonly></td>
@@ -154,13 +136,16 @@ Swal.fire({
 <script src="<?= $URL ?>/public/templates/AdminLTE-3.2.0/plugins/select2/js/select2.full.min.js"></script>
 
 <script>
-const URL_APP     = '<?= $URL ?>';
-const PRODUCTOS   = <?= json_encode(array_map(fn($p) => [
-    'id'     => $p['id_producto'],
-    'nombre' => $p['codigo'] . ' - ' . $p['nombre'],
-    'precio' => $p['precio_venta'],
-    'stock'  => $p['stock_disponible'],
-], $datos_productos)) ?>;
+const URL_APP    = '<?= $URL ?>';
+const PRODUCTOS  = <?= json_encode(array_values(array_map(function($p){
+  return [
+    'id'     => (string)$p['id_producto'],
+    'text'   => $p['codigo'] . ' — ' . $p['nombre'] . ' (' . $p['proveedor'] . ') [' . (int)$p['stock_disponible'] . ' disp.]',
+    'precio' => (float)$p['precio_venta'],
+    'stock'  => (int)$p['stock_disponible'],
+  ];
+}, $datos_productos)), JSON_UNESCAPED_UNICODE) ?>;
+const PROD_MAP   = Object.fromEntries(PRODUCTOS.map(p => [p.id, p]));
 
 let _envioIdx   = 0;
 let _dirsByCliente = [];
@@ -378,8 +363,17 @@ function agregarEnvio() {
       <button type="button" class="btn btn-sm btn-outline-secondary" onclick="agregarProducto(this)">
         <i class="fa fa-plus"></i> Agregar producto
       </button>
-      <div class="text-right mt-2">
-        <strong>Subtotal envío: $<span class="subtotal-envio">0.00</span></strong>
+      <div class="row mt-2 align-items-center">
+        <div class="col-md-4">
+          <div class="input-group input-group-sm">
+            <div class="input-group-prepend"><span class="input-group-text"><i class="fa fa-truck text-info"></i></span></div>
+            <input type="number" class="form-control inp-costo-envio" min="0" step="0.01" value="0" placeholder="Costo de envío">
+            <div class="input-group-append"><span class="input-group-text">$</span></div>
+          </div>
+        </div>
+        <div class="col-md-8 text-right">
+          <strong>Subtotal envío: $<span class="subtotal-envio">0.00</span></strong>
+        </div>
       </div>
     </div>`;
 
@@ -388,6 +382,9 @@ function agregarEnvio() {
   // Rellenar direcciones si ya hay cliente
   const sel = div.querySelector('.sel-direccion');
   if (_dirsByCliente.length) rellenarDirecciones(sel);
+
+  // Recalcular al cambiar costo de envío
+  div.querySelector('.inp-costo-envio').addEventListener('input', calcularTotales);
 
   // Agregar primera fila de producto
   agregarProducto(div.querySelector('.btn-outline-secondary'));
@@ -400,26 +397,17 @@ function agregarProducto(btn) {
   const tpl    = document.getElementById('tpl_producto').content.cloneNode(true);
   const fila   = tpl.querySelector('tr');
 
-  const sel = fila.querySelector('.sel-producto');
-  sel.addEventListener('change', function() {
-    const opt = this.options[this.selectedIndex];
-    fila.querySelector('.inp-precio').value = opt?.dataset?.precio || '';
-    calcularFila(fila);
-  });
-
   fila.querySelector('.inp-cantidad').addEventListener('input', () => calcularFila(fila));
-  fila.querySelector('.btn-quitar-prod').addEventListener('click', () => {
-    fila.remove();
-    calcularTotales();
-  });
+  fila.querySelector('.btn-quitar-prod').addEventListener('click', () => { fila.remove(); calcularTotales(); });
 
-  // Inicializar Select2
   tbody.appendChild(fila);
   $(fila.querySelector('.sel-producto')).select2({
-    theme:'bootstrap4', placeholder:'Buscar producto...', width:'100%'
-  }).on('change', function(){
-    const opt = this.options[this.selectedIndex];
-    fila.querySelector('.inp-precio').value = opt?.dataset?.precio || '';
+    theme: 'bootstrap4', placeholder: 'Buscar producto...', data: PRODUCTOS, width: '100%'
+  }).on('change', function() {
+    const prod = PROD_MAP[this.value];
+    if (!prod) return;
+    fila.querySelector('.inp-precio').value = prod.precio;
+    fila.querySelector('.inp-cantidad').max  = prod.stock;
     calcularFila(fila);
   });
 }
@@ -436,6 +424,7 @@ function calcularTotales() {
   document.querySelectorAll('.envio-block').forEach(bloque => {
     let sub = 0;
     bloque.querySelectorAll('.inp-subtotal').forEach(el => sub += parseFloat(el.value || 0));
+    sub += parseFloat(bloque.querySelector('.inp-costo-envio')?.value || 0);
     bloque.querySelector('.subtotal-envio').textContent = sub.toFixed(2);
     total += sub;
   });
@@ -493,7 +482,8 @@ document.getElementById('form_pedido').addEventListener('submit', function(e) {
     });
 
     if (!productos.length) { valido = false; Swal.fire('Sin productos','Agrega al menos un producto por envío','warning'); return; }
-    envios.push({ id_direccion: idDir, productos });
+    const costoEnvio = parseFloat(bloque.querySelector('.inp-costo-envio')?.value || 0);
+    envios.push({ id_direccion: idDir, costo_envio: costoEnvio, productos });
   });
 
   if (!valido || !envios.length) return;
@@ -508,7 +498,55 @@ document.getElementById('form_pedido').addEventListener('submit', function(e) {
     confirmButtonText: 'Sí, guardar',
     cancelButtonText: 'Cancelar',
     confirmButtonColor: '#28a745'
-  }).then(r => { if (r.isConfirmed) this.submit(); });
+  }).then(r => {
+    if (!r.isConfirmed) return;
+
+    const formData = new FormData(document.getElementById('form_pedido'));
+
+    Swal.fire({
+      title: 'Subiendo pedido...',
+      html: `
+        <div class="progress mt-2" style="height:20px;">
+          <div id="swal_progress" class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+               style="width:0%;transition:width .3s ease;"></div>
+        </div>
+        <p id="swal_pct" class="mt-2 mb-0 font-weight-bold text-success">0%</p>`,
+      allowOutsideClick: false,
+      showConfirmButton: false,
+    });
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '<?= $URL ?>/app/controllers/ventas/create_pedido_multiple.php');
+
+    xhr.upload.addEventListener('progress', function(ev) {
+      if (!ev.lengthComputable) return;
+      const pct = Math.round((ev.loaded / ev.total) * 100);
+      const bar = document.getElementById('swal_progress');
+      const lbl = document.getElementById('swal_pct');
+      if (bar) bar.style.width = pct + '%';
+      if (lbl) lbl.textContent = pct + '%';
+    });
+
+    xhr.addEventListener('load', function() {
+      let res;
+      try { res = JSON.parse(xhr.responseText); } catch(err) {
+        Swal.fire({ icon:'error', title:'Error inesperado', text: xhr.responseText.substring(0,200) });
+        return;
+      }
+      if (res.success) {
+        Swal.fire({ icon:'success', title:'¡Pedido guardado!', text: res.message, timer:2500, showConfirmButton:false })
+          .then(() => { window.location = '<?= $URL ?>/ventas/'; });
+      } else {
+        Swal.fire({ icon:'error', title:'Error', text: res.message });
+      }
+    });
+
+    xhr.addEventListener('error', function() {
+      Swal.fire({ icon:'error', title:'Error de conexión', text:'No se pudo conectar con el servidor' });
+    });
+
+    xhr.send(formData);
+  });
 });
 
 // Iniciar con un envío y un slot de comprobante

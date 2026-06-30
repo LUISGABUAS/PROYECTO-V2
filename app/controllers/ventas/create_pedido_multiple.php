@@ -4,26 +4,26 @@ require_once(dirname(__DIR__, 2) . '/config.php');
 include(__DIR__ . '/../helpers/csrf.php');
 csrf_verify();
 
+header('Content-Type: application/json');
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header("Location: ../../../ventas/pedido_multiple.php");
+    echo json_encode(['success' => false, 'message' => 'Método no permitido']);
     exit;
 }
 
 $id_cliente = (int)($_POST['id_cliente'] ?? 0);
-$fecha      = $_POST['fecha'] ?? date('Y-m-d');
+$fecha      = date('Y-m-d H:i:s'); // hora exacta del servidor (America/Mexico_City)
 $id_usuario = (int)($_POST['id_usuario'] ?? 0);
 $envios_raw = $_POST['envios_json'] ?? '';
 
 if (!$id_cliente || !$id_usuario || !$envios_raw) {
-    $_SESSION['mensaje'] = '❌ Faltan datos obligatorios';
-    header("Location: ../../../ventas/pedido_multiple.php");
+    echo json_encode(['success' => false, 'message' => '❌ Faltan datos obligatorios']);
     exit;
 }
 
 $envios = json_decode($envios_raw, true);
 if (!$envios || !is_array($envios) || count($envios) === 0) {
-    $_SESSION['mensaje'] = '❌ No se recibieron envíos válidos';
-    header("Location: ../../../ventas/pedido_multiple.php");
+    echo json_encode(['success' => false, 'message' => '❌ No se recibieron envíos válidos']);
     exit;
 }
 
@@ -41,8 +41,7 @@ if ($hayArchivos) {
 }
 
 if (empty($indicesValidos)) {
-    $_SESSION['mensaje'] = '❌ Debe adjuntar al menos un comprobante';
-    header("Location: ../../../ventas/pedido_multiple.php");
+    echo json_encode(['success' => false, 'message' => '❌ Debe adjuntar al menos un comprobante']);
     exit;
 }
 
@@ -50,12 +49,12 @@ if (!is_dir($carpeta)) mkdir($carpeta, 0755, true);
 foreach ($indicesValidos as $i) {
     $ext = strtolower(pathinfo($_FILES['comprobantes']['name'][$i], PATHINFO_EXTENSION));
     if (!in_array($ext, $permitidas)) {
-        $_SESSION['mensaje'] = '❌ Formato no permitido: ' . htmlspecialchars($_FILES['comprobantes']['name'][$i]);
-        header("Location: ../../../ventas/pedido_multiple.php"); exit;
+        echo json_encode(['success' => false, 'message' => '❌ Formato no permitido: ' . htmlspecialchars($_FILES['comprobantes']['name'][$i])]);
+        exit;
     }
     if ($_FILES['comprobantes']['size'][$i] > 5 * 1024 * 1024) {
-        $_SESSION['mensaje'] = '❌ Un comprobante supera 5MB';
-        header("Location: ../../../ventas/pedido_multiple.php"); exit;
+        echo json_encode(['success' => false, 'message' => '❌ Un comprobante supera 5MB']);
+        exit;
     }
     $nombre_archivo = date('Y-m-d_H-i-s') . '_pedido_' . uniqid() . '.' . $ext;
     move_uploaded_file($_FILES['comprobantes']['tmp_name'][$i], $carpeta . $nombre_archivo);
@@ -65,12 +64,13 @@ foreach ($indicesValidos as $i) {
 try {
     $pdo->beginTransaction();
 
-    // Calcular total general
+    // Calcular total general (productos + costo de envío)
     $total_general = 0;
     foreach ($envios as $envio) {
         foreach ($envio['productos'] as $prod) {
             $total_general += (float)$prod['precio'] * (int)$prod['cantidad'];
         }
+        $total_general += (float)($envio['costo_envio'] ?? 0);
     }
 
     // Insertar pedido padre
@@ -87,6 +87,7 @@ try {
         foreach ($envio['productos'] as $prod) {
             $total_envio += (float)$prod['precio'] * (int)$prod['cantidad'];
         }
+        $total_envio += (float)($envio['costo_envio'] ?? 0);
 
         $stmt_v = $pdo->prepare("INSERT INTO tb_ventas
             (id_pedido, fecha, cliente, envio, tipo_pago, total, comprobante, id_usuario, id_direccion_entrega)
@@ -115,13 +116,11 @@ try {
 
     $pdo->commit();
 
-    $_SESSION['mensaje'] = "✅ Pedido múltiple registrado — {$total_general} total — " . count($envios) . " envíos creados";
-    header("Location: ../../../ventas/index.php");
+    echo json_encode(['success' => true, 'message' => "✅ Pedido múltiple registrado — $" . number_format($total_general, 2) . " total — " . count($envios) . " envíos creados"]);
     exit;
 
 } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
-    $_SESSION['mensaje'] = '❌ Error al guardar el pedido: ' . $e->getMessage();
-    header("Location: ../../../ventas/pedido_multiple.php");
+    echo json_encode(['success' => false, 'message' => '❌ Error al guardar el pedido: ' . $e->getMessage()]);
     exit;
 }
