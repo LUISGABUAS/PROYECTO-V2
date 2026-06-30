@@ -1,0 +1,423 @@
+/* ============================================================
+   PACAS YADIRA — Premium Theme Override
+   Se carga encima de AdminLTE. Soporta data-theme en <html>.
+   Temas: dark (default) | light | rose
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ── Variables por tema ────────────────────────────────────────── */
+:root,
+[data-theme="dark"] {
+  --py-bg:           #0f172a;
+  --py-bg2:          #1e293b;
+  --py-bg3:          #273549;
+  --py-card:         #1e293b;
+  --py-card-border:  rgba(255,255,255,.07);
+  --py-sidebar:      #1e293b;
+  --py-sidebar-top:  #162032;
+  --py-navbar:       #1e293b;
+  --py-text:         #e2e8f0;
+  --py-text-muted:   #94a3b8;
+  --py-accent:       #e91e8c;
+  --py-accent2:      #ff6b35;
+  --py-shadow:       0 4px 24px rgba(0,0,0,.4);
+  --py-shadow-lg:    0 8px 40px rgba(0,0,0,.5);
+  --py-input-bg:     #273549;
+  --py-input-border: rgba(255,255,255,.12);
+  --py-table-stripe: rgba(255,255,255,.03);
+  --py-table-hover:  rgba(233,30,140,.07);
+  --py-badge-bg:     rgba(255,255,255,.08);
+}
+
+[data-theme="light"] {
+  --py-bg:           #f1f5f9;
+  --py-bg2:          #e2e8f0;
+  --py-bg3:          #cbd5e1;
+  --py-card:         #ffffff;
+  --py-card-border:  rgba(0,0,0,.07);
+  --py-sidebar:      #1e293b;
+  --py-sidebar-top:  #162032;
+  --py-navbar:       #ffffff;
+  --py-text:         #1e293b;
+  --py-text-muted:   #64748b;
+  --py-accent:       #e91e8c;
+  --py-accent2:      #ff6b35;
+  --py-shadow:       0 2px 12px rgba(0,0,0,.08);
+  --py-shadow-lg:    0 6px 24px rgba(0,0,0,.12);
+  --py-input-bg:     #f8fafc;
+  --py-input-border: #cbd5e1;
+  --py-table-stripe: rgba(0,0,0,.02);
+  --py-table-hover:  rgba(233,30,140,.05);
+  --py-badge-bg:     rgba(0,0,0,.06);
+}
+
+[data-theme="rose"] {
+  --py-bg:           #1a0a14;
+  --py-bg2:          #2d1020;
+  --py-bg3:          #3d1830;
+  --py-card:         #2d1020;
+  --py-card-border:  rgba(233,30,140,.15);
+  --py-sidebar:      #200c18;
+  --py-sidebar-top:  #150810;
+  --py-navbar:       #200c18;
+  --py-text:         #fce7f3;
+  --py-text-muted:   #f9a8d4;
+  --py-accent:       #f43f5e;
+  --py-accent2:      #ec4899;
+  --py-shadow:       0 4px 24px rgba(233,30,140,.25);
+  --py-shadow-lg:    0 8px 40px rgba(233,30,140,.3);
+  --py-input-bg:     #3d1830;
+  --py-input-border: rgba(233,30,140,.25);
+  --py-table-stripe: rgba(233,30,140,.04);
+  --py-table-hover:  rgba(233,30,140,.1);
+  --py-badge-bg:     rgba(233,30,140,.15);
+}
+
+/* ── Base ──────────────────────────────────────────────────────── */
+*, body {
+  font-family: 'Inter', 'Source Sans Pro', sans-serif !important;
+}
+
+body {
+  background-color: var(--py-bg) !important;
+  color: var(--py-text) !important;
+  transition: background-color .3s, color .3s;
+}
+
+/* ── Wrapper ──────────────────────────────────────────────────── */
+.wrapper { background: var(--py-bg) !important; }
+
+/* ── Navbar top ───────────────────────────────────────────────── */
+.main-header.navbar {
+  background: var(--py-navbar) !important;
+  border-bottom: 1px solid var(--py-card-border) !important;
+  box-shadow: var(--py-shadow) !important;
+}
+.main-header .nav-link,
+.main-header .navbar-text {
+  color: var(--py-text) !important;
+}
+
+/* ── Sidebar ──────────────────────────────────────────────────── */
+.main-sidebar {
+  background: var(--py-sidebar) !important;
+  box-shadow: 4px 0 20px rgba(0,0,0,.3) !important;
+}
+.main-sidebar .brand-link {
+  background: var(--py-sidebar-top) !important;
+  border-bottom: 1px solid var(--py-card-border) !important;
+}
+.main-sidebar .brand-text {
+  font-weight: 700 !important;
+  font-size: 17px !important;
+  background: linear-gradient(135deg, var(--py-accent), var(--py-accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.sidebar .nav-sidebar .nav-link {
+  border-radius: 10px !important;
+  margin: 2px 8px !important;
+  padding: 9px 12px !important;
+  transition: background .2s, transform .15s !important;
+  color: var(--py-text-muted) !important;
+}
+.sidebar .nav-sidebar .nav-link:hover,
+.sidebar .nav-sidebar .nav-link.active {
+  background: rgba(233,30,140,.15) !important;
+  color: #fff !important;
+  transform: translateX(2px);
+}
+.sidebar .nav-sidebar .nav-link i.nav-icon {
+  color: var(--py-accent) !important;
+}
+.sidebar .nav-treeview .nav-link {
+  padding-left: 28px !important;
+  font-size: 13px !important;
+}
+.sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active,
+.sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link:hover {
+  background: rgba(233,30,140,.15) !important;
+}
+/* Buscador sidebar */
+.sidebar-search-results,
+.sidebar .input-group-text,
+.sidebar .form-control-sidebar {
+  background: var(--py-bg3) !important;
+  border-color: var(--py-card-border) !important;
+  color: var(--py-text) !important;
+}
+
+/* ── Content wrapper ──────────────────────────────────────────── */
+.content-wrapper {
+  background: var(--py-bg) !important;
+  color: var(--py-text) !important;
+}
+.content-header h1 {
+  font-weight: 700 !important;
+  font-size: 22px !important;
+  color: var(--py-text) !important;
+}
+
+/* ── Cards ────────────────────────────────────────────────────── */
+.card {
+  background: var(--py-card) !important;
+  border: 1px solid var(--py-card-border) !important;
+  border-radius: 16px !important;
+  box-shadow: var(--py-shadow) !important;
+  transition: box-shadow .2s !important;
+  color: var(--py-text) !important;
+}
+.card:hover { box-shadow: var(--py-shadow-lg) !important; }
+
+.card-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--py-card-border) !important;
+  border-radius: 16px 16px 0 0 !important;
+  padding: 14px 20px !important;
+}
+.card-title { font-weight: 600 !important; color: var(--py-text) !important; }
+.card-body  { padding: 20px !important; }
+.card-footer {
+  background: transparent !important;
+  border-top: 1px solid var(--py-card-border) !important;
+  border-radius: 0 0 16px 16px !important;
+}
+
+/* Colores de outline cards */
+.card-outline.card-primary  { border-top-color: var(--py-accent) !important; }
+.card-outline.card-success  { border-top-color: #10b981 !important; }
+.card-outline.card-warning  { border-top-color: #f59e0b !important; }
+.card-outline.card-danger   { border-top-color: #ef4444 !important; }
+.card-outline.card-info     { border-top-color: #06b6d4 !important; }
+
+/* ── Formularios ──────────────────────────────────────────────── */
+.form-control, .custom-select {
+  background: var(--py-input-bg) !important;
+  border: 1px solid var(--py-input-border) !important;
+  border-radius: 10px !important;
+  color: var(--py-text) !important;
+  transition: border-color .2s, box-shadow .2s !important;
+}
+.form-control:focus, .custom-select:focus {
+  border-color: var(--py-accent) !important;
+  box-shadow: 0 0 0 3px rgba(233,30,140,.15) !important;
+  background: var(--py-input-bg) !important;
+  color: var(--py-text) !important;
+}
+.form-control::placeholder { color: var(--py-text-muted) !important; }
+.input-group-text {
+  background: var(--py-bg3) !important;
+  border-color: var(--py-input-border) !important;
+  color: var(--py-text-muted) !important;
+}
+label { color: var(--py-text) !important; font-weight: 500 !important; }
+.text-muted { color: var(--py-text-muted) !important; }
+
+/* ── Botones ──────────────────────────────────────────────────── */
+.btn { border-radius: 10px !important; font-weight: 500 !important; transition: all .2s !important; }
+.btn-primary   { background: var(--py-accent) !important; border-color: var(--py-accent) !important; }
+.btn-success   { background: #10b981 !important; border-color: #10b981 !important; }
+.btn-danger    { background: #ef4444 !important; border-color: #ef4444 !important; }
+.btn-warning   { background: #f59e0b !important; border-color: #f59e0b !important; color: #fff !important; }
+.btn-info      { background: #06b6d4 !important; border-color: #06b6d4 !important; }
+.btn-secondary { background: var(--py-bg3) !important; border-color: var(--py-card-border) !important; color: var(--py-text) !important; }
+.btn:hover     { filter: brightness(1.1); transform: translateY(-1px); }
+.btn:active    { transform: translateY(0); }
+.btn-sm { border-radius: 8px !important; }
+
+/* ── Tablas ───────────────────────────────────────────────────── */
+.table { color: var(--py-text) !important; }
+.table thead th {
+  background: var(--py-bg3) !important;
+  border-color: var(--py-card-border) !important;
+  color: var(--py-text-muted) !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: .5px !important;
+}
+.table td, .table th {
+  border-color: var(--py-card-border) !important;
+  color: var(--py-text) !important;
+}
+.table-striped tbody tr:nth-of-type(odd) {
+  background: var(--py-table-stripe) !important;
+}
+.table-hover tbody tr:hover {
+  background: var(--py-table-hover) !important;
+}
+.thead-light th {
+  background: var(--py-bg3) !important;
+  color: var(--py-text-muted) !important;
+  border-color: var(--py-card-border) !important;
+}
+
+/* ── Badges ───────────────────────────────────────────────────── */
+.badge { border-radius: 6px !important; font-weight: 500 !important; }
+.badge-primary  { background: var(--py-accent) !important; }
+.badge-secondary{ background: var(--py-badge-bg) !important; color: var(--py-text) !important; }
+
+/* ── Alertas ──────────────────────────────────────────────────── */
+.alert {
+  border-radius: 12px !important;
+  border: 1px solid var(--py-card-border) !important;
+}
+.alert-info    { background: rgba(6,182,212,.1)  !important; color: #67e8f9 !important; border-color: rgba(6,182,212,.25) !important; }
+.alert-success { background: rgba(16,185,129,.1) !important; color: #6ee7b7 !important; border-color: rgba(16,185,129,.25) !important; }
+.alert-warning { background: rgba(245,158,11,.1) !important; color: #fcd34d !important; border-color: rgba(245,158,11,.25) !important; }
+.alert-danger  { background: rgba(239,68,68,.1)  !important; color: #fca5a5 !important; border-color: rgba(239,68,68,.25) !important; }
+.alert-secondary { background: var(--py-bg3) !important; color: var(--py-text) !important; }
+
+/* ── Modales ──────────────────────────────────────────────────── */
+.modal-content {
+  background: var(--py-card) !important;
+  border: 1px solid var(--py-card-border) !important;
+  border-radius: 20px !important;
+  box-shadow: var(--py-shadow-lg) !important;
+  color: var(--py-text) !important;
+}
+.modal-header {
+  border-bottom: 1px solid var(--py-card-border) !important;
+  border-radius: 20px 20px 0 0 !important;
+}
+.modal-footer {
+  border-top: 1px solid var(--py-card-border) !important;
+  border-radius: 0 0 20px 20px !important;
+}
+.modal-header .close { color: var(--py-text) !important; }
+
+/* ── Small boxes (info-box) ───────────────────────────────────── */
+.info-box {
+  border-radius: 14px !important;
+  box-shadow: var(--py-shadow) !important;
+}
+.small-box {
+  border-radius: 14px !important;
+  box-shadow: var(--py-shadow) !important;
+}
+
+/* ── Select2 ──────────────────────────────────────────────────── */
+.select2-container--bootstrap4 .select2-selection {
+  background: var(--py-input-bg) !important;
+  border-color: var(--py-input-border) !important;
+  border-radius: 10px !important;
+  color: var(--py-text) !important;
+}
+.select2-dropdown {
+  background: var(--py-card) !important;
+  border-color: var(--py-card-border) !important;
+  border-radius: 10px !important;
+  box-shadow: var(--py-shadow-lg) !important;
+}
+.select2-results__option { color: var(--py-text) !important; }
+.select2-results__option--highlighted {
+  background: rgba(233,30,140,.15) !important;
+  color: #fff !important;
+}
+.select2-search__field {
+  background: var(--py-input-bg) !important;
+  color: var(--py-text) !important;
+  border-color: var(--py-input-border) !important;
+  border-radius: 8px !important;
+}
+.select2-container--bootstrap4 .select2-selection__rendered {
+  color: var(--py-text) !important;
+}
+
+/* ── DataTables ───────────────────────────────────────────────── */
+.dataTables_wrapper .dataTables_filter input,
+.dataTables_wrapper .dataTables_length select {
+  background: var(--py-input-bg) !important;
+  border-color: var(--py-input-border) !important;
+  color: var(--py-text) !important;
+  border-radius: 8px !important;
+}
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  color: var(--py-text-muted) !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+  background: var(--py-accent) !important;
+  border-color: var(--py-accent) !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+}
+
+/* ── Progress bars ────────────────────────────────────────────── */
+.progress {
+  background: var(--py-bg3) !important;
+  border-radius: 99px !important;
+}
+
+/* ── Nav tabs ─────────────────────────────────────────────────── */
+.nav-tabs {
+  border-color: var(--py-card-border) !important;
+}
+.nav-tabs .nav-link {
+  color: var(--py-text-muted) !important;
+  border-radius: 10px 10px 0 0 !important;
+}
+.nav-tabs .nav-link.active {
+  background: var(--py-card) !important;
+  border-color: var(--py-card-border) !important;
+  color: var(--py-accent) !important;
+}
+
+/* ── User panel sidebar ───────────────────────────────────────── */
+.user-panel { border-color: var(--py-card-border) !important; }
+.user-panel .info a { color: var(--py-text) !important; font-weight: 500 !important; }
+
+/* ── Scrollbar premium ────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(233,30,140,.3); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--py-accent); }
+
+/* ── Tema Claro: override sidebar para que quede oscuro de todas formas ── */
+[data-theme="light"] .main-sidebar,
+[data-theme="light"] .main-sidebar .brand-link {
+  background: #1e293b !important;
+}
+[data-theme="light"] .content-wrapper { background: #f1f5f9 !important; }
+[data-theme="light"] .card { color: #1e293b !important; }
+[data-theme="light"] label { color: #374151 !important; }
+[data-theme="light"] .table { color: #1e293b !important; }
+[data-theme="light"] .table thead th { color: #64748b !important; }
+[data-theme="light"] .form-control { color: #1e293b !important; }
+[data-theme="light"] .text-muted { color: #64748b !important; }
+[data-theme="light"] .main-header.navbar { border-bottom: 1px solid #e2e8f0 !important; }
+
+/* ── Selector de tema en perfil ───────────────────────────────── */
+.theme-option {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--py-card-border);
+  background: var(--py-bg3);
+  color: var(--py-text);
+  cursor: pointer;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.theme-option:hover {
+  border-color: var(--py-accent);
+  transform: translateX(4px);
+}
+.theme-option.active {
+  border-color: var(--py-accent);
+  background: rgba(233,30,140,.1);
+}
+.theme-option .theme-dot {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.theme-dot-dark  { background: linear-gradient(135deg,#0f172a,#1e293b); border:1px solid rgba(255,255,255,.2); }
+.theme-dot-light { background: linear-gradient(135deg,#f1f5f9,#ffffff); border:1px solid #cbd5e1; }
+.theme-dot-rose  { background: linear-gradient(135deg,#1a0a14,#f43f5e); }
