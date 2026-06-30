@@ -16,12 +16,12 @@ include('app/controllers/ventas/reporte_ventas.php');
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1 class="m-0">Welcome to the system - <?php echo $rol_sesion;?></h1>
+            <h1 class="m-0">Bienvenido - <?php echo $rol_sesion;?></h1>
           </div><!-- /.col -->
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="<?php echo $URL;?>">Home</a></li>
-              <li class="breadcrumb-item active">Starter Page</li>
+              <li class="breadcrumb-item"><a href="<?php echo $URL;?>">Inicio</a></li>
+              <li class="breadcrumb-item active">Panel principal</li>
             </ol>
           </div><!-- /.col -->
         </div><!-- /.row -->
@@ -33,8 +33,6 @@ include('app/controllers/ventas/reporte_ventas.php');
     <div class="content">
       <div class="container-fluid">
         
-      Content goes here 
-      <br><br>
      <div class="row">
          
           <div class="col-lg-3 col-6">
@@ -50,14 +48,14 @@ include('app/controllers/ventas/reporte_ventas.php');
                 ?>
                 <h3><?php echo $contador_de_usuarios;?></h3>
 
-                <p>User Registrations</p>
+                <p>Usuarios registrados</p>
               </div>
               <a href="<?php echo $URL?>/usuarios/create.php">
                 <div class="icon">
                 <i class="fa fas fa-user-plus"></i>
               </div>
               </a>
-              <a href="<?php echo $URL?>/usuarios/" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+              <a href="<?php echo $URL?>/usuarios/" class="small-box-footer">Ver más <i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
 
@@ -76,14 +74,14 @@ include('app/controllers/ventas/reporte_ventas.php');
                 ?>
                 <h3><?php echo $contador_de_productos;?></h3>
 
-                <p>Products Registered</p>
+                <p>Productos registrados</p>
               </div>
               <a href="<?php echo $URL?>/almacen/create.php">
                 <div class="icon">
                 <i class="nav-icon fas fa-list"></i>
               </div>
               </a>
-              <a href="<?php echo $URL?>/almacen/" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+              <a href="<?php echo $URL?>/almacen/" class="small-box-footer">Ver más <i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
 
@@ -102,14 +100,14 @@ include('app/controllers/ventas/reporte_ventas.php');
                 ?>
                 <h3><?php echo $contador_de_usuarios;?></h3>
 
-                <p>Prooveders Registered</p>
+                <p>Proveedores registrados</p>
               </div>
               
                 <div class="icon">
                 <i class="nav-icon fas fa-building"></i>
               </div>
               </a>
-              <a href="<?php echo $URL?>/provedores/" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+              <a href="<?php echo $URL?>/provedores/" class="small-box-footer">Ver más <i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
 
@@ -136,7 +134,7 @@ include('app/controllers/ventas/reporte_ventas.php');
                 <i class="nav-icon fas fa-dollar-sign"></i>
               </div>
               </a>
-              <a href="<?php echo $URL?>/ventas/" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+              <a href="<?php echo $URL?>/ventas/" class="small-box-footer">Ver más <i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
           <?php } ?>
