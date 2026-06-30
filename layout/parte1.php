@@ -386,6 +386,14 @@ if (in_array(37, $_SESSION['permisos'] ?? [])) {
                   <p>Cotizar</p>
                 </a>
               </li>
+              <?php if(in_array(24, $_SESSION['permisos'])): ?>
+              <li class="nav-item">
+                <a href="<?php echo $URL;?>/ventas/comprobantes.php" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Comprobantes</p>
+                </a>
+              </li>
+              <?php endif; ?>
             </ul>
           </li>
           <?php endif; ?>
