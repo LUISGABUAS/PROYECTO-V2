@@ -14,7 +14,7 @@
   ">
     <span>
       &copy; <?= date('Y') ?>
-      <strong style="color:var(--py-accent,#e91e8c);">Pacas Yadira</strong>
+      <a href="https://nesb.com.mx" target="_blank" rel="noopener noreferrer" style="color:var(--py-accent,#e91e8c); text-decoration:none; font-weight:bold;">NESB</a>
       &mdash; Todos los derechos reservados.
     </span>
     <span style="opacity:.5; font-size:12px;">
