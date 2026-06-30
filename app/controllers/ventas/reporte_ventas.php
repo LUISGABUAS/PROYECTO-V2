@@ -23,13 +23,17 @@ if (strtotime($desde) > strtotime($hasta)) {
 $ventas_generales = [];
 
 if (in_array(24, $permisos)) {
-    $stmt = $pdo->prepare("SELECT 
-        COUNT(DISTINCT v.id_venta) as total_ventas,
+    $stmt = $pdo->prepare("SELECT
+        COUNT(v.id_venta) as total_ventas,
         COALESCE(SUM(v.total), 0) as monto_total,
         ROUND(AVG(v.total), 2) as promedio_venta,
-        COALESCE(SUM(vd.cantidad), 0) as total_pacas_sistema
+        COALESCE(SUM(vd.total_pacas), 0) as total_pacas_sistema
         FROM tb_ventas v
-        LEFT JOIN tb_ventas_detalle vd ON v.id_venta = vd.id_venta
+        LEFT JOIN (
+            SELECT id_venta, SUM(cantidad) as total_pacas
+            FROM tb_ventas_detalle
+            GROUP BY id_venta
+        ) vd ON v.id_venta = vd.id_venta
         WHERE DATE(v.fecha) BETWEEN :desde AND :hasta
     ");
     $stmt->execute([
