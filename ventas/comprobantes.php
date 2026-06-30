@@ -115,9 +115,13 @@ $comprobantes = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <div class="card shadow-sm h-100">
 
             <!-- Vista previa -->
+            <?php
+              $titulo_modal = '#' . $c['id_venta'] . ' - ' . htmlspecialchars($c['cliente'], ENT_QUOTES);
+              $onclick_attr = $esPDF ? '' : 'onclick="abrirImg(\'' . $url_archivo . '\', \'' . $titulo_modal . '\')"';
+            ?>
             <div class="card-img-top d-flex align-items-center justify-content-center bg-light"
-                 style="height:160px; overflow:hidden; cursor:pointer;"
-                 <?= $esPDF ? '' : "onclick=\"abrirImg('$url_archivo', '#<?= $c['id_venta'] ?> — {$c['cliente']}')\""?>>
+                 style="height:160px; overflow:hidden; <?= $esPDF ? '' : 'cursor:pointer;' ?>"
+                 <?= $onclick_attr ?>>
               <?php if ($esPDF): ?>
                 <a href="<?= $url_archivo ?>" target="_blank" class="text-center text-danger p-3">
                   <i class="fa fa-file-pdf fa-5x"></i><br>
@@ -155,7 +159,7 @@ $comprobantes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </a>
               <?php else: ?>
                 <button class="btn btn-info btn-sm btn-block"
-                        onclick="abrirImg('<?= $url_archivo ?>', '#<?= $c['id_venta'] ?> — <?= htmlspecialchars(addslashes($c['cliente'])) ?>')">
+                        onclick="abrirImg('<?= $url_archivo ?>', '<?= $titulo_modal ?>')">
                   <i class="fa fa-search-plus"></i> Ver imagen
                 </button>
               <?php endif; ?>
