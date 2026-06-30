@@ -75,15 +75,22 @@
 }
 
 /* ── Base ──────────────────────────────────────────────────────── */
-/* Sin !important en * para no romper Font Awesome */
-* { font-family: 'Inter', 'Source Sans Pro', sans-serif; }
-
-body,
-p, span, a, td, th, li, label, input, textarea, select, button,
-h1, h2, h3, h4, h5, h6,
-.card-title, .nav-link p, .brand-text, .content-header h1,
-.form-control, .btn, .badge, .alert, .modal-title {
+body {
   font-family: 'Inter', 'Source Sans Pro', sans-serif !important;
+}
+
+/* Restaurar Font Awesome ANTES que cualquier otra regla de fuente */
+.fa, .fas, .far, .fab, .fal, .fad,
+i[class*="fa-"], span[class*="fa-"] {
+  font-family: 'Font Awesome 5 Free' !important;
+  font-weight: 900 !important;
+}
+.fab, i.fab, span.fab {
+  font-family: 'Font Awesome 5 Brands' !important;
+  font-weight: 400 !important;
+}
+.far, i.far, span.far {
+  font-weight: 400 !important;
 }
 
 body {
