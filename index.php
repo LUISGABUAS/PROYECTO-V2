@@ -7,8 +7,8 @@ include('layout/parte1.php');
 include('app/controllers/usuarios/listado_de_usuarios.php');
 include('app/controllers/almacen/list_almacen.php');
 include('app/controllers/provedores/list_provedores.php');
-$_GET['desde'] = date('Y-m-01');
-$_GET['hasta']  = date('Y-m-d');
+$_GET['desde'] = date('Y-m-01') . 'T00:00';
+$_GET['hasta']  = date('Y-m-d')  . 'T23:59';
 include('app/controllers/ventas/reporte_ventas.php');
 ?>
   <!-- Content Wrapper. Contains page content -->

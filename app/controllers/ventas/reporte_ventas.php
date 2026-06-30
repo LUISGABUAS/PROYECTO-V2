@@ -2,8 +2,12 @@
 /* =========================
    FILTROS DE FECHA
 ========================= */
-$desde = $_GET['desde'] ?? date('Y-m-01');
-$hasta = $_GET['hasta'] ?? date('Y-m-d');
+$desde_raw = $_GET['desde'] ?? date('Y-m-01') . 'T00:00';
+$hasta_raw  = $_GET['hasta']  ?? date('Y-m-d')  . 'T23:59';
+$desde = str_replace('T', ' ', $desde_raw);
+if (strlen($desde) === 16) $desde .= ':00';
+$hasta = str_replace('T', ' ', $hasta_raw);
+if (strlen($hasta) === 16) $hasta .= ':59';
 
 $permisos   = $_SESSION['permisos'];
 $id_usuario = $id_usuario_sesion;
@@ -34,7 +38,7 @@ if (in_array(24, $permisos)) {
             FROM tb_ventas_detalle
             GROUP BY id_venta
         ) vd ON v.id_venta = vd.id_venta
-        WHERE DATE(v.fecha) BETWEEN :desde AND :hasta
+        WHERE v.fecha BETWEEN :desde AND :hasta
     ");
     $stmt->execute([
         ':desde' => $desde,
@@ -59,7 +63,7 @@ if (in_array(25, $permisos)) {
         FROM tb_ventas v
         LEFT JOIN tb_ventas_detalle vd ON v.id_venta = vd.id_venta
         WHERE v.id_usuario = :usuario
-        AND DATE(v.fecha) BETWEEN :desde AND :hasta
+        AND v.fecha BETWEEN :desde AND :hasta
     ");
     $stmt->execute([
         ':usuario' => $id_usuario,
@@ -92,7 +96,7 @@ if (in_array(24, $permisos)) {
         JOIN tb_usuario u ON u.id = v.id_usuario
         JOIN clientes c ON v.cliente = c.id_cliente
         LEFT JOIN tb_ventas_detalle vd ON v.id_venta = vd.id_venta
-        WHERE DATE(v.fecha) BETWEEN :desde AND :hasta
+        WHERE v.fecha BETWEEN :desde AND :hasta
         GROUP BY v.id_venta
         ORDER BY v.fecha DESC
     ");
@@ -119,7 +123,7 @@ if (in_array(25, $permisos)) {
         JOIN clientes c ON v.cliente = c.id_cliente
         LEFT JOIN tb_ventas_detalle vd ON v.id_venta = vd.id_venta
         WHERE v.id_usuario = :usuario
-        AND DATE(v.fecha) BETWEEN :desde AND :hasta
+        AND v.fecha BETWEEN :desde AND :hasta
         GROUP BY v.id_venta
         ORDER BY v.fecha DESC
     ");
@@ -142,7 +146,7 @@ if (in_array(25, $permisos)) {
         SUM(v.total) AS total
         FROM tb_ventas v
         WHERE v.id_usuario = :usuario
-        AND DATE(v.fecha) BETWEEN :desde AND :hasta
+        AND v.fecha BETWEEN :desde AND :hasta
         GROUP BY DATE(v.fecha)
         ORDER BY dia
     ");
@@ -164,7 +168,7 @@ if (in_array(24, $permisos)) {
         DATE(fecha) AS dia,
         SUM(total) AS total
         FROM tb_ventas
-        WHERE DATE(fecha) BETWEEN :desde AND :hasta
+        WHERE fecha BETWEEN :desde AND :hasta
         GROUP BY DATE(fecha)
         ORDER BY dia
     ");

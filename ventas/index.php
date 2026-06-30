@@ -51,7 +51,7 @@ if (!in_array(20, $_SESSION['permisos'])) {
             <div class="info-box-content">
               <span class="info-box-text">Total Ventas Sistema</span>
               <span class="info-box-number"><?= $ventas_generales['total_ventas'] ?? 0 ?></span>
-              <small>Del <?= date('d/m/Y', strtotime($desde)) ?> al <?= date('d/m/Y', strtotime($hasta)) ?></small>
+              <small>Del <?= date('d/m/Y H:i', strtotime($desde)) ?> al <?= date('d/m/Y H:i', strtotime($hasta)) ?></small>
             </div>
           </div>
         </div>
@@ -76,7 +76,7 @@ if (!in_array(20, $_SESSION['permisos'])) {
             <div class="info-box-content">
               <span class="info-box-text">Mis Ventas</span>
               <span class="info-box-number"><?= $mis_ventas_cantidad ?? 0 ?></span>
-              <small>Del <?= date('d/m/Y', strtotime($desde)) ?> al <?= date('d/m/Y', strtotime($hasta)) ?></small>
+              <small>Del <?= date('d/m/Y H:i', strtotime($desde)) ?> al <?= date('d/m/Y H:i', strtotime($hasta)) ?></small>
             </div>
           </div>
         </div>
@@ -136,11 +136,11 @@ if (!in_array(20, $_SESSION['permisos'])) {
           <form method="get" class="row">
             <div class="col-md-3">
               <label>Desde:</label>
-              <input type="date" name="desde" class="form-control" value="<?= $desde ?>" required>
+              <input type="datetime-local" name="desde" class="form-control" value="<?= date('Y-m-d\TH:i', strtotime($desde)) ?>" required>
             </div>
             <div class="col-md-3">
               <label>Hasta:</label>
-              <input type="date" name="hasta" class="form-control" value="<?= $hasta ?>" required>
+              <input type="datetime-local" name="hasta" class="form-control" value="<?= date('Y-m-d\TH:i', strtotime($hasta)) ?>" required>
             </div>
             <div class="col-md-2">
               <label>&nbsp;</label>

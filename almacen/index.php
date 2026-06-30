@@ -64,11 +64,44 @@ if (isset($_SESSION['mensaje'])) {
     <div class="content">
       <div class="container-fluid">
 
+      <!-- FILTRO PROVEEDOR -->
+      <div class="card card-outline card-secondary mb-3">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fa fa-filter"></i> Filtrar por Proveedor</h3>
+        </div>
+        <div class="card-body">
+          <form method="get" class="row align-items-end">
+            <div class="col-md-4">
+              <label>Proveedor:</label>
+              <select name="proveedor" class="form-control">
+                <option value="">— Todos los proveedores —</option>
+                <?php foreach ($proveedores_lista as $prov): ?>
+                  <option value="<?= $prov['id_proovedor'] ?>"
+                    <?= ($filtro_proveedor == $prov['id_proovedor']) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($prov['nombre_proveedor']) ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-primary btn-block">
+                <i class="fa fa-filter"></i> Filtrar
+              </button>
+            </div>
+            <div class="col-md-2">
+              <a href="?" class="btn btn-secondary btn-block">
+                <i class="fa fa-redo"></i> Limpiar
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <div class="row">
         <div class="col-md-12">
             <div class="card card-outline card-primary">
               <div class="card-header">
-                <h3 class="card-title">Productos</h3>
+                <h3 class="card-title">Productos <?= $filtro_proveedor ? '— ' . htmlspecialchars(array_column($proveedores_lista, 'nombre_proveedor', 'id_proovedor')[$filtro_proveedor] ?? '') : '' ?></h3>
 
                 <div class="card-tools">
                   <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i>
