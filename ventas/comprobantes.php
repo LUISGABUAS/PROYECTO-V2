@@ -17,8 +17,10 @@ $hasta = str_replace('T', ' ', $hasta_raw);
 if (strlen($hasta) === 16) $hasta .= ':59';
 
 $stmt = $pdo->prepare("
-    SELECT vc.ruta, v.id_venta, v.fecha, v.total, v.tipo_pago,
-           c.nombre_completo AS cliente, u.nombres AS vendedor
+    SELECT CONVERT(vc.ruta USING utf8mb4) COLLATE utf8mb4_general_ci AS ruta,
+           v.id_venta, v.fecha, v.total, v.tipo_pago,
+           CONVERT(c.nombre_completo USING utf8mb4) COLLATE utf8mb4_general_ci AS cliente,
+           CONVERT(u.nombres USING utf8mb4) COLLATE utf8mb4_general_ci AS vendedor
     FROM tb_ventas_comprobantes vc
     JOIN tb_ventas v  ON vc.id_venta = v.id_venta
     JOIN clientes  c  ON v.cliente   = c.id_cliente
@@ -27,8 +29,10 @@ $stmt = $pdo->prepare("
 
     UNION ALL
 
-    SELECT v.comprobante AS ruta, v.id_venta, v.fecha, v.total, v.tipo_pago,
-           c.nombre_completo AS cliente, u.nombres AS vendedor
+    SELECT CONVERT(v.comprobante USING utf8mb4) COLLATE utf8mb4_general_ci AS ruta,
+           v.id_venta, v.fecha, v.total, v.tipo_pago,
+           CONVERT(c.nombre_completo USING utf8mb4) COLLATE utf8mb4_general_ci AS cliente,
+           CONVERT(u.nombres USING utf8mb4) COLLATE utf8mb4_general_ci AS vendedor
     FROM tb_ventas v
     JOIN clientes  c  ON v.cliente    = c.id_cliente
     JOIN tb_usuario u ON v.id_usuario = u.id
