@@ -376,57 +376,6 @@ if (!in_array(20, $_SESSION['permisos'])) {
       </div>
       <?php endif; ?>
 
-      <!-- TABLA DE STOCK -->
-      <div class="card card-warning">
-        <div class="card-header">
-          <h3 class="card-title">📦 Estado de Stock</h3>
-        </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table id="tablaStock" class="table table-bordered table-striped table-sm">
-              <thead class="thead-light">
-                <tr>
-                  <th>#</th>
-                  <th>Código</th>
-                  <th>Producto</th>
-                  <th>Categoría</th>
-                  <th class="text-center">Stock Bodega</th>
-                  <th class="text-center">Pendiente Entregar</th>
-                  <th class="text-center">Disponible</th>
-                  <th>Precio Venta</th>
-                </tr>
-              </thead>
-              <tbody>
-                <?php $num = 1; ?>
-                <?php foreach($productos_stock as $prod): ?>
-                <tr>
-                  <td><?= $num++ ?></td>
-                  <td><strong><?= htmlspecialchars($prod['codigo']) ?></strong></td>
-                  <td><?= htmlspecialchars($prod['nombre']) ?></td>
-                  <td><?= htmlspecialchars($prod['nombre_categoria']) ?></td>
-                  <td class="text-center">
-                    <span class="badge badge-info"><?= $prod['stock_bodega'] ?></span>
-                  </td>
-                  <td class="text-center">
-                    <span class="badge badge-warning"><?= $prod['stock_pendiente'] ?></span>
-                  </td>
-                  <td class="text-center">
-                    <?php if($prod['stock_disponible'] <= 0): ?>
-                      <span class="badge badge-danger">0</span>
-                    <?php elseif($prod['stock_disponible'] <= 5): ?>
-                      <span class="badge badge-warning"><?= $prod['stock_disponible'] ?></span>
-                    <?php else: ?>
-                      <span class="badge badge-success"><?= $prod['stock_disponible'] ?></span>
-                    <?php endif; ?>
-                  </td>
-                  <td>$<?= number_format($prod['precio_venta'], 2) ?></td>
-                </tr>
-                <?php endforeach; ?>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
 
     </div>
   </div>
