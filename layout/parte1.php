@@ -1,43 +1,58 @@
 <?php
-// ========== BADGES SIDEBAR ==========
-$badge_stock_bajo = 0;
+// ========== BADGES SIDEBAR (caché 60 s en sesión) ==========
+$badge_stock_bajo        = 0;
 $badge_ventas_pendientes = 0;
+$badge_tickets           = 0;
 
-if (in_array(8, $_SESSION['permisos'] ?? []) || in_array(24, $_SESSION['permisos'] ?? [])) {
-    $stmt_badge = $pdo->prepare("
-        SELECT COUNT(*)
-        FROM tb_almacen a
-        LEFT JOIN (
-            SELECT id_producto, COUNT(*) AS bodega
-            FROM stock WHERE estado = 'EN BODEGA'
-            GROUP BY id_producto
-        ) sb ON sb.id_producto = a.id_producto
-        LEFT JOIN (
-            SELECT id_producto, SUM(cantidad - cantidad_entregada) AS pendiente
-            FROM tb_ventas_detalle WHERE cantidad_entregada < cantidad
-            GROUP BY id_producto
-        ) sp ON sp.id_producto = a.id_producto
-        WHERE a.stock_minimo > 0
-        AND (COALESCE(sb.bodega, 0) - COALESCE(sp.pendiente, 0)) <= a.stock_minimo
-    ");
-    $stmt_badge->execute();
-    $badge_stock_bajo = (int)$stmt_badge->fetchColumn();
+$perms      = $_SESSION['permisos'] ?? [];
+$cache_key  = 'badges_cache';
+$cache_ttl  = 60; // segundos
+$cache      = $_SESSION[$cache_key] ?? null;
+
+if (!$cache || (time() - $cache['ts']) > $cache_ttl) {
+    $nuevo = ['ts' => time(), 'stock' => 0, 'ventas' => 0, 'tickets' => 0];
+
+    if (in_array(8, $perms) || in_array(24, $perms)) {
+        try {
+            $s = $pdo->query("
+                SELECT COUNT(*)
+                FROM tb_almacen a
+                LEFT JOIN (
+                    SELECT id_producto, COUNT(*) AS bodega
+                    FROM stock WHERE estado = 'EN BODEGA' GROUP BY id_producto
+                ) sb ON sb.id_producto = a.id_producto
+                LEFT JOIN (
+                    SELECT id_producto, SUM(cantidad - cantidad_entregada) AS pendiente
+                    FROM tb_ventas_detalle WHERE cantidad_entregada < cantidad GROUP BY id_producto
+                ) sp ON sp.id_producto = a.id_producto
+                WHERE a.stock_minimo > 0
+                AND (COALESCE(sb.bodega,0) - COALESCE(sp.pendiente,0)) <= a.stock_minimo
+            ");
+            $nuevo['stock'] = (int)$s->fetchColumn();
+        } catch (Exception $e) {}
+    }
+
+    if (in_array(24, $perms)) {
+        try {
+            $s = $pdo->query("SELECT COUNT(*) FROM tb_ventas WHERE estado_logistico IN ('SIN ENVIO','PENDIENTE GUIA')");
+            $nuevo['ventas'] = (int)$s->fetchColumn();
+        } catch (Exception $e) {}
+    }
+
+    if (in_array(37, $perms)) {
+        try {
+            $s = $pdo->query("SELECT COUNT(*) FROM tb_tickets WHERE estado IN ('pendiente','en_progreso')");
+            $nuevo['tickets'] = (int)$s->fetchColumn();
+        } catch (Exception $e) {}
+    }
+
+    $_SESSION[$cache_key]    = $nuevo;
+    $cache                   = $nuevo;
 }
 
-if (in_array(24, $_SESSION['permisos'] ?? [])) {
-    $stmt_badge2 = $pdo->prepare("SELECT COUNT(*) FROM tb_ventas WHERE estado_logistico IN ('SIN ENVIO', 'PENDIENTE GUIA')");
-    $stmt_badge2->execute();
-    $badge_ventas_pendientes = (int)$stmt_badge2->fetchColumn();
-}
-
-$badge_tickets = 0;
-if (in_array(37, $_SESSION['permisos'] ?? [])) {
-    try {
-        $stmt_badge3 = $pdo->prepare("SELECT COUNT(*) FROM tb_tickets WHERE estado IN ('pendiente','en_progreso')");
-        $stmt_badge3->execute();
-        $badge_tickets = (int)$stmt_badge3->fetchColumn();
-    } catch (Exception $e) { $badge_tickets = 0; }
-}
+$badge_stock_bajo        = $cache['stock'];
+$badge_ventas_pendientes = $cache['ventas'];
+$badge_tickets           = $cache['tickets'];
 ?>
 <!DOCTYPE html>
 <html lang="es">

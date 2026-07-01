@@ -98,42 +98,55 @@ try {
     /* ======================
        INSERTAR COMPROBANTES
     ====================== */
-    foreach ($rutas_comprobantes as $ruta) {
-        $stmt = $pdo->prepare("INSERT INTO tb_ventas_comprobantes (id_venta, ruta) VALUES (?, ?)");
-        $stmt->execute([$id_venta, $ruta]);
+    if (!empty($rutas_comprobantes)) {
+        $vals   = implode(',', array_fill(0, count($rutas_comprobantes), '(?,?)'));
+        $params = [];
+        foreach ($rutas_comprobantes as $ruta) { $params[] = $id_venta; $params[] = $ruta; }
+        $pdo->prepare("INSERT INTO tb_ventas_comprobantes (id_venta, ruta) VALUES $vals")->execute($params);
     }
 
     /* ======================
-       VALIDAR STOCK (servidor, con bloqueo FOR UPDATE)
+       VALIDAR STOCK EN BATCH (1 query por tabla, con FOR UPDATE)
        Previene que dos ventas simultáneas vendan la misma pieza
     ====================== */
+    $ids_productos = array_map('intval', array_unique($productos));
+    $placeholders  = implode(',', array_fill(0, count($ids_productos), '?'));
+
+    // Bloquea todas las filas EN BODEGA de los productos de esta venta
+    $stmt_lock = $pdo->prepare("
+        SELECT id_producto, COUNT(*) AS en_bodega
+        FROM stock
+        WHERE id_producto IN ($placeholders) AND estado = 'EN BODEGA'
+        GROUP BY id_producto
+        FOR UPDATE
+    ");
+    $stmt_lock->execute($ids_productos);
+    $bodega_map = array_column($stmt_lock->fetchAll(PDO::FETCH_ASSOC), 'en_bodega', 'id_producto');
+
+    // Pendiente de entrega en batch
+    $stmt_pend = $pdo->prepare("
+        SELECT id_producto, COALESCE(SUM(cantidad - cantidad_entregada), 0) AS pendiente
+        FROM tb_ventas_detalle
+        WHERE id_producto IN ($placeholders) AND cantidad_entregada < cantidad
+        GROUP BY id_producto
+    ");
+    $stmt_pend->execute($ids_productos);
+    $pendiente_map = array_column($stmt_pend->fetchAll(PDO::FETCH_ASSOC), 'pendiente', 'id_producto');
+
+    // Nombres en batch para mensajes de error
+    $stmt_nom = $pdo->prepare("SELECT id_producto, nombre FROM tb_almacen WHERE id_producto IN ($placeholders)");
+    $stmt_nom->execute($ids_productos);
+    $nombres_map = array_column($stmt_nom->fetchAll(PDO::FETCH_ASSOC), 'nombre', 'id_producto');
+
     foreach ($productos as $i => $id_producto) {
-        $cantidad = (int)$cantidades[$i];
-
-        // Bloquea las filas EN BODEGA — transacciones concurrentes esperan aquí
-        $stmt_lock = $pdo->prepare("
-            SELECT COUNT(*) FROM stock
-            WHERE id_producto = ? AND estado = 'EN BODEGA'
-            FOR UPDATE
-        ");
-        $stmt_lock->execute([$id_producto]);
-        $en_bodega = (int)$stmt_lock->fetchColumn();
-
-        // Stock comprometido en ventas pendientes de entrega
-        $stmt_pend = $pdo->prepare("
-            SELECT COALESCE(SUM(cantidad - cantidad_entregada), 0)
-            FROM tb_ventas_detalle
-            WHERE id_producto = ? AND cantidad_entregada < cantidad
-        ");
-        $stmt_pend->execute([$id_producto]);
-        $pendiente = (int)$stmt_pend->fetchColumn();
-
-        $disponible = $en_bodega - $pendiente;
+        $id_producto = (int)$id_producto;
+        $cantidad    = (int)$cantidades[$i];
+        $en_bodega   = (int)($bodega_map[$id_producto]   ?? 0);
+        $pendiente   = (int)($pendiente_map[$id_producto] ?? 0);
+        $disponible  = $en_bodega - $pendiente;
 
         if ($cantidad > $disponible) {
-            $stmt_nom = $pdo->prepare("SELECT nombre FROM tb_almacen WHERE id_producto = ?");
-            $stmt_nom->execute([$id_producto]);
-            $nombre = $stmt_nom->fetchColumn() ?: "Producto #$id_producto";
+            $nombre = $nombres_map[$id_producto] ?? "Producto #$id_producto";
             throw new Exception("❌ Stock insuficiente para \"$nombre\": pedido $cantidad, disponible $disponible");
         }
     }
