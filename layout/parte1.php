@@ -68,8 +68,10 @@ $badge_tickets           = $cache['tickets'];
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
-  <!-- Font Awesome Icons (local) -->
-  <link rel="stylesheet" href="<?php echo $URL?>/public/templates/AdminLTE-3.2.0/plugins/fontawesome-free/css/all.min.css">
+  <!-- Font Awesome Icons (CDN principal para garantizar carga en todos los SO) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+        integrity="sha512-1ycn6IcaQQ40/MKBW37f6aCUOmO5/+CdxFNMkBQ3ZxmD0bH5fFQTpq7q7mI0SMbf/DLxCcGKuJBujVV1BHug=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- DataTables -->
   <link rel="stylesheet" href="<?php echo $URL?>/public/templates/AdminLTE-3.2.0/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
   <link rel="stylesheet" href="<?php echo $URL?>/public/templates/AdminLTE-3.2.0/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
