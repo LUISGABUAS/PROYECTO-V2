@@ -422,7 +422,7 @@ if(in_array(15, $_SESSION['permisos'])):
                 <i class="fas fa-info-circle"></i> No hay ventas en este período.
               </div>
               <?php else: ?>
-              <table class="table table-bordered table-sm mb-0">
+              <table id="tablaVentasPeriodo" class="table table-bordered table-sm mb-0">
                 <thead class="thead-light">
                   <tr>
                     <th>#Venta</th>
@@ -587,8 +587,28 @@ function verGuia(url, numero) {
 }
 </script>
 
+<script>
+$(function() {
+  if ($('#tablaVentasPeriodo').length) {
+    $('#tablaVentasPeriodo').DataTable({
+      responsive: true,
+      autoWidth: false,
+      pageLength: 25,
+      language: {
+        search: 'Buscar cliente:',
+        lengthMenu: 'Mostrar _MENU_',
+        zeroRecords: 'No se encontraron ventas',
+        info: '_START_-_END_ de _TOTAL_',
+        infoEmpty: 'Sin resultados',
+        paginate: { previous: 'Anterior', next: 'Siguiente' }
+      },
+      order: [[3, 'asc']]
+    });
+  }
+});
+</script>
 
-<?php 
+<?php
 unset($_SESSION['mensaje'], $_SESSION['icono']);
 include('../layout/parte2.php'); 
 
