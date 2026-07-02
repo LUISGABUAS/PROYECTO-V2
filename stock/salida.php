@@ -334,8 +334,8 @@ if(in_array(15, $_SESSION['permisos'])):
                   foreach($productos as $p){
                     $porcentaje = min(100, round(($p['entregados'] / $p['vendidos']) * 100));
                     $completo = $p['entregados'] >= $p['vendidos'];
-                    $html .= "<tr class='text-center " . ($completo ? "table-success" : "table-danger") . "'>
-                                <td>".htmlspecialchars($p['nombre'])."</td>
+                    $html .= "<tr class='text-center " . ($completo ? "table-success" : "table-danger") . "' style='color:#212529;'>
+                                <td class='text-left font-weight-bold'>".htmlspecialchars($p['nombre'])."</td>
                                 <td>{$p['vendidos']}</td>
                                 <td>{$p['entregados']}</td>
                                 <td>
