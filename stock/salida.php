@@ -183,24 +183,22 @@ if(in_array(15, $_SESSION['permisos'])):
               <!-- Hoja de empaque -->
               <div class="mb-2 text-right">
                 <a href="hoja_empaque.php?id=<?= $id_venta ?>" target="_blank"
-                   class="btn btn-outline-dark btn-sm">
+                   class="btn btn-sm" style="background:#343a40 !important; color:#fff !important; border:none;">
                   <i class="fas fa-print"></i> Hoja de empaque / Guías
                 </a>
               </div>
 
               <!-- Datos del cliente -->
-              <div class="card mb-3" style="border:2px solid #17a2b8; background:#f0faff;">
-                <div class="card-body py-2 px-3" style="color:#212529;">
-                  <p class="mb-1"><strong style="color:#0c7a8a;">Cliente:</strong> <?= htmlspecialchars($cliente['nombre_completo']) ?></p>
-                  <p class="mb-1"><strong style="color:#0c7a8a;">Dirección:</strong> <?= htmlspecialchars($cliente['calle_numero'] . ', ' . $cliente['colonia'] . ', ' . $cliente['municipio'] . ', ' . $cliente['estado'] . ', CP ' . $cliente['cp']) ?></p>
-                  <p class="mb-1"><strong style="color:#0c7a8a;">Teléfono:</strong> <?= htmlspecialchars($cliente['telefono']) ?></p>
-                  <p class="mb-1"><strong style="color:#0c7a8a;">Envío:</strong> <?= htmlspecialchars(strtoupper($cliente['envio'])) ?></p>
-                  <p class="mb-0"><strong style="color:#0c7a8a;">Total:</strong> <span class="font-weight-bold text-success">$<?= number_format($cliente['total'],2) ?></span></p>
-                  <?php if (!empty($cliente['notas'])): ?>
-                  <hr class="my-2">
-                  <p class="mb-0"><strong><i class="fas fa-sticky-note text-warning"></i> Notas:</strong> <?= nl2br(htmlspecialchars($cliente['notas'])) ?></p>
-                  <?php endif; ?>
-                </div>
+              <div style="border:2px solid #17a2b8 !important; background:#ffffff !important; border-radius:8px; padding:12px 16px; margin-bottom:1rem; color:#000 !important;">
+                <p style="margin:0 0 4px; color:#000 !important;"><strong style="color:#0c7a8a !important;">Cliente:</strong> <?= htmlspecialchars($cliente['nombre_completo']) ?></p>
+                <p style="margin:0 0 4px; color:#000 !important;"><strong style="color:#0c7a8a !important;">Dirección:</strong> <?= htmlspecialchars($cliente['calle_numero'] . ', ' . $cliente['colonia'] . ', ' . $cliente['municipio'] . ', ' . $cliente['estado'] . ', CP ' . $cliente['cp']) ?></p>
+                <p style="margin:0 0 4px; color:#000 !important;"><strong style="color:#0c7a8a !important;">Teléfono:</strong> <?= htmlspecialchars($cliente['telefono']) ?></p>
+                <p style="margin:0 0 4px; color:#000 !important;"><strong style="color:#0c7a8a !important;">Envío:</strong> <?= htmlspecialchars(strtoupper($cliente['envio'])) ?></p>
+                <p style="margin:0; color:#000 !important;"><strong style="color:#0c7a8a !important;">Total:</strong> <strong style="color:#28a745 !important;">$<?= number_format($cliente['total'],2) ?></strong></p>
+                <?php if (!empty($cliente['notas'])): ?>
+                <hr style="margin:8px 0; border-color:#ccc;">
+                <p style="margin:0; color:#000 !important;"><strong style="color:#856404 !important;"><i class="fas fa-sticky-note"></i> Notas:</strong> <?= nl2br(htmlspecialchars($cliente['notas'])) ?></p>
+                <?php endif; ?>
               </div>
 
               <!-- Guías (solo foráneos) -->
