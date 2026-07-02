@@ -152,7 +152,16 @@ if (isset($_SESSION['mensaje'])) {
                           <td><?php echo htmlspecialchars($dato['nombre'], ENT_QUOTES, 'UTF-8') ?></td>
                           <td><?php echo htmlspecialchars($dato['descripcion'], ENT_QUOTES, 'UTF-8') ?></td>
                           <td><?= (int)$dato['stock_bodega'] ?></td>
-                          <td><?= (int)$dato['stock_pendiente'] ?></td>
+                          <td>
+                            <?php if ((int)$dato['stock_pendiente'] > 0): ?>
+                              <span class="badge badge-warning" style="cursor:pointer; font-size:13px;"
+                                    onclick="verPendientes(<?= $dato['id_producto'] ?>, '<?= htmlspecialchars($dato['nombre'], ENT_QUOTES) ?>')">
+                                <?= (int)$dato['stock_pendiente'] ?>
+                              </span>
+                            <?php else: ?>
+                              0
+                            <?php endif; ?>
+                          </td>
                           <td>
                             <span class="<?= $dato['stock_disponible'] <= 0 ? 'text-danger' : 'text-success' ?>">
                               <?= (int)$dato['stock_disponible'] ?>
@@ -234,7 +243,14 @@ if (isset($_SESSION['mensaje'])) {
                         <span class="badge badge-info"><?= $prod['stock_bodega'] ?></span>
                       </td>
                       <td class="text-center">
-                        <span class="badge badge-warning"><?= $prod['stock_pendiente'] ?></span>
+                        <?php if ((int)$prod['stock_pendiente'] > 0): ?>
+                          <span class="badge badge-warning" style="cursor:pointer; font-size:13px;"
+                                onclick="verPendientes(<?= $prod['id_producto'] ?>, '<?= htmlspecialchars($prod['nombre'], ENT_QUOTES) ?>')">
+                            <?= $prod['stock_pendiente'] ?>
+                          </span>
+                        <?php else: ?>
+                          <span class="badge badge-secondary">0</span>
+                        <?php endif; ?>
                       </td>
                       <td class="text-center">
                         <?php if($prod['stock_disponible'] <= 0): ?>
@@ -264,6 +280,85 @@ if (isset($_SESSION['mensaje'])) {
   <!-- /.content-wrapper -->
 
 <?php include('../layout/mensajes.php')?>
+
+<!-- MODAL PENDIENTES POR CLIENTE -->
+<div class="modal fade" id="modalPendientes" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title"><i class="fa fa-clock"></i> Pacas pendientes — <span id="mpNombre"></span></h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body p-0" id="mpBody">
+        <div class="text-center p-4"><i class="fa fa-spinner fa-spin"></i> Cargando...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function verPendientes(idProducto, nombre) {
+  document.getElementById('mpNombre').textContent = nombre;
+  document.getElementById('mpBody').innerHTML = '<div class="text-center p-4"><i class="fa fa-spinner fa-spin"></i> Cargando...</div>';
+  $('#modalPendientes').modal('show');
+
+  fetch('<?= $URL ?>/app/controllers/almacen/stock_pendiente.php?id_producto=' + idProducto, { credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success || !data.pendientes.length) {
+        document.getElementById('mpBody').innerHTML = '<div class="alert alert-info m-3">No hay pacas pendientes para este producto.</div>';
+        return;
+      }
+
+      let total = data.pendientes.reduce((s, r) => s + parseInt(r.pendiente), 0);
+      let html = `
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm mb-0">
+            <thead class="thead-light">
+              <tr>
+                <th>#Venta</th>
+                <th>Cliente</th>
+                <th>Teléfono</th>
+                <th class="text-center">Vendidas</th>
+                <th class="text-center">Entregadas</th>
+                <th class="text-center text-warning font-weight-bold">Pendientes</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody>`;
+
+      data.pendientes.forEach(r => {
+        html += `
+              <tr>
+                <td><strong>#${r.id_venta}</strong></td>
+                <td>${r.cliente}</td>
+                <td>${r.telefono || '—'}</td>
+                <td class="text-center">${r.cantidad}</td>
+                <td class="text-center">${r.cantidad_entregada}</td>
+                <td class="text-center"><span class="badge badge-warning" style="font-size:14px;">${r.pendiente}</span></td>
+                <td>${r.fecha ? r.fecha.substring(0,10) : '—'}</td>
+              </tr>`;
+      });
+
+      html += `
+            </tbody>
+            <tfoot class="thead-light">
+              <tr>
+                <td colspan="5" class="text-right font-weight-bold">Total pendiente:</td>
+                <td class="text-center"><span class="badge badge-danger" style="font-size:15px;">${total}</span></td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>`;
+
+      document.getElementById('mpBody').innerHTML = html;
+    })
+    .catch(() => {
+      document.getElementById('mpBody').innerHTML = '<div class="alert alert-danger m-3">Error al cargar los datos.</div>';
+    });
+}
+</script>
 
 <script>
 function confirmarEliminar(id, nombre) {

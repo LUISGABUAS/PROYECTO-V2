@@ -127,6 +127,15 @@ try {
                 </div>
             </div>
 
+            <style>
+              .card-body dl dt { color: rgba(255,255,255,0.55) !important; font-size:.85em; font-weight:600; }
+              .card-body dl dd { color: #fff !important; }
+              @media (prefers-color-scheme: light) {
+                .card-body dl dt { color: #555 !important; }
+                .card-body dl dd { color: #212529 !important; }
+              }
+            </style>
+
             <div class="row">
                 <!-- INFORMACIÓN DE LA VENTA -->
                 <div class="col-md-4">
