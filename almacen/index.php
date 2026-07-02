@@ -140,13 +140,13 @@ if (isset($_SESSION['mensaje'])) {
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
-            <table class="table table-bordered table-sm mb-0">
+            <table id="tablaPendientes" class="table table-bordered table-striped table-sm">
               <thead class="thead-light">
                 <tr>
                   <th>#Venta</th>
                   <th>Cliente</th>
                   <th>Teléfono</th>
-                  <th class="text-center text-danger font-weight-bold">Pacas pendientes</th>
+                  <th class="text-center">Pacas pendientes</th>
                   <th>Productos</th>
                   <th>Fecha</th>
                 </tr>
@@ -541,6 +541,22 @@ function confirmarEliminar(id, nombre) {
       }
       ],
     }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+
+    // DataTable para ventas pendientes
+    $("#tablaPendientes").DataTable({
+      "responsive": true, "lengthChange": true, "autoWidth": false,
+      "language": { "search": "Buscar:", "lengthMenu": "Mostrar _MENU_ registros" },
+      "order": [[5, "asc"]],
+      "buttons": [{
+        extend: 'collection', text: 'Exportar',
+        buttons: [
+          { extend: 'copy',  text: 'Copiar',  exportOptions: { columns: ':visible' } },
+          { extend: 'excel', text: 'Excel',   exportOptions: { columns: ':visible' } },
+          { extend: 'pdf',   text: 'PDF',     exportOptions: { columns: ':visible' }, orientation: 'landscape' },
+          { extend: 'print', text: 'Imprimir',exportOptions: { columns: ':visible' } }
+        ]
+      }],
+    }).buttons().container().appendTo('#tablaPendientes_wrapper .col-md-6:eq(0)');
   });
 </script>
 <?php 
