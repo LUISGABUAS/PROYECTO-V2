@@ -38,6 +38,13 @@ try {
 
 $URL = $_ENV['APP_URL'];
 
+// Si la petición llega por HTTPS pero APP_URL tiene http://, corregir automáticamente
+if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+    $URL = preg_replace('/^http:\/\//', 'https://', $URL);
+} elseif (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+    $URL = preg_replace('/^http:\/\//', 'https://', $URL);
+}
+
 date_default_timezone_set("America/Mexico_City");
 $fechaHora = date("Y-m-d H:i:s");
 
