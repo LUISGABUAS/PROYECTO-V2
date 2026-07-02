@@ -193,6 +193,9 @@ Swal.fire({
                   $ext  = strtolower(pathinfo($arch, PATHINFO_EXTENSION));
                   $ruta = "../app/comprobantes/" . $arch;
                 ?>
+                <?php
+                  $url_comp = $URL . '/app/comprobantes/' . $arch;
+                ?>
                 <div class="col-md-4 mb-3" id="comp_card_<?= htmlspecialchars($comp['id']) ?>">
                   <div class="card border">
                     <div class="card-body p-2">
@@ -206,15 +209,29 @@ Swal.fire({
                       </div>
                       <input type="hidden" name="delete_comprobantes[]" id="del_<?= htmlspecialchars($comp['id']) ?>" value="" disabled>
                       <?php if (in_array($ext, ['jpg','jpeg','png'])): ?>
-                        <img src="<?= $ruta ?>" class="img-fluid rounded border" style="max-height:120px; width:100%; object-fit:cover;"
+                        <img src="<?= $url_comp ?>" class="img-fluid rounded border"
+                             style="max-height:140px; width:100%; object-fit:cover; cursor:pointer;"
+                             onclick="verComprobante('<?= $url_comp ?>', 'imagen')"
+                             title="Clic para ver completo"
                              onerror="this.replaceWith(document.getElementById('tpl_broken').content.cloneNode(true))">
+                        <button type="button" class="btn btn-sm btn-info btn-block mt-1"
+                                onclick="verComprobante('<?= $url_comp ?>', 'imagen')">
+                          <i class="fa fa-search-plus"></i> Ver completo
+                        </button>
                       <?php elseif ($ext === 'pdf'): ?>
-                        <embed src="<?= $ruta ?>" type="application/pdf" width="100%" height="120px">
-                        <a href="<?= $ruta ?>" target="_blank" class="btn btn-sm btn-outline-secondary btn-block mt-1">
-                          <i class="fa fa-external-link-alt"></i> Abrir PDF
+                        <a href="<?= $url_comp ?>" target="_blank"
+                           class="d-flex align-items-center justify-content-center bg-light border rounded mb-1"
+                           style="height:100px; text-decoration:none; color:#c0392b;">
+                          <div class="text-center">
+                            <i class="fa fa-file-pdf fa-3x"></i><br>
+                            <small>PDF</small>
+                          </div>
+                        </a>
+                        <a href="<?= $url_comp ?>" target="_blank" class="btn btn-sm btn-danger btn-block">
+                          <i class="fa fa-file-pdf"></i> Ver PDF completo
                         </a>
                       <?php else: ?>
-                        <a href="<?= $ruta ?>" target="_blank" class="btn btn-sm btn-info btn-block mt-1">
+                        <a href="<?= $url_comp ?>" target="_blank" class="btn btn-sm btn-info btn-block mt-1">
                           <i class="fa fa-file"></i> Ver (<?= strtoupper($ext) ?>)
                         </a>
                       <?php endif; ?>
@@ -817,6 +834,30 @@ $(document).ready(function(){
     cargarDireccionesCliente(this.value, 0);
   });
 });
+</script>
+
+<!-- MODAL VER COMPROBANTE COMPLETO -->
+<div class="modal fade" id="modalComprobante" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content bg-dark">
+      <div class="modal-header border-0 pb-0">
+        <h6 class="modal-title text-white"><i class="fa fa-image"></i> Comprobante</h6>
+        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body text-center p-2">
+        <img id="modalCompImg" src="" alt="" style="max-width:100%; max-height:80vh; object-fit:contain; display:none;">
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function verComprobante(src, tipo) {
+  if (tipo === 'imagen') {
+    document.getElementById('modalCompImg').src = src;
+    document.getElementById('modalCompImg').style.display = 'block';
+    $('#modalComprobante').modal('show');
+  }
+}
 </script>
 
 <?php include('../layout/parte2.php'); ?>
