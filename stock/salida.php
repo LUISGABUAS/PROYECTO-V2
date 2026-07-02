@@ -439,20 +439,21 @@ if(in_array(15, $_SESSION['permisos'])):
                     $tipo_link   = $vl['envio'] === 'foraneo' ? 'foraneo' : 'local';
                     $hora_creacion = $vl['created_at'] ? date('H:i', strtotime($vl['created_at'])) : '—';
                   ?>
-                  <tr class="<?= $completada ? 'table-success' : '' ?>">
-                    <td><strong>#<?= $vl['id_venta'] ?></strong></td>
-                    <td><?= htmlspecialchars($vl['cliente']) ?></td>
-                    <td>
+                  <?php $tdS = "style='color:#000 !important;'"; ?>
+                  <tr class="<?= $completada ? 'table-success' : '' ?>" style="color:#000 !important;">
+                    <td <?= $tdS ?>><strong>#<?= $vl['id_venta'] ?></strong></td>
+                    <td <?= $tdS ?>><?= htmlspecialchars($vl['cliente']) ?></td>
+                    <td <?= $tdS ?>>
                       <?php if ($vl['envio'] === 'foraneo'): ?>
                         <span class="badge badge-info"><i class="fas fa-truck"></i> Foráneo</span>
                       <?php else: ?>
                         <span class="badge badge-primary"><i class="fas fa-home"></i> Local</span>
                       <?php endif; ?>
                     </td>
-                    <td class="text-center">
+                    <td class="text-center" <?= $tdS ?>>
                       <strong><?= $hora_creacion ?> hrs</strong>
                     </td>
-                    <td class="text-center">
+                    <td class="text-center" <?= $tdS ?>>
                       <?php if ($completada && $vl['ultima_scan']): ?>
                         <span class="badge badge-success" style="font-size:.9em;">
                           <i class="fas fa-check-circle"></i>
@@ -472,7 +473,7 @@ if(in_array(15, $_SESSION['permisos'])):
                       </a>
                       <?php endif; ?>
                       <a href="hoja_empaque.php?id=<?= $vl['id_venta'] ?>" target="_blank"
-                         class="btn btn-sm btn-outline-dark ml-1" title="Hoja de empaque">
+                         class="btn btn-sm ml-1" style="background:#343a40 !important;color:#fff !important;" title="Hoja de empaque">
                         <i class="fas fa-print"></i>
                       </a>
                     </td>
