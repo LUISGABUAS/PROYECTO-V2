@@ -92,6 +92,86 @@ if (isset($_SESSION['mensaje'])) {
         </div>
       </div>
 
+      <?php
+      // VENTAS PENDIENTES (todas las pacas por entregar)
+      $stmt_pend_global = $pdo->query("
+          SELECT
+              v.id_venta,
+              v.fecha,
+              c.nombre_completo AS cliente,
+              c.telefono,
+              SUM(vd.cantidad - vd.cantidad_entregada) AS total_pendiente,
+              GROUP_CONCAT(
+                  CONCAT(a.nombre, ' x', (vd.cantidad - vd.cantidad_entregada))
+                  ORDER BY a.nombre SEPARATOR ' | '
+              ) AS detalle_productos
+          FROM tb_ventas_detalle vd
+          JOIN tb_ventas v  ON vd.id_venta    = v.id_venta
+          JOIN clientes  c  ON v.cliente       = c.id_cliente
+          JOIN tb_almacen a ON vd.id_producto  = a.id_producto
+          WHERE vd.cantidad_entregada < vd.cantidad
+          GROUP BY v.id_venta
+          ORDER BY v.fecha ASC
+      ");
+      $ventas_pendientes_global = $stmt_pend_global->fetchAll(PDO::FETCH_ASSOC);
+      $total_pacas_pendientes   = array_sum(array_column($ventas_pendientes_global, 'total_pendiente'));
+      ?>
+
+      <?php if (!empty($ventas_pendientes_global)): ?>
+      <div class="card card-outline card-warning mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h3 class="card-title">
+            <i class="fas fa-clock text-warning"></i>
+            Ventas pendientes de entrega
+            <span class="badge badge-warning ml-2" style="font-size:14px;"><?= count($ventas_pendientes_global) ?> ventas</span>
+            <span class="badge badge-danger ml-1" style="font-size:14px;"><?= $total_pacas_pendientes ?> pacas</span>
+          </h3>
+          <button type="button" class="btn btn-tool" data-card-widget="collapse">
+            <i class="fas fa-minus"></i>
+          </button>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-bordered table-sm mb-0">
+              <thead class="thead-light">
+                <tr>
+                  <th>#Venta</th>
+                  <th>Cliente</th>
+                  <th>Teléfono</th>
+                  <th class="text-center text-danger font-weight-bold">Pacas pendientes</th>
+                  <th>Productos</th>
+                  <th>Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php foreach ($ventas_pendientes_global as $vp): ?>
+                <tr>
+                  <td><strong>#<?= $vp['id_venta'] ?></strong></td>
+                  <td><?= htmlspecialchars($vp['cliente']) ?></td>
+                  <td><?= htmlspecialchars($vp['telefono'] ?? '—') ?></td>
+                  <td class="text-center">
+                    <span class="badge badge-danger" style="font-size:15px;"><?= $vp['total_pendiente'] ?></span>
+                  </td>
+                  <td class="text-muted small"><?= htmlspecialchars($vp['detalle_productos']) ?></td>
+                  <td><?= $vp['fecha'] ? date('d/m/Y', strtotime($vp['fecha'])) : '—' ?></td>
+                </tr>
+                <?php endforeach; ?>
+              </tbody>
+              <tfoot class="thead-light">
+                <tr>
+                  <td colspan="3" class="text-right font-weight-bold">Total:</td>
+                  <td class="text-center">
+                    <span class="badge badge-danger" style="font-size:15px;"><?= $total_pacas_pendientes ?> pacas</span>
+                  </td>
+                  <td colspan="2"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+      <?php endif; ?>
+
       <div class="row">
         <div class="col-md-12">
             <div class="card card-outline card-primary">
