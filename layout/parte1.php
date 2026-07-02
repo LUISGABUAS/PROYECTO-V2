@@ -137,7 +137,7 @@ $badge_tickets           = $cache['tickets'];
           ?>" id="userProfileImage" class="img-circle elevation-2" alt="Foto de usuario" style="width: 40px; height: 40px; object-fit: cover;">
         </div>
         <div class="info">
-          <a href="#" class="d-block" id="userProfileName"><?php echo $sesion_nombres; ?></a>
+          <a href="#" class="d-block" id="userProfileName" style="color:#fff !important; font-weight:600;"><?php echo $sesion_nombres; ?></a>
         </div>
       </div>
 
@@ -482,18 +482,18 @@ $badge_tickets           = $cache['tickets'];
           <!-- CHANGELOG -->
           <?php if(in_array(39, $_SESSION['permisos'] ?? [])): ?>
           <li class="nav-item">
-            <a href="<?php echo $URL;?>/changelog" class="nav-link">
-              <i class="nav-icon fab fa-git-alt"></i>
-              <p>Changelog</p>
+            <a href="<?php echo $URL;?>/changelog" class="nav-link" style="color:#fff !important;">
+              <i class="nav-icon fab fa-git-alt" style="color:#fff !important;"></i>
+              <p style="color:#fff !important;">Changelog</p>
             </a>
           </li>
           <?php endif; ?>
 
           <!-- CERRAR SESIÓN -->
           <li class="nav-item">
-            <a href="#" class="nav-link" style="background-color: rgba(177, 16, 16, 1);" onclick="confirmarLogout()">
-              <i class="nav-icon fas fa-door-closed"></i>
-              <p>Cerrar Sesión</p>
+            <a href="#" class="nav-link" style="background-color:rgba(177,16,16,1) !important; color:#fff !important;" onclick="confirmarLogout()">
+              <i class="nav-icon fas fa-door-closed" style="color:#fff !important;"></i>
+              <p style="color:#fff !important;">Cerrar Sesión</p>
             </a>
           </li>
 
