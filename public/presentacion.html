@@ -358,7 +358,7 @@
 </head>
 <body>
 
-<div class="slide-num-badge" id="slideNumBadge">1 / 20</div>
+<div class="slide-num-badge" id="slideNumBadge">1 / 25</div>
 
 <div class="slides-container">
 
@@ -938,32 +938,76 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════
-       SLIDE 16 — IMPLEMENTACIÓN PASO 1-2
+       SLIDE 16 — CAPACITACIÓN VISIÓN GENERAL
   ═══════════════════════════════════════════════ -->
-  <div class="slide bg-rojo">
+  <div class="slide bg-oscuro">
     <div class="slide-inner">
-      <div class="tag">Plan de implementación</div>
-      <h2>Pasos para adoptar el sistema</h2>
+      <div class="tag">Plan de capacitación y arranque</div>
+      <h2>6 fases para arrancar sin caos</h2>
+      <p>El sistema no se activa de golpe. Se adopta por fases para que cada área aprenda a su ritmo y nadie se sienta perdido.</p>
+      <div class="cards cols-3" style="margin-top:26px;">
+        <div class="card">
+          <span class="icon">🔧</span>
+          <h4>Fase 1 — Preparar</h4>
+          <p>El admin configura el sistema solo antes de involucrar al equipo. Usuarios, catálogo y prueba interna.</p>
+        </div>
+        <div class="card">
+          <span class="icon">👔</span>
+          <h4>Fase 2 — Dirección</h4>
+          <p>Los jefes aprenden primero. Deben entender el sistema antes de explicárselo a otros.</p>
+        </div>
+        <div class="card">
+          <span class="icon">💼</span>
+          <h4>Fase 3 — Vendedores</h4>
+          <p>Sesión práctica: crear venta, adjuntar comprobante, ver sus pendientes.</p>
+        </div>
+        <div class="card">
+          <span class="icon">📦</span>
+          <h4>Fase 4 — Bodega</h4>
+          <p>Sesión práctica: imprimir etiquetas, escanear salidas, identificar pacas especiales.</p>
+        </div>
+        <div class="card">
+          <span class="icon">⚖️</span>
+          <h4>Fase 5 — En paralelo</h4>
+          <p>Una semana usando sistema Y método anterior. Se comparan resultados al final del día.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🚀</span>
+          <h4>Fase 6 — Solo el sistema</h4>
+          <p>Cuando 5 días seguidos sin diferencias, se abandona el método manual para siempre.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SLIDE 17 — FASE 1: PREPARAR
+  ═══════════════════════════════════════════════ -->
+  <div class="slide bg-gris">
+    <div class="slide-inner">
+      <div class="tag">Fase 1 · Solo el admin · 1 día</div>
+      <h2>Preparar antes de tocar con el equipo</h2>
+      <p>Antes de capacitar a nadie, el administrador deja todo listo. El equipo no toca el sistema hasta que esto esté completo.</p>
       <div class="steps" style="margin-top:22px;">
         <div class="step">
           <div class="step-num">1</div>
           <div class="step-body">
-            <h4>Crear usuarios y asignar roles</h4>
-            <p>El administrador crea una cuenta para cada persona: vendedores, bodegueros y supervisores. Se asignan los permisos según su función. <em>Tiempo estimado: 1 hora.</em></p>
+            <h4>Crear todos los usuarios y asignar roles</h4>
+            <p>Una cuenta por persona: nombre, contraseña temporal (ej. <strong>paca2026</strong>) y rol correcto. Admin, Supervisor, Vendedor, Bodeguero. <em>~1 hora.</em></p>
           </div>
         </div>
         <div class="step">
           <div class="step-num">2</div>
           <div class="step-body">
-            <h4>Registrar el catálogo de productos</h4>
-            <p>Se dan de alta todos los tipos de pacas en el módulo de Almacén con nombre, código, categoría y precio. Si ya hay una lista, se puede importar. <em>Tiempo estimado: 2-3 horas.</em></p>
+            <h4>Capturar el catálogo de productos en Almacén</h4>
+            <p>Dar de alta cada tipo de paca: nombre, código, categoría, precio. Sin este paso los vendedores no pueden hacer ventas. Si hay lista en Excel, se puede importar. <em>~2-3 horas.</em></p>
           </div>
         </div>
         <div class="step">
           <div class="step-num">3</div>
           <div class="step-body">
-            <h4>Registrar clientes existentes</h4>
-            <p>Cada vendedor captura o importa su cartera de clientes (nombre y teléfono). Los clientes foráneos incluyen ciudad y paquetería. <em>Tiempo estimado: 1-2 horas por vendedor.</em></p>
+            <h4>Hacer una prueba interna completa</h4>
+            <p>Entrar con usuario de vendedor de prueba → crear venta ficticia. Entrar con usuario de bodega → escanear esa venta. Confirmar que cada rol ve solo lo que debe ver.</p>
           </div>
         </div>
       </div>
@@ -971,34 +1015,188 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════
-       SLIDE 17 — IMPLEMENTACIÓN PASO 3-5
+       SLIDE 18 — FASE 2: DIRECCIÓN
+  ═══════════════════════════════════════════════ -->
+  <div class="slide bg-morado">
+    <div class="slide-inner">
+      <div class="tag">Fase 2 · Días 1-2 · 1 hora</div>
+      <h2>Capacitar a Dirección primero</h2>
+      <p>Los jefes aprenden antes que el equipo operativo. Deben saber leer el sistema para poder resolver dudas y detectar errores.</p>
+      <div class="cards cols-2" style="margin-top:24px;">
+        <div class="card">
+          <span class="icon">📊</span>
+          <h4>Dashboard — leer las métricas</h4>
+          <p>Cómo ver ventas totales del período, monto generado, stock disponible y comparativa local vs foráneo. Cómo cambiar el rango de fechas.</p>
+        </div>
+        <div class="card">
+          <span class="icon">👥</span>
+          <h4>Ver ventas de todos los vendedores</h4>
+          <p>Cómo filtrar por vendedor, ver el detalle de cada venta y cuáles están pendientes de entrega en toda la empresa.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🔍</span>
+          <h4>Auditoría — quién hizo qué</h4>
+          <p>Cómo revisar el registro de acciones: quién creó cada venta, quién escaneó cada paca y qué se modificó.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🔑</span>
+          <h4>Gestión de usuarios</h4>
+          <p>Cómo crear, editar o bloquear usuarios. Qué hacer si alguien olvida su contraseña o si entra personal nuevo.</p>
+        </div>
+      </div>
+      <div class="highlight" style="margin-top:18px;">
+        <p>Regla de dirección: revisar el dashboard <strong>cada mañana</strong> antes de iniciar operaciones y auditoría una vez al mes.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SLIDE 19 — FASE 3: VENDEDORES
+  ═══════════════════════════════════════════════ -->
+  <div class="slide bg-azul">
+    <div class="slide-inner">
+      <div class="tag">Fase 3 · Día 3 · 1 hora por grupo</div>
+      <h2>Capacitar al equipo de Ventas</h2>
+      <p>Se capacita por grupo pequeño o de uno en uno. No mezclar con bodega: cada área aprende solo lo suyo.</p>
+      <div class="steps" style="margin-top:20px;">
+        <div class="step">
+          <div class="step-num">A</div>
+          <div class="step-body">
+            <h4>Entrar al sistema desde celular o computadora</h4>
+            <p>Abrir <strong>pacasyadira.com</strong> en el navegador. Iniciar sesión con su usuario. Cambiar la contraseña temporal.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">B</div>
+          <div class="step-body">
+            <h4>Crear un cliente y registrar una venta</h4>
+            <p>Ir a Clientes → Crear. Luego Ventas → Nueva Venta: elegir cliente, productos, cantidades y tipo de pago. El sistema calcula el total.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">C</div>
+          <div class="step-body">
+            <h4>Adjuntar comprobante de pago</h4>
+            <p>Desde la venta, subir foto del comprobante o transferencia al momento de recibirlo. No dejarlo para después.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">D</div>
+          <div class="step-body">
+            <h4>Ver sus ventas pendientes</h4>
+            <p>En Ventas → Mis ventas, ver qué pedidos están pendientes de entrega y cuáles están completos.</p>
+          </div>
+        </div>
+      </div>
+      <div class="highlight" style="margin-top:14px;">
+        <p>Regla clave: <strong>"La venta se registra el mismo día que se cierra, no después."</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SLIDE 20 — FASE 4: BODEGA
   ═══════════════════════════════════════════════ -->
   <div class="slide bg-naranja">
     <div class="slide-inner">
-      <div class="tag">Plan de implementación</div>
-      <h2>Pasos para adoptar el sistema</h2>
-      <div class="steps" style="margin-top:22px;">
+      <div class="tag">Fase 4 · Día 4 · 1 hora</div>
+      <h2>Capacitar al equipo de Bodega</h2>
+      <p>Bodega aprende en su propio módulo. No necesita saber de ventas ni clientes. Solo su flujo.</p>
+      <div class="steps" style="margin-top:20px;">
         <div class="step">
-          <div class="step-num">4</div>
+          <div class="step-num">A</div>
           <div class="step-body">
-            <h4>Etiquetar el inventario físico</h4>
-            <p>Se importa el stock actual al sistema. El sistema genera etiquetas con código de barras. Se imprimen y pegan en cada paca física en bodega. <em>Tiempo estimado: depende del inventario.</em></p>
+            <h4>Imprimir etiquetas y pegarlas en pacas físicas</h4>
+            <p>Desde Stock → Etiquetas de bodega, imprimir los códigos de barras de cada paca y pegarlos físicamente. Esto se hace <em>una sola vez</em> al registrar inventario nuevo.</p>
           </div>
         </div>
         <div class="step">
-          <div class="step-num">5</div>
+          <div class="step-num">B</div>
           <div class="step-body">
-            <h4>Capacitación por área</h4>
-            <p>Sesión práctica de 1 hora por área: vendedores aprenden a crear ventas, bodegueros aprenden a escanear salidas, administración aprende a leer el dashboard. <em>Tiempo: 1 hora por grupo.</em></p>
+            <h4>Usar la Salida de Bodega paso a paso</h4>
+            <p>Filtrar por fecha → elegir Local o Foráneo → seleccionar la venta del cliente → escanear cada paca. Escuchar los sonidos: bip OK = bien, error = parar y reportar.</p>
           </div>
         </div>
         <div class="step">
-          <div class="step-num">6</div>
+          <div class="step-num">C</div>
           <div class="step-body">
-            <h4>Arranque en paralelo (1 semana)</h4>
-            <p>Primera semana: el equipo opera con el sistema Y lleva el control manual como respaldo. Esto permite detectar errores sin riesgo. Después de 7 días, se abandona el método manual.</p>
+            <h4>Identificar pacas FLEJADA y VIDEO</h4>
+            <p>Estas pacas tienen etiqueta especial. <strong>No van al escaneo normal.</strong> Si el sistema las bloquea, avisar al supervisor. Se venden por el módulo "Pacas Especiales".</p>
           </div>
         </div>
+      </div>
+      <div class="highlight" style="margin-top:14px;">
+        <p>Regla de oro: <strong>"Nunca entregues una paca sin escanearla. Si el sistema dice error, para y avisa — no fuerces."</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SLIDE 21 — FASE 5: ARRANQUE EN PARALELO
+  ═══════════════════════════════════════════════ -->
+  <div class="slide bg-teal">
+    <div class="slide-inner">
+      <div class="tag">Fase 5 · Días 5-12 · Semana de transición</div>
+      <h2>Arranque en paralelo — la semana más importante</h2>
+      <p>Primera semana: el equipo usa el sistema <strong>y además</strong> lleva el control anterior como respaldo. Esto permite detectar errores sin riesgo.</p>
+      <div class="cards cols-2" style="margin-top:22px;">
+        <div class="card">
+          <span class="icon">📋</span>
+          <h4>Cómo funciona el paralelo</h4>
+          <p>Vendedores registran ventas en el sistema <em>y</em> en su cuaderno o Excel de siempre. Bodega escanea en el sistema <em>y</em> anota en su hoja de control. Al final del día se comparan los dos registros.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🔎</span>
+          <h4>Quién revisa cada día</h4>
+          <p>El supervisor o jefe saca el reporte del día desde el Dashboard y lo compara con el control manual. Si hay diferencia, se investiga <em>antes del día siguiente</em>.</p>
+        </div>
+        <div class="card">
+          <span class="icon">✅</span>
+          <h4>¿Cuándo se abandona el método manual?</h4>
+          <p>Cuando <strong>5 días seguidos</strong> el sistema y el manual coinciden sin diferencias. Normalmente sucede entre el día 7 y el día 10.</p>
+        </div>
+        <div class="card">
+          <span class="icon">⚠️</span>
+          <h4>Si hay diferencia un día</h4>
+          <p>No pasa nada — para eso existe el paralelo. Se identifica el error, se corrige en el sistema y se vuelve a contar. El contador de "días sin diferencias" reinicia.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SLIDE 22 — FASE 6: OPERACIÓN NORMAL + TABLA
+  ═══════════════════════════════════════════════ -->
+  <div class="slide bg-verde">
+    <div class="slide-inner">
+      <div class="tag">Fase 6 · Semana 3 en adelante</div>
+      <h2>Operación normal — solo el sistema</h2>
+      <div class="split" style="margin-top:18px;">
+        <div class="split-box">
+          <h4>📅 Rutinas de operación</h4>
+          <ul>
+            <li>Cada mañana: admin revisa dashboard</li>
+            <li>Cada venta: se registra el mismo día</li>
+            <li>Cada entrega: se escanea paca por paca</li>
+            <li>Cada entrada de mercancía: se registra y etiqueta</li>
+            <li>Cada semana: revisar pacas pendientes globales</li>
+            <li>Cada mes: auditoría de usuarios y permisos</li>
+          </ul>
+        </div>
+        <div class="split-box">
+          <h4>🗓️ Resumen de tiempos del arranque</h4>
+          <ul>
+            <li>Día 1 — Admin prepara: usuarios, catálogo, prueba</li>
+            <li>Día 2 — Capacitación a Dirección (1 hora)</li>
+            <li>Día 3 — Capacitación a Vendedores (1 hora)</li>
+            <li>Día 4 — Capacitación a Bodega + etiquetar</li>
+            <li>Días 5-12 — Operación en paralelo</li>
+            <li>Semana 3 — Solo el sistema, método anterior: adiós</li>
+          </ul>
+        </div>
+      </div>
+      <div class="highlight" style="margin-top:18px;">
+        <p>La clave del éxito no es el sistema — es la disciplina del equipo. <strong>Un solo dato que no se capture rompe el inventario.</strong> Todos capturan todo, siempre.</p>
       </div>
     </div>
   </div>
@@ -1127,7 +1325,7 @@
 <!-- ── NAVIGATION ── -->
 <div class="nav-bar">
   <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)" disabled>← Anterior</button>
-  <span class="slide-counter" id="counter">1 / 20</span>
+  <span class="slide-counter" id="counter">1 / 25</span>
   <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">Siguiente →</button>
 </div>
 
