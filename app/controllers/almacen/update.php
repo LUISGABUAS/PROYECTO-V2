@@ -5,7 +5,7 @@ include(__DIR__ . '/../helpers/csrf.php');
 include(__DIR__ . '/../helpers/validador.php');
 csrf_verify();
 
-$errores = validarDatos(['codigo', 'id_categoria', 'nombre', 'descripcion', 'stock_minimo', 'stock_maximo', 'precio_venta', 'fecha_ingreso', 'id_producto']);
+$errores = validarDatos(['codigo', 'id_categoria', 'id_proovedor', 'nombre', 'descripcion', 'stock_minimo', 'stock_maximo', 'precio_venta', 'fecha_ingreso', 'id_producto']);
 if (!empty($errores)) {
     error400('Faltan datos obligatorios', $errores);
     $_SESSION['mensaje'] = "Faltan datos obligatorios";
@@ -16,6 +16,7 @@ if (!empty($errores)) {
 
 $codigo        = $_POST['codigo'];
 $id_categoria  = $_POST['id_categoria'];
+$id_proovedor  = (int)($_POST['id_proovedor'] ?? 0);
 $nombre        = $_POST['nombre'];
 $id_usuario    = $_POST['id_usuario'];
 $descripcion   = $_POST['descripcion'];
@@ -87,6 +88,7 @@ try {
         precio_venta       = :precio_venta,
         fecha_ingreso      = :fecha_ingreso,
         id_categoria       = :id_categoria,
+        id_proovedor       = :id_proovedor,
         id_usuario         = :id_usuario,
         imagen             = :imagen,
         fyh_actualizacion  = :fyh_actualizacion
@@ -102,6 +104,7 @@ try {
     $sentencia->bindParam(':precio_venta', $precio_venta);
     $sentencia->bindParam(':fecha_ingreso', $fecha_ingreso);
     $sentencia->bindParam(':id_categoria', $id_categoria);
+    $sentencia->bindParam(':id_proovedor', $id_proovedor);
     $sentencia->bindParam(':id_usuario', $id_usuario);
     $sentencia->bindParam(':imagen', $image_text);
     $sentencia->bindParam(':id_producto', $id_producto);

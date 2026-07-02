@@ -5,6 +5,7 @@ include('../layout/sesion.php');
 include('../layout/parte1.php');
 
 include('../app/controllers/categorias/list_categorias.php');
+include('../app/controllers/provedores/list_provedores.php');
 include('../app/controllers/almacen/cargar_producto.php');
 
 
@@ -81,7 +82,20 @@ include('../app/controllers/almacen/cargar_producto.php');
                                     </option><?php
                                   }?>
 
-                                          
+
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="">Proveedor:</label>
+                                        <select name="id_proovedor" class="form-control" required>
+                                          <?php foreach ($proovedores_datos as $prov): ?>
+                                            <option value="<?= $prov['id_proovedor'] ?>"
+                                              <?= $prov['id_proovedor'] == $id_proovedor ? 'selected' : '' ?>>
+                                              <?= htmlspecialchars($prov['nombre_proveedor']) ?>
+                                            </option>
+                                          <?php endforeach; ?>
                                         </select>
                                     </div>
                                 </div>
