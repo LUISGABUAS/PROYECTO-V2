@@ -106,6 +106,7 @@ if (isset($_SESSION['mensaje'])) {
           SELECT
               v.id_venta,
               v.fecha,
+              v.envio,
               c.nombre_completo AS cliente,
               c.telefono,
               SUM(vd.cantidad - vd.cantidad_entregada) AS total_pendiente,
@@ -146,6 +147,7 @@ if (isset($_SESSION['mensaje'])) {
                   <th>#Venta</th>
                   <th>Cliente</th>
                   <th>Teléfono</th>
+                  <th class="text-center">Envío</th>
                   <th class="text-center">Pacas pendientes</th>
                   <th>Productos</th>
                   <th>Fecha</th>
@@ -158,6 +160,13 @@ if (isset($_SESSION['mensaje'])) {
                   <td><?= htmlspecialchars($vp['cliente']) ?></td>
                   <td><?= htmlspecialchars($vp['telefono'] ?? '—') ?></td>
                   <td class="text-center">
+                    <?php if ($vp['envio'] === 'foraneo'): ?>
+                      <span class="badge badge-info"><i class="fas fa-truck"></i> Foráneo</span>
+                    <?php else: ?>
+                      <span class="badge badge-primary"><i class="fas fa-home"></i> Local</span>
+                    <?php endif; ?>
+                  </td>
+                  <td class="text-center">
                     <span class="badge badge-danger" style="font-size:15px;"><?= $vp['total_pendiente'] ?></span>
                   </td>
                   <td class="text-muted small"><?= htmlspecialchars($vp['detalle_productos']) ?></td>
@@ -167,7 +176,7 @@ if (isset($_SESSION['mensaje'])) {
               </tbody>
               <tfoot class="thead-light">
                 <tr>
-                  <td colspan="3" class="text-right font-weight-bold">Total:</td>
+                  <td colspan="4" class="text-right font-weight-bold">Total:</td>
                   <td class="text-center">
                     <span class="badge badge-danger" style="font-size:15px;"><?= $total_pacas_pendientes ?> pacas</span>
                   </td>
