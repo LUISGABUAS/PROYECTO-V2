@@ -3,10 +3,12 @@
 $id_producto_get = (int)$_GET['id'];
 
 $sql_productos = "SELECT a.*, cat.nombre_categoria as categoria, u.nombres as nombre_usuario, u.id as id_usuario,
-                COALESCE(s.stock, 0) as stock
+                COALESCE(s.stock, 0) as stock,
+                p.nombre_proveedor
                 FROM tb_almacen as a
                 INNER JOIN tb_categorias as cat ON a.id_categoria = cat.id_categoria
                 INNER JOIN tb_usuario as u ON u.id = a.id_usuario
+                LEFT JOIN tb_proveedores p ON p.id_proovedor = a.id_proovedor
                 LEFT JOIN (
                     SELECT id_producto, COUNT(*) as stock
                     FROM stock WHERE estado = 'EN BODEGA'
@@ -33,6 +35,8 @@ foreach ($datos_productos as $pro) {
     $precio_venta  = $pro['precio_venta'];
     $fecha_ingreso = $pro['fecha_ingreso'];
     $imagen        = $pro['imagen'];
-    $nombre_usuario = $pro['nombre_usuario'];
-    $id_usuario    = $pro['id_usuario'];
+    $nombre_usuario    = $pro['nombre_usuario'];
+    $id_usuario        = $pro['id_usuario'];
+    $id_proovedor      = $pro['id_proovedor'];
+    $nombre_proveedor  = $pro['nombre_proveedor'] ?? '';
 }
