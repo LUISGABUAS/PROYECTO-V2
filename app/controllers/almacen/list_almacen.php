@@ -6,6 +6,28 @@ $proveedores_lista = $pdo->query(
 
 $filtro_proveedor = isset($_GET['proveedor']) && $_GET['proveedor'] !== '' ? (int)$_GET['proveedor'] : null;
 
+// Detectar si la columna tipo_especial ya existe (migración puede no haberse corrido)
+$_col = $pdo->query("SHOW COLUMNS FROM stock LIKE 'tipo_especial'")->fetchAll();
+$_tiene_especial = !empty($_col);
+
+if ($_tiene_especial) {
+    $join_bodega  = "WHERE estado = 'EN BODEGA' AND tipo_especial IS NULL";
+    $join_especial = "LEFT JOIN (
+        SELECT id_producto,
+            SUM(tipo_especial = 'VIDEO')   AS stock_video,
+            SUM(tipo_especial = 'FLEJADA') AS stock_flejada
+        FROM stock
+        WHERE estado = 'EN BODEGA' AND tipo_especial IS NOT NULL
+        GROUP BY id_producto
+    ) se ON se.id_producto = a.id_producto";
+    $select_especial = "COALESCE(se.stock_video, 0)   AS stock_video,
+    COALESCE(se.stock_flejada, 0) AS stock_flejada,";
+} else {
+    $join_bodega     = "WHERE estado = 'EN BODEGA'";
+    $join_especial   = "";
+    $select_especial = "0 AS stock_video, 0 AS stock_flejada,";
+}
+
 $sql_productos = "SELECT
     a.id_producto,
     a.codigo,
@@ -25,8 +47,9 @@ $sql_productos = "SELECT
     COALESCE(sb.stock_bodega, 0) AS stock_bodega,
     COALESCE(sp.stock_pendiente, 0) AS stock_pendiente,
     COALESCE(sb.stock_bodega, 0) - COALESCE(sp.stock_pendiente, 0) AS stock_disponible,
-    COALESCE(se.stock_video, 0)   AS stock_video,
-    COALESCE(se.stock_flejada, 0) AS stock_flejada
+    $select_especial
+
+    a.id_producto AS _id -- dummy para evitar trailing comma
 
 FROM tb_almacen a
 INNER JOIN tb_categorias cat ON a.id_categoria = cat.id_categoria
@@ -35,23 +58,16 @@ INNER JOIN tb_usuario u ON u.id = a.id_usuario
 LEFT JOIN (
     SELECT id_producto, COUNT(*) AS stock_bodega
     FROM stock
-    WHERE estado = 'EN BODEGA' AND tipo_especial IS NULL
+    $join_bodega
     GROUP BY id_producto
 ) sb ON sb.id_producto = a.id_producto
-LEFT JOIN (
-    SELECT id_producto,
-        SUM(tipo_especial = 'VIDEO')   AS stock_video,
-        SUM(tipo_especial = 'FLEJADA') AS stock_flejada
-    FROM stock
-    WHERE estado = 'EN BODEGA' AND tipo_especial IS NOT NULL
-    GROUP BY id_producto
-) se ON se.id_producto = a.id_producto
 LEFT JOIN (
     SELECT id_producto, SUM(cantidad - cantidad_entregada) AS stock_pendiente
     FROM tb_ventas_detalle
     WHERE cantidad_entregada < cantidad
     GROUP BY id_producto
 ) sp ON sp.id_producto = a.id_producto
+$join_especial
 WHERE 1=1
 ";
 

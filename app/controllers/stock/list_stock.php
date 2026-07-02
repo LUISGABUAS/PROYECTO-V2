@@ -12,13 +12,16 @@ if ($desde && $hasta) {
     $params[':hasta'] = $hasta;
 }
 
-$sql = "SELECT 
+$_col2 = $pdo->query("SHOW COLUMNS FROM stock LIKE 'tipo_especial'")->fetchAll();
+$_sel_especial = !empty($_col2)
+    ? "s.tipo_especial, s.notas_especial, s.id_venta_origen,"
+    : "NULL AS tipo_especial, NULL AS notas_especial, NULL AS id_venta_origen,";
+
+$sql = "SELECT
     s.id_stock,
     s.codigo_unico,
     s.estado,
-    s.tipo_especial,
-    s.notas_especial,
-    s.id_venta_origen,
+    $_sel_especial
     s.fecha_ingreso,
     s.fecha_salida,
     a.codigo AS codigo_producto,
