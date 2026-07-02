@@ -162,7 +162,7 @@ if (!in_array(20, $_SESSION['permisos'])) {
           <table id="ventas" class="table table-bordered table-striped table-sm">
             <thead>
               <tr>
-                <th>#</th>
+                <th>#Venta</th>
                 <th>Fecha</th>
                 <th>Cliente</th>
                 <th>Vendedor</th>
@@ -175,9 +175,9 @@ if (!in_array(20, $_SESSION['permisos'])) {
             </thead>
 
             <tbody>
-              <?php $c = 1; foreach ($ventas as $v): ?>
+              <?php foreach ($ventas as $v): ?>
                 <tr>
-                  <td><?= $c++ ?></td>
+                  <td><strong>#<?= $v['id_venta'] ?></strong></td>
                   <td><?= $v['fecha'] ?></td>
                   <td><?= $v['cliente'] ?></td>
                   <td><?= $v['vendedor'] ?></td>
@@ -224,7 +224,7 @@ if (!in_array(20, $_SESSION['permisos'])) {
           <table id="mis_ventas" class="table table-bordered table-striped table-sm">
             <thead>
               <tr>
-                <th>#</th>
+                <th>#Venta</th>
                 <th>Fecha</th>
                 <th>Cliente</th>
                 <th>Pacas</th>
@@ -233,9 +233,9 @@ if (!in_array(20, $_SESSION['permisos'])) {
               </tr>
             </thead>
             <tbody>
-              <?php $c = 1; foreach ($mis_ventas as $v): ?>
+              <?php foreach ($mis_ventas as $v): ?>
               <tr>
-                <td><?= $c++ ?></td>
+                <td><strong>#<?= $v['id_venta'] ?></strong></td>
                 <td><?= $v['fecha'] ?></td>
                 <td><?= $v['cliente'] ?></td>
                 <td class="text-center">
