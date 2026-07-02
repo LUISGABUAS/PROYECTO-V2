@@ -439,8 +439,11 @@ if(in_array(15, $_SESSION['permisos'])):
                     $tipo_link   = $vl['envio'] === 'foraneo' ? 'foraneo' : 'local';
                     $hora_creacion = $vl['created_at'] ? date('H:i', strtotime($vl['created_at'])) : '—';
                   ?>
-                  <?php $tdS = "style='color:#000 !important;'"; ?>
-                  <tr class="<?= $completada ? 'table-success' : '' ?>" style="color:#000 !important;">
+                  <?php
+                    $rowBg = $completada ? '#d4edda' : '#ffffff';
+                    $tdS   = "style='color:#000 !important; background:{$rowBg} !important;'";
+                  ?>
+                  <tr style="color:#000 !important; background:<?= $rowBg ?> !important;">
                     <td <?= $tdS ?>><strong>#<?= $vl['id_venta'] ?></strong></td>
                     <td <?= $tdS ?>><?= htmlspecialchars($vl['cliente']) ?></td>
                     <td <?= $tdS ?>>
