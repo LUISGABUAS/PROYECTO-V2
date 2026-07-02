@@ -245,7 +245,7 @@ $stock_bajo = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="container-fluid">
       <div class="row mb-2">
         <div class="col-sm-6">
-          <h1 class="m-0">📊 Dashboard - Análisis de Ventas</h1>
+          <h1 class="m-0"><i class="fa fa-chart-bar"></i> Dashboard - Análisis de Ventas</h1>
         </div>
         <div class="col-sm-6">
           <ol class="breadcrumb float-sm-right">
@@ -309,7 +309,7 @@ $stock_bajo = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="col-md-8">
           <div class="card card-primary">
             <div class="card-header">
-              <h3 class="card-title">📈 Ventas Últimos 7 Días</h3>
+              <h3 class="card-title"><i class="fa fa-chart-line"></i> Ventas Últimos 7 Días</h3>
             </div>
             <div class="card-body">
               <canvas id="chartVentas" height="80"></canvas>
@@ -321,7 +321,7 @@ $stock_bajo = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="col-md-4">
           <div class="card card-success">
             <div class="card-header">
-              <h3 class="card-title">📍 Ventas por Tipo</h3>
+              <h3 class="card-title"><i class="fa fa-map-marker-alt"></i> Ventas por Tipo</h3>
             </div>
             <div class="card-body">
               <canvas id="chartTipoEnvio" height="120"></canvas>
@@ -335,7 +335,7 @@ $stock_bajo = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="col-md-8">
           <div class="card card-warning">
             <div class="card-header">
-              <h3 class="card-title">📊 Ventas por Período Seleccionado</h3>
+              <h3 class="card-title"><i class="fa fa-chart-bar"></i> Ventas por Período Seleccionado</h3>
             </div>
             <div class="card-body">
               <canvas id="chartVentasPeriodo" height="80"></canvas>
@@ -346,7 +346,7 @@ $stock_bajo = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="col-md-4">
           <div class="card card-danger">
             <div class="card-header">
-              <h3 class="card-title">🚚 Tipo de Envío por Período</h3>
+              <h3 class="card-title"><i class="fa fa-truck"></i> Tipo de Envío por Período</h3>
             </div>
             <div class="card-body">
               <canvas id="chartTipoEnvioPeriodo" height="120"></canvas>
@@ -360,7 +360,7 @@ $stock_bajo = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="col-md-12">
           <div class="card card-info">
             <div class="card-header">
-              <h3 class="card-title">📋 Registro de Ventas</h3>
+              <h3 class="card-title"><i class="fa fa-list"></i> Registro de Ventas</h3>
             </div>
             <div class="card-body">
               
@@ -503,7 +503,7 @@ $stock_bajo = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="col-md-12">
           <div class="card card-warning">
             <div class="card-header">
-              <h3 class="card-title">📦 Estado de Stock</h3>
+              <h3 class="card-title"><i class="fa fa-box"></i> Estado de Stock</h3>
             </div>
             <div class="card-body">
               <div class="table-responsive">

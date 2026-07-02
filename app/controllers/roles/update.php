@@ -13,7 +13,7 @@ $permisos_seleccionados = isset($_POST['permisos']) ? $_POST['permisos'] : [];
 // Validar
 if ($id_rol <= 0 || empty($rol_nombre)) {
     error400('Datos inválidos', ['id_rol' => $id_rol, 'rol_nombre' => $rol_nombre]);
-    $_SESSION['mensaje'] = "❌ Datos inválidos";
+    $_SESSION['mensaje'] = "Datos inválidos";
     $_SESSION['icono'] = "error";
     header("Location: ../../../roles/index.php");
     exit;
@@ -21,7 +21,7 @@ if ($id_rol <= 0 || empty($rol_nombre)) {
 
 if (empty($permisos_seleccionados)) {
     error400('Debe asignar al menos un permiso');
-    $_SESSION['mensaje'] = "❌ Debe asignar al menos un permiso";
+    $_SESSION['mensaje'] = "Debe asignar al menos un permiso";
     $_SESSION['icono'] = "error";
     header("Location: ../../../roles/update.php?id=" . $id_rol);
     exit;
@@ -60,13 +60,13 @@ try {
     // Forzar refresco de caché de permisos en la sesión activa
     unset($_SESSION['_cache_time']);
 
-    $_SESSION['mensaje'] = "✅ Rol actualizado correctamente";
+    $_SESSION['mensaje'] = "Rol actualizado correctamente";
     $_SESSION['icono'] = "success";
 
 } catch (Exception $e) {
     $pdo->rollBack();
     error500('Error actualizando rol', ['error' => $e->getMessage()]);
-    $_SESSION['mensaje'] = "❌ Error al actualizar el rol";
+    $_SESSION['mensaje'] = "Error al actualizar el rol";
     $_SESSION['icono'] = "error";
 }
 

@@ -93,22 +93,22 @@ Swal.fire({
                     <button type="button" id="btn_efectivo" onclick="seleccionarPago('efectivo')"
                             class="btn py-2 <?= $tp==='efectivo' ? 'btn-success' : 'btn-outline-success' ?>"
                             style="border-radius:10px; font-size:12px; flex:1;">
-                      💵<br><small>Efectivo</small>
+                      <i class="fa fa-money-bill-wave"></i><br><small>Efectivo</small>
                     </button>
                     <button type="button" id="btn_comprobante" onclick="seleccionarPago('comprobante')"
                             class="btn py-2 <?= $tp==='comprobante' ? 'btn-primary' : 'btn-outline-primary' ?>"
                             style="border-radius:10px; font-size:12px; flex:1;">
-                      🧾<br><small>Comprobante</small>
+                      <i class="fa fa-receipt"></i><br><small>Comprobante</small>
                     </button>
                     <button type="button" id="btn_ambos" onclick="seleccionarPago('ambos')"
                             class="btn py-2 <?= $tp==='ambos' ? 'btn-warning' : 'btn-outline-warning' ?>"
                             style="border-radius:10px; font-size:12px; flex:1;">
-                      💵🧾<br><small>Ambos</small>
+                      <i class="fa fa-money-bill-wave"></i><i class="fa fa-receipt"></i><br><small>Ambos</small>
                     </button>
                     <button type="button" id="btn_contra_entrega" onclick="seleccionarPago('contra_entrega')"
                             class="btn py-2 <?= $tp==='contra_entrega' ? 'btn-danger' : 'btn-outline-danger' ?>"
                             style="border-radius:10px; font-size:12px; flex:1;">
-                      🚚<br><small>C. Entrega</small>
+                      <i class="fa fa-truck"></i><br><small>C. Entrega</small>
                     </button>
                   </div>
                 </div>
@@ -166,12 +166,12 @@ Swal.fire({
                     <button type="button" id="btn_mp_efectivo" onclick="seleccionarMetodoPendiente('efectivo')"
                             class="btn flex-fill py-2 <?= $mp==='efectivo' ? 'btn-success' : 'btn-outline-success' ?>"
                             style="border-radius:10px; font-size:13px;">
-                      💵<br><small>Efectivo</small>
+                      <i class="fa fa-money-bill-wave"></i><br><small>Efectivo</small>
                     </button>
                     <button type="button" id="btn_mp_comprobante" onclick="seleccionarMetodoPendiente('comprobante')"
                             class="btn flex-fill py-2 <?= $mp==='comprobante' ? 'btn-primary' : 'btn-outline-primary' ?>"
                             style="border-radius:10px; font-size:13px;">
-                      🧾<br><small>Comprobante</small>
+                      <i class="fa fa-receipt"></i><br><small>Comprobante</small>
                     </button>
                   </div>
                 </div>
@@ -292,7 +292,7 @@ Swal.fire({
                       <i class="fa fa-lock text-success mr-1"></i>
                       <?= htmlspecialchars($d['codigo'] . ' - ' . $d['nombre_producto']) ?>
                     </span>
-                    <small class="text-success d-block">✅ Ya entregado — no se puede cambiar</small>
+                    <small class="text-success d-block"><i class="fa fa-check-circle text-success"></i> Ya entregado — no se puede cambiar</small>
                   </td>
                   <td style="color:#000 !important;">
                     <input type="hidden" name="cantidades[]" value="<?= $d['cantidad'] ?>">
@@ -610,12 +610,12 @@ function _mostrarPreviewSlot(file, idx) {
   cont.innerHTML = ''; prev.style.display = 'none'; err.style.display = 'none';
 
   if (file.size > 5 * 1024 * 1024) {
-    err.textContent = '❌ Máximo 5MB'; err.style.display = 'block'; fi.value = ''; return;
+    err.textContent = 'Máximo 5MB'; err.style.display = 'block'; fi.value = ''; return;
   }
   const tipos = ['image/jpeg','image/jpg','image/png','application/pdf',
                  'application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
   if (!tipos.includes(file.type)) {
-    err.textContent = '❌ Formato no permitido'; err.style.display = 'block'; fi.value = ''; return;
+    err.textContent = 'Formato no permitido'; err.style.display = 'block'; fi.value = ''; return;
   }
   dz.innerHTML = `
     <i class="fa fa-check-circle fa-lg text-success mb-1"></i>
@@ -763,11 +763,11 @@ function eliminarFila(btn){
 
 
 /* =========================
-   🔥 SINCRONIZAR AL CARGAR (CLAVE)
+   SINCRONIZAR AL CARGAR (CLAVE)
 ========================= */
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.producto').forEach(select => {
-    asignarPrecio(select); // 👈 fuerza el precio correcto
+    asignarPrecio(select); // fuerza el precio correcto
   });
 });
 </script>

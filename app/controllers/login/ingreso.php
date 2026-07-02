@@ -60,7 +60,7 @@ if(($contador > 0) && (password_verify($password_user, $password_user_tabla)))  
     header("Location: " .$URL. "/index.php");
 }else{
     $_SESSION[$key]['count']++;
-    $_SESSION['mensaje'] = "❌ Datos incorrectos";
+    $_SESSION['mensaje'] = "Datos incorrectos";
     Logger::auth('LOGIN', $email ?? 'unknown', false, 'Credenciales inválidas');
     header("Location: " .$URL. "/login/index.php");
 

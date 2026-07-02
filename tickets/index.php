@@ -22,8 +22,8 @@ $labels_imp  = ['baja'=>'Baja','media'=>'Media','alta'=>'Alta','critica'=>'Crít
 <?php if (isset($_SESSION['mensaje'])): ?>
 <script>
 Swal.fire({
-    icon: <?= json_encode(str_contains($_SESSION['mensaje'], '❌') ? 'error' : 'success') ?>,
-    title: <?= json_encode(str_contains($_SESSION['mensaje'], '❌') ? 'Error' : '¡Listo!') ?>,
+    icon: <?= json_encode(($_SESSION['icono'] ?? 'success') === 'error' ? 'error' : 'success') ?>,
+    title: <?= json_encode(($_SESSION['icono'] ?? 'success') === 'error' ? 'Error' : '¡Listo!') ?>,
     text: <?= json_encode($_SESSION['mensaje']) ?>,
     timer: 3000, showConfirmButton: false
 });

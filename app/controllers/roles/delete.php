@@ -24,7 +24,7 @@ if ($id_rol <= 0) {
     exit;
 }
 
-/* ❌ Proteger rol ADMIN */
+/* Proteger rol ADMIN */
 if ($id_rol === 1) {
     $response['message'] = 'No se puede eliminar el rol administrador';
     $response['icon'] = 'warning';
@@ -32,7 +32,7 @@ if ($id_rol === 1) {
     exit;
 }
 
-/* 🔍 Verificar usuarios */
+/* Verificar usuarios */
 $checkUsuarios = $pdo->prepare("
     SELECT COUNT(*) 
     FROM tb_usuario 
@@ -50,14 +50,14 @@ if ($checkUsuarios->fetchColumn() > 0) {
 try {
     $pdo->beginTransaction();
 
-    /* 🧹 Eliminar permisos */
+    /* Eliminar permisos */
     $deletePermisos = $pdo->prepare("
         DELETE FROM tb_roles_permisos 
         WHERE id_rol = :id_rol
     ");
     $deletePermisos->execute([':id_rol' => $id_rol]);
 
-    /* 🗑️ Eliminar rol */
+    /* Eliminar rol */
     $deleteRol = $pdo->prepare("
         DELETE FROM tb_roles 
         WHERE id_rol = :id_rol

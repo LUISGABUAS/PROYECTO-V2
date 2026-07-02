@@ -8,7 +8,7 @@ include('../layout/parte1.php');
 <section class="content">
 <div class="container-fluid">
 
-<h3 class="mb-4">📊 Reporte de clientes que más compran</h3>
+<h3 class="mb-4"><i class="fa fa-chart-bar"></i> Reporte de clientes que más compran</h3>
 
 <div class="card">
     <div class="card-body">

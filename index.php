@@ -160,7 +160,7 @@ include('app/controllers/ventas/reporte_ventas.php');
               <?php if (in_array(25, $_SESSION['permisos'])): ?>
               <div class="card card-outline card-info mb-4 col-lg-6">
                 <div class="card-header">
-                  <h3 class="card-title">📊 Mis ventas del mes</h3>
+                  <h3 class="card-title"><i class="fa fa-chart-bar"></i> Mis ventas del mes</h3>
                 </div>
                 <div class="card-body">
                   <canvas id="graficaVentas" height="120"></canvas>
@@ -175,7 +175,7 @@ include('app/controllers/ventas/reporte_ventas.php');
               <?php if (in_array(24, $_SESSION['permisos'])): ?>
               <div class="card card-outline card-info mb-4 col-lg-6">
                 <div class="card-header">
-                  <h3 class="card-title">📊 Ventas totales del mes</h3>
+                  <h3 class="card-title"><i class="fa fa-chart-bar"></i> Ventas totales del mes</h3>
                 </div>
                 <div class="card-body">
                   <canvas id="graficaVentasTotal" height="120"></canvas>

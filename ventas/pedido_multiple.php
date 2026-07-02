@@ -14,7 +14,7 @@ endif;
 <?php if (isset($_SESSION['mensaje'])): ?>
 <script>
 Swal.fire({
-    icon: <?= json_encode($_SESSION['mensaje'][0] === '✅' ? 'success' : 'error') ?>,
+    icon: <?= json_encode(($_SESSION['icono'] ?? 'success') === 'error' ? 'error' : 'success') ?>,
     title: 'Atención',
     text: <?= json_encode($_SESSION['mensaje']) ?>,
     confirmButtonText: 'OK'
@@ -250,7 +250,7 @@ async function _procesarArchivoSlot(file, idx) {
   const prev = document.getElementById('cprev_' + idx);
   const cont = document.getElementById('cpcont_' + idx);
   cont.innerHTML = ''; prev.style.display = 'none';
-  if (opt.size > 5*1024*1024) { dz.innerHTML='<small class="text-danger">❌ Máximo 5MB</small>'; fi.value=''; return; }
+  if (opt.size > 5*1024*1024) { dz.innerHTML='<small class="text-danger">Máximo 5MB</small>'; fi.value=''; return; }
   dz.innerHTML = `<i class="fa fa-check-circle fa-lg text-success mb-1"></i>
     <p class="mb-0 text-success small font-weight-bold">${opt.name}</p>
     <small class="text-muted">${(opt.size/1024).toFixed(1)} KB</small>`;

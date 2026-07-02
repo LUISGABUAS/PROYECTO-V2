@@ -8,7 +8,7 @@ include('../helpers/auditoria.php');
 $errores = validarDatos(['id']);
 if (!empty($errores)) {
     error400('ID de cliente requerido', $errores);
-    $_SESSION['mensaje'] = '❌ Cliente no válido';
+    $_SESSION['mensaje'] = 'Cliente no válido';
     $_SESSION['icono'] = 'error';
     header("Location: ../../../clientes/foraneos.php");
     exit;
@@ -24,12 +24,12 @@ try {
     
     registrarAuditoria($pdo, $id_usuario, $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null, 'ELIMINAR CLIENTE FORÁNEO', 'clientes', $id, "Cliente ID: $id eliminado");
     
-    $_SESSION['mensaje'] = '✅ Cliente eliminado correctamente';
+    $_SESSION['mensaje'] = 'Cliente eliminado correctamente';
     $_SESSION['icono'] = 'success';
     header("Location: ../../../clientes/foraneos.php");
 } catch (Exception $e) {
     error500('Error eliminando cliente', ['error' => $e->getMessage()]);
-    $_SESSION['mensaje'] = '❌ Error al eliminar cliente';
+    $_SESSION['mensaje'] = 'Error al eliminar cliente';
     $_SESSION['icono'] = 'error';
     header("Location: ../../../clientes/foraneos.php");
 }

@@ -35,7 +35,7 @@ try {
     $precios    = $_POST['precios'];
 
     if (empty($productos)) {
-        throw new Exception("❌ No hay productos en la venta");
+        throw new Exception("No hay productos en la venta");
     }
 
     /* ======================
@@ -54,7 +54,7 @@ try {
 
     $requiere_comprobante = in_array($tipo_pago, ['comprobante', 'ambos']);
     if (empty($indicesValidos) && $requiere_comprobante) {
-        throw new Exception("❌ Debe adjuntar al menos un comprobante");
+        throw new Exception("Debe adjuntar al menos un comprobante");
     }
 
     if (!empty($indicesValidos)) {
@@ -62,23 +62,23 @@ try {
         $permitidas = ['pdf','jpg','jpeg','png','doc','docx'];
 
         if (!is_dir($carpeta) && !mkdir($carpeta, 0755, true)) {
-            throw new Exception("❌ No se pudo crear la carpeta de comprobantes");
+            throw new Exception("No se pudo crear la carpeta de comprobantes");
         }
         if (!is_writable($carpeta)) {
-            throw new Exception("❌ No hay permisos de escritura en la carpeta de comprobantes");
+            throw new Exception("No hay permisos de escritura en la carpeta de comprobantes");
         }
 
         foreach ($indicesValidos as $i) {
             $ext = strtolower(pathinfo($_FILES['comprobantes']['name'][$i], PATHINFO_EXTENSION));
             if (!in_array($ext, $permitidas)) {
-                throw new Exception("❌ Formato no permitido: " . htmlspecialchars($_FILES['comprobantes']['name'][$i]));
+                throw new Exception("Formato no permitido: " . htmlspecialchars($_FILES['comprobantes']['name'][$i]));
             }
             if ($_FILES['comprobantes']['size'][$i] > 5 * 1024 * 1024) {
-                throw new Exception("❌ El archivo excede el tamaño máximo de 5MB");
+                throw new Exception("El archivo excede el tamaño máximo de 5MB");
             }
             $nombre = date('Y-m-d_H-i-s') . '_' . uniqid() . '.' . $ext;
             if (!move_uploaded_file($_FILES['comprobantes']['tmp_name'][$i], $carpeta . $nombre)) {
-                throw new Exception("❌ Error al subir el comprobante");
+                throw new Exception("Error al subir el comprobante");
             }
             $rutas_comprobantes[] = 'app/comprobantes/' . $nombre;
         }
@@ -147,7 +147,7 @@ try {
 
         if ($cantidad > $disponible) {
             $nombre = $nombres_map[$id_producto] ?? "Producto #$id_producto";
-            throw new Exception("❌ Stock insuficiente para \"$nombre\": pedido $cantidad, disponible $disponible");
+            throw new Exception("Stock insuficiente para \"$nombre\": pedido $cantidad, disponible $disponible");
         }
     }
 
@@ -179,7 +179,7 @@ try {
     include('../helpers/auditoria.php');
     registrarAuditoria($pdo, $id_usuario, null, 'CREAR VENTA', 'tb_ventas', $id_venta, "Venta #$id_venta — Cliente: $cliente — Total: $total");
 
-    echo json_encode(['success' => true, 'message' => "✅ Venta #$id_venta creada correctamente", 'id_venta' => $id_venta]);
+    echo json_encode(['success' => true, 'message' => "Venta #$id_venta creada correctamente", 'id_venta' => $id_venta]);
     exit;
 
 } catch (Exception $e) {
