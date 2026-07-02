@@ -39,7 +39,7 @@ try {
     $comprobante_actual = $stmt->fetchColumn();
 
     /* =========================
-       1️⃣ OBTENER PRODUCTOS YA ENTREGADOS (quedan bloqueados)
+       1. OBTENER PRODUCTOS YA ENTREGADOS (quedan bloqueados)
     ========================= */
     $stmt = $pdo->prepare("SELECT id_producto FROM tb_ventas_detalle
         WHERE id_venta = ? AND cantidad_entregada > 0");
@@ -47,7 +47,7 @@ try {
     $ids_bloqueados = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'id_producto');
 
     /* =========================
-       2️⃣ VALIDAR STOCK (solo productos no entregados)
+       2. VALIDAR STOCK (solo productos no entregados)
     ========================= */
     foreach ($productos as $i => $id_producto) {
         $id_producto = (int)$id_producto;
@@ -80,7 +80,7 @@ try {
     }
 
     /* =========================
-       3️⃣ ELIMINAR COMPROBANTES MARCADOS
+       3. ELIMINAR COMPROBANTES MARCADOS
     ========================= */
     $carpeta_comp = __DIR__ . '/../../comprobantes/';
     $ids_eliminar = array_filter($_POST['delete_comprobantes'] ?? [], fn($v) => $v !== '');
@@ -107,7 +107,7 @@ try {
     }
 
     /* =========================
-       4️⃣ SUBIR NUEVOS COMPROBANTES
+       4. SUBIR NUEVOS COMPROBANTES
     ========================= */
     $nuevos_comprobantes = [];
     $hayArchivos = isset($_FILES['comprobantes']) && is_array($_FILES['comprobantes']['name']);
@@ -141,7 +141,7 @@ try {
     }
 
     /* =========================
-       5️⃣ ACTUALIZAR VENTA
+       5. ACTUALIZAR VENTA
     ========================= */
     $stmt = $pdo->prepare("UPDATE tb_ventas
         SET fecha = ?, cliente = ?, envio = ?, tipo_pago = ?, total = ?,
@@ -154,7 +154,7 @@ try {
                     $id_direccion_entrega, $fechaHora, $id_venta]);
 
     /* =========================
-       6️⃣ REEMPLAZAR SOLO PRODUCTOS NO ENTREGADOS
+       6. REEMPLAZAR SOLO PRODUCTOS NO ENTREGADOS
        Los bloqueados (cantidad_entregada > 0) se conservan intactos
     ========================= */
     // Borrar solo los no entregados
@@ -188,14 +188,14 @@ try {
     $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
     registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'ACTUALIZAR VENTA', 'tb_ventas', $id_venta, "Venta ID: $id_venta actualizada");
 
-    $_SESSION['mensaje'] = '✅ Venta actualizada correctamente';
+    $_SESSION['mensaje'] = 'Venta actualizada correctamente';
     header('Location: ../../../ventas');
     exit;
 
 } catch (Exception $e) {
 
     $pdo->rollBack();
-    $_SESSION['mensaje'] = '❌ ' . $e->getMessage();
+    $_SESSION['mensaje'] = $e->getMessage();
     header('Location: ../../../ventas/edit.php?id=' . $id_venta);
     exit;
 }

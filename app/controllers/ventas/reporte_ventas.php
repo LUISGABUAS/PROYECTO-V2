@@ -22,7 +22,7 @@ if (strtotime($desde) > strtotime($hasta)) {
 }
 
 /* =========================
-   📊 ESTADÍSTICAS GENERALES DEL SISTEMA (FILTRADAS)
+   ESTADÍSTICAS GENERALES DEL SISTEMA (FILTRADAS)
 ========================= */
 $ventas_generales = [];
 
@@ -48,7 +48,7 @@ if (in_array(24, $permisos)) {
 }
 
 /* =========================
-   👤 MIS ESTADÍSTICAS (FILTRADAS)
+   MIS ESTADÍSTICAS (FILTRADAS)
 ========================= */
 $mis_ventas_cantidad = 0;
 $total_vendido = 0;
@@ -79,7 +79,7 @@ if (in_array(25, $permisos)) {
 }
 
 /* =========================
-   📋 REPORTE GENERAL DE VENTAS (ADMIN)
+   REPORTE GENERAL DE VENTAS (ADMIN)
 ========================= */
 $ventas = [];
 
@@ -108,7 +108,7 @@ if (in_array(24, $permisos)) {
 }
 
 /* =========================
-   📋 MIS VENTAS (VENDEDOR)
+   MIS VENTAS (VENDEDOR)
 ========================= */
 $mis_ventas = [];
 
@@ -136,7 +136,7 @@ if (in_array(25, $permisos)) {
 }
 
 /* =========================
-   📊 GRÁFICA MIS VENTAS (POR MONTO)
+   GRÁFICA MIS VENTAS (POR MONTO)
 ========================= */
 $ventas_grafica = [];
 
@@ -159,7 +159,7 @@ if (in_array(25, $permisos)) {
 }
 
 /* =========================
-   📊 GRÁFICA VENTAS TOTALES
+   GRÁFICA VENTAS TOTALES
 ========================= */
 $ventas_grafica_total = [];
 
@@ -180,7 +180,7 @@ if (in_array(24, $permisos)) {
 }
 
 /* =========================
-   🚚 COBROS PENDIENTES CONTRA ENTREGA
+   COBROS PENDIENTES CONTRA ENTREGA
 ========================= */
 $cobros_pendientes = [];
 

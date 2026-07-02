@@ -9,7 +9,7 @@ include('../helpers/auditoria.php');
 $errores = validarDatos(['nombres', 'email', 'id', 'rol']);
 if (!empty($errores)) {
     error400('Faltan datos obligatorios', $errores);
-    $_SESSION['mensaje'] = "❌ Faltan datos obligatorios";
+    $_SESSION['mensaje'] = "Faltan datos obligatorios";
     $_SESSION['icono'] = "error";
     header("Location: " . $URL . "/usuarios/update.php?id=" . ($_POST['id'] ?? ''));
     exit;
@@ -27,14 +27,14 @@ $id_usuario = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
 if (!empty($password_user) || !empty($password_repeat)) {
     if ($password_user !== $password_repeat) {
         error400('Las contraseñas no coinciden');
-        $_SESSION['mensaje'] = "❌ Las contraseñas no coinciden";
+        $_SESSION['mensaje'] = "Las contraseñas no coinciden";
         $_SESSION['icono'] = "error";
         header("Location: " . $URL . "/usuarios/update.php?id=" . $id);
         exit;
     }
     if (empty($password_user)) {
         error400('Contraseña no puede estar vacía');
-        $_SESSION['mensaje'] = "❌ Contraseña no puede estar vacía";
+        $_SESSION['mensaje'] = "Contraseña no puede estar vacía";
         $_SESSION['icono'] = "error";
         header("Location: " . $URL . "/usuarios/update.php?id=" . $id);
         exit;
@@ -61,12 +61,12 @@ try {
     
     registrarAuditoria($pdo, $id_usuario, $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null, 'ACTUALIZAR USUARIO', 'tb_usuario', $id, $nombres);
     
-    $_SESSION['mensaje'] = "✅ Usuario actualizado correctamente";
+    $_SESSION['mensaje'] = "Usuario actualizado correctamente";
     $_SESSION['icono'] = "success";
     header("Location: " . $URL . "/usuarios");
 } catch (Exception $e) {
     error500('Error actualizando usuario', ['error' => $e->getMessage()]);
-    $_SESSION['mensaje'] = "❌ Error al actualizar usuario";
+    $_SESSION['mensaje'] = "Error al actualizar usuario";
     $_SESSION['icono'] = "error";
     header("Location: " . $URL . "/usuarios/update.php?id=" . $id);
 }

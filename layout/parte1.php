@@ -564,15 +564,15 @@ $badge_tickets           = $cache['tickets'];
                   <div class="mt-2">
                     <button type="button" class="theme-option" onclick="aplicarTema('dark')" id="theme-dark">
                       <span class="theme-dot theme-dot-dark"></span>
-                      <span>🌙 Oscuro Elegante</span>
+                      <span>Oscuro Elegante</span>
                     </button>
                     <button type="button" class="theme-option" onclick="aplicarTema('light')" id="theme-light">
                       <span class="theme-dot theme-dot-light"></span>
-                      <span>☀️ Claro Moderno</span>
+                      <span>Claro Moderno</span>
                     </button>
                     <button type="button" class="theme-option" onclick="aplicarTema('rose')" id="theme-rose">
                       <span class="theme-dot theme-dot-rose"></span>
-                      <span>🌸 Rosa Pasión</span>
+                      <span>Rosa Pasión</span>
                     </button>
                   </div>
                 </div>
@@ -698,7 +698,7 @@ $badge_tickets           = $cache['tickets'];
       });
     });
 
-    // ✅ Confirmar cierre de sesión
+    // Confirmar cierre de sesión
     function confirmarLogout(){
       Swal.fire({
         icon: 'question',

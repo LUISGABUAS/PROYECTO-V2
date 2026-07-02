@@ -13,7 +13,7 @@ if(in_array(21, $_SESSION['permisos'])):
 <?php if (isset($_SESSION['mensaje'])): ?>
 <script>
 let mensaje = <?= json_encode($_SESSION['mensaje']) ?>;
-let icono = mensaje.includes('❌') ? 'error' : 'success';
+let icono = <?= json_encode($_SESSION['icono'] ?? 'success') ?>;
 
 Swal.fire({
     icon: icono,
@@ -95,25 +95,25 @@ Swal.fire({
                                 onclick="seleccionarPago('efectivo')"
                                 class="btn btn-outline-success py-2"
                                 style="border-radius:10px; font-size:12px; flex:1;">
-                          💵<br><small>Efectivo</small>
+                          <i class="fa fa-money-bill-wave"></i><br><small>Efectivo</small>
                         </button>
                         <button type="button" id="btn_comprobante"
                                 onclick="seleccionarPago('comprobante')"
                                 class="btn btn-outline-primary py-2"
                                 style="border-radius:10px; font-size:12px; flex:1;">
-                          🧾<br><small>Comprobante</small>
+                          <i class="fa fa-receipt"></i><br><small>Comprobante</small>
                         </button>
                         <button type="button" id="btn_ambos"
                                 onclick="seleccionarPago('ambos')"
                                 class="btn btn-outline-warning py-2"
                                 style="border-radius:10px; font-size:12px; flex:1;">
-                          💵🧾<br><small>Ambos</small>
+                          <i class="fa fa-money-bill-wave"></i><i class="fa fa-receipt"></i><br><small>Ambos</small>
                         </button>
                         <button type="button" id="btn_contra_entrega"
                                 onclick="seleccionarPago('contra_entrega')"
                                 class="btn btn-outline-danger py-2"
                                 style="border-radius:10px; font-size:12px; flex:1;">
-                          🚚<br><small>C. Entrega</small>
+                          <i class="fa fa-truck"></i><br><small>C. Entrega</small>
                         </button>
                       </div>
                     </div>
@@ -179,13 +179,13 @@ Swal.fire({
                                 onclick="seleccionarMetodoPendiente('efectivo')"
                                 class="btn btn-outline-success flex-fill py-2"
                                 style="border-radius:10px; font-size:13px;">
-                          💵<br><small>Efectivo</small>
+                          <i class="fa fa-money-bill-wave"></i><br><small>Efectivo</small>
                         </button>
                         <button type="button" id="btn_mp_comprobante"
                                 onclick="seleccionarMetodoPendiente('comprobante')"
                                 class="btn btn-outline-primary flex-fill py-2"
                                 style="border-radius:10px; font-size:13px;">
-                          🧾<br><small>Comprobante</small>
+                          <i class="fa fa-receipt"></i><br><small>Comprobante</small>
                         </button>
                       </div>
                     </div>
@@ -586,12 +586,12 @@ function _mostrarPreviewSlot(file, idx) {
   cont.innerHTML = ''; prev.style.display = 'none'; err.style.display = 'none';
 
   if (file.size > 5 * 1024 * 1024) {
-    err.textContent = '❌ Máximo 5MB'; err.style.display = 'block'; fi.value = ''; return;
+    err.textContent = 'Máximo 5MB'; err.style.display = 'block'; fi.value = ''; return;
   }
   const tipos = ['image/jpeg','image/jpg','image/png','application/pdf',
                  'application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
   if (!tipos.includes(file.type)) {
-    err.textContent = '❌ Formato no permitido'; err.style.display = 'block'; fi.value = ''; return;
+    err.textContent = 'Formato no permitido'; err.style.display = 'block'; fi.value = ''; return;
   }
 
   dz.innerHTML = `
@@ -620,7 +620,7 @@ document.addEventListener('DOMContentLoaded', () => agregarSlotComprobante());
 // ============ VALIDACIÓN FINAL ANTES DE ENVIAR ============
 document.getElementById('form_venta').addEventListener('submit', function(e) {
 
-  // ✅ Validar tipo de pago seleccionado
+  // Validar tipo de pago seleccionado
   const tipoPagoVal = document.getElementById('tipo_pago')?.value || '';
   if (!tipoPagoVal) {
     e.preventDefault();
@@ -628,7 +628,7 @@ document.getElementById('form_venta').addEventListener('submit', function(e) {
     return false;
   }
 
-  // ✅ Validar comprobante (obligatorio para comprobante y ambos, opcional para contra_entrega)
+  // Validar comprobante (obligatorio para comprobante y ambos, opcional para contra_entrega)
   if (tipoPagoVal === 'comprobante' || tipoPagoVal === 'ambos') {
     const inputs    = document.querySelectorAll('[name="comprobantes[]"]');
     const hayAlguno = Array.from(inputs).some(fi => fi.files.length > 0);
@@ -639,7 +639,7 @@ document.getElementById('form_venta').addEventListener('submit', function(e) {
     }
   }
 
-  // ✅ Validar contra entrega: monto y método
+  // Validar contra entrega: monto y método
   if (tipoPagoVal === 'contra_entrega') {
     const monto   = parseFloat(document.getElementById('monto_pendiente')?.value || 0);
     const metodo  = document.getElementById('metodo_pendiente')?.value || '';
@@ -655,7 +655,7 @@ document.getElementById('form_venta').addEventListener('submit', function(e) {
     }
   }
 
-  // ✅ Validar que haya productos seleccionados
+  // Validar que haya productos seleccionados
   const productos = document.querySelectorAll('.producto');
   let hayProducto  = false;
   productos.forEach(p => { if (p.value) hayProducto = true; });
@@ -666,7 +666,7 @@ document.getElementById('form_venta').addEventListener('submit', function(e) {
     return false;
   }
 
-  // ✅ Validar stock de cada producto
+  // Validar stock de cada producto
   let stockOk      = true;
   let mensajeStock = '';
 
@@ -692,7 +692,7 @@ document.getElementById('form_venta').addEventListener('submit', function(e) {
     return false;
   }
 
-  // ✅ Validar que el total sea mayor a 0
+  // Validar que el total sea mayor a 0
   const total = parseFloat(document.getElementById('total_venta').value || 0);
   if (total <= 0) {
     e.preventDefault();
@@ -700,7 +700,7 @@ document.getElementById('form_venta').addEventListener('submit', function(e) {
     return false;
   }
 
-  // ✅ Todo correcto — envío AJAX con progreso
+  // Todo correcto — envío AJAX con progreso
   e.preventDefault();
 
   const formData = new FormData(document.getElementById('form_venta'));

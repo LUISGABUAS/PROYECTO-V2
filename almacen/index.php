@@ -214,7 +214,7 @@ if (isset($_SESSION['mensaje'])) {
         <div class="col-md-12">
           <div class="card card-warning">
             <div class="card-header">
-              <h3 class="card-title">📦 Estado de Stock</h3>
+              <h3 class="card-title"><i class="fa fa-box"></i> Estado de Stock</h3>
             </div>
             <div class="card-body">
               <div class="table-responsive">

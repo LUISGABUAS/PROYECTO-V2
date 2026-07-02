@@ -17,13 +17,13 @@ $id_usuario = (int)($_POST['id_usuario'] ?? 0);
 $envios_raw = $_POST['envios_json'] ?? '';
 
 if (!$id_cliente || !$id_usuario || !$envios_raw) {
-    echo json_encode(['success' => false, 'message' => '❌ Faltan datos obligatorios']);
+    echo json_encode(['success' => false, 'message' => 'Faltan datos obligatorios']);
     exit;
 }
 
 $envios = json_decode($envios_raw, true);
 if (!$envios || !is_array($envios) || count($envios) === 0) {
-    echo json_encode(['success' => false, 'message' => '❌ No se recibieron envíos válidos']);
+    echo json_encode(['success' => false, 'message' => 'No se recibieron envíos válidos']);
     exit;
 }
 
@@ -41,7 +41,7 @@ if ($hayArchivos) {
 }
 
 if (empty($indicesValidos)) {
-    echo json_encode(['success' => false, 'message' => '❌ Debe adjuntar al menos un comprobante']);
+    echo json_encode(['success' => false, 'message' => 'Debe adjuntar al menos un comprobante']);
     exit;
 }
 
@@ -49,11 +49,11 @@ if (!is_dir($carpeta)) mkdir($carpeta, 0755, true);
 foreach ($indicesValidos as $i) {
     $ext = strtolower(pathinfo($_FILES['comprobantes']['name'][$i], PATHINFO_EXTENSION));
     if (!in_array($ext, $permitidas)) {
-        echo json_encode(['success' => false, 'message' => '❌ Formato no permitido: ' . htmlspecialchars($_FILES['comprobantes']['name'][$i])]);
+        echo json_encode(['success' => false, 'message' => 'Formato no permitido: ' . htmlspecialchars($_FILES['comprobantes']['name'][$i])]);
         exit;
     }
     if ($_FILES['comprobantes']['size'][$i] > 5 * 1024 * 1024) {
-        echo json_encode(['success' => false, 'message' => '❌ Un comprobante supera 5MB']);
+        echo json_encode(['success' => false, 'message' => 'Un comprobante supera 5MB']);
         exit;
     }
     $nombre_archivo = date('Y-m-d_H-i-s') . '_pedido_' . uniqid() . '.' . $ext;
@@ -122,7 +122,7 @@ try {
                 $nombre = $pdo->prepare("SELECT nombre FROM tb_almacen WHERE id_producto = ?");
                 $nombre->execute([$id_prod]);
                 $nom = $nombre->fetchColumn() ?: "Producto #$id_prod";
-                throw new Exception("❌ Stock insuficiente para \"$nom\": pedido $cantidad, disponible $disponible");
+                throw new Exception("Stock insuficiente para \"$nom\": pedido $cantidad, disponible $disponible");
             }
 
             $pdo->prepare("INSERT INTO tb_ventas_detalle (id_venta, id_producto, cantidad, precio, subtotal)
@@ -133,11 +133,11 @@ try {
 
     $pdo->commit();
 
-    echo json_encode(['success' => true, 'message' => "✅ Pedido múltiple registrado — $" . number_format($total_general, 2) . " total — " . count($envios) . " envíos creados"]);
+    echo json_encode(['success' => true, 'message' => "Pedido múltiple registrado — $" . number_format($total_general, 2) . " total — " . count($envios) . " envíos creados"]);
     exit;
 
 } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
-    echo json_encode(['success' => false, 'message' => '❌ Error al guardar el pedido: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error al guardar el pedido: ' . $e->getMessage()]);
     exit;
 }

@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $errores = validarDatos(['id_cliente', 'tipo_cliente', 'nombre_completo', 'calle_numero', 'cp', 'colonia', 'municipio', 'estado']);
 if (!empty($errores)) {
     error400('Faltan datos obligatorios', $errores);
-    $_SESSION['mensaje'] = '❌ Faltan datos obligatorios';
+    $_SESSION['mensaje'] = 'Faltan datos obligatorios';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL . '/clientes/edit.php?id=' . ($_POST['id_cliente'] ?? ''));
     exit;
@@ -56,7 +56,7 @@ $check->execute([$id_cliente]);
 
 if ($check->rowCount() === 0) {
     error400('Cliente no encontrado');
-    $_SESSION['mensaje'] = '❌ Cliente no encontrado';
+    $_SESSION['mensaje'] = 'Cliente no encontrado';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL . '/clientes');
     exit;
@@ -68,7 +68,7 @@ if ($check->rowCount() === 0) {
 $check_nombre = $pdo->prepare("SELECT id_cliente FROM clientes WHERE nombre_completo = ? AND id_cliente != ? LIMIT 1");
 $check_nombre->execute([$nombre_completo, $id_cliente]);
 if ($check_nombre->fetch()) {
-    $_SESSION['mensaje'] = '⚠️ Ya existe otro cliente con ese nombre';
+    $_SESSION['mensaje'] = 'Ya existe otro cliente con ese nombre';
     $_SESSION['icono'] = 'warning';
     header('Location: ' . $URL . '/clientes/edit.php?id=' . $id_cliente);
     exit;
@@ -139,7 +139,7 @@ try {
 
     registrarAuditoria($pdo, $id_usuario, $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null, 'EDITAR CLIENTE', 'clientes', $id_cliente, $nombre_completo);
 
-    $_SESSION['mensaje'] = '✅ Cliente actualizado correctamente';
+    $_SESSION['mensaje'] = 'Cliente actualizado correctamente';
     $_SESSION['icono'] = 'success';
     
     // Redirigir a la página anterior según el tipo de cliente
@@ -157,7 +157,7 @@ try {
     }
 
     error500('Error actualizando cliente', ['error' => $e->getMessage()]);
-    $_SESSION['mensaje'] = '❌ Error al actualizar el cliente';
+    $_SESSION['mensaje'] = 'Error al actualizar el cliente';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL . '/clientes/edit.php?id=' . $id_cliente);
     exit;

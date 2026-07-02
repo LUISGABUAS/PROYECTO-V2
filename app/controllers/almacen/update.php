@@ -8,7 +8,7 @@ csrf_verify();
 $errores = validarDatos(['codigo', 'id_categoria', 'nombre', 'descripcion', 'stock_minimo', 'stock_maximo', 'precio_venta', 'fecha_ingreso', 'id_producto']);
 if (!empty($errores)) {
     error400('Faltan datos obligatorios', $errores);
-    $_SESSION['mensaje'] = "❌ Faltan datos obligatorios";
+    $_SESSION['mensaje'] = "Faltan datos obligatorios";
     $_SESSION['icono'] = "error";
     header('Location: ' . $URL . '/almacen/update.php?id=' . ($_POST['id_producto'] ?? ''));
     exit;
@@ -51,7 +51,7 @@ if ($_FILES['image']['name'] != null) {
     
     if (!in_array($mimeReal, $tiposPermitidos) || !in_array($extImg, $extensionesPermitidas)) {
         error400('Tipo de archivo no permitido', ['archivo' => $_FILES['image']['name']]);
-        $_SESSION['mensaje'] = "❌ Solo imágenes (JPG, PNG, GIF, WEBP)";
+        $_SESSION['mensaje'] = "Solo imágenes (JPG, PNG, GIF, WEBP)";
         $_SESSION['icono'] = "error";
         header("Location: " . $URL . "/almacen/update.php?id=" . $id_producto);
         exit;
@@ -60,7 +60,7 @@ if ($_FILES['image']['name'] != null) {
     $maxSize = 5 * 1024 * 1024;
     if ($_FILES['image']['size'] > $maxSize) {
         error400('Archivo demasiado grande', ['tamaño' => $_FILES['image']['size']]);
-        $_SESSION['mensaje'] = "❌ Imagen no puede superar 5MB";
+        $_SESSION['mensaje'] = "Imagen no puede superar 5MB";
         $_SESSION['icono'] = "error";
         header("Location: " . $URL . "/almacen/update.php?id=" . $id_producto);
         exit;
@@ -110,18 +110,18 @@ try {
     if ($sentencia->execute()) {
         include('../helpers/auditoria.php');
         registrarAuditoria($pdo, $id_usuario, $_SESSION['nombre_usuario'] ?? null, 'ACTUALIZAR PRODUCTO', 'tb_almacen', $id_producto, "Producto: $nombre (Código: $codigo)");
-        $_SESSION['mensaje'] = "✅ Producto actualizado correctamente";
+        $_SESSION['mensaje'] = "Producto actualizado correctamente";
         $_SESSION['icono'] = "success";
         header("Location: " . $URL . "/almacen");
     } else {
         error500('Error ejecutando query de actualización');
-        $_SESSION['mensaje'] = "❌ Error al actualizar producto";
+        $_SESSION['mensaje'] = "Error al actualizar producto";
         $_SESSION['icono'] = "error";
         header("Location: " . $URL . "/almacen/update.php?id=" . $id_producto);
     }
 } catch (Exception $e) {
     error500('Error actualizando producto', ['error' => $e->getMessage()]);
-    $_SESSION['mensaje'] = "❌ Error al actualizar producto";
+    $_SESSION['mensaje'] = "Error al actualizar producto";
     $_SESSION['icono'] = "error";
     header("Location: " . $URL . "/almacen/update.php?id=" . $id_producto);
 }

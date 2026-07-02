@@ -131,16 +131,16 @@ foreach ($rows as $row) {
 
           // Etiqueta y color del tipo de pago
           if ($tipo === 'efectivo') {
-              $badge_pago = '<span class="badge badge-success">💵 Efectivo</span>';
+              $badge_pago = '<span class="badge badge-success"><i class="fa fa-money-bill-wave"></i> Efectivo</span>';
               $info_pago  = '<span class="text-success font-weight-bold">$' . number_format($total, 0, '.', ',') . ' en efectivo</span>';
           } elseif ($tipo === 'comprobante') {
-              $badge_pago = '<span class="badge badge-primary">🧾 Comprobante</span>';
+              $badge_pago = '<span class="badge badge-primary"><i class="fa fa-receipt"></i> Comprobante</span>';
               $info_pago  = '';
           } elseif ($tipo === 'ambos') {
-              $badge_pago = '<span class="badge badge-warning">💵+🧾 Efectivo y comprobante</span>';
+              $badge_pago = '<span class="badge badge-warning"><i class="fa fa-money-bill-wave"></i>+<i class="fa fa-receipt"></i> Efectivo y comprobante</span>';
               $info_pago  = '<span class="text-warning">Pago mixto</span>';
           } elseif ($tipo === 'contra_entrega') {
-              $badge_pago = '<span class="badge badge-danger">🚚 Contra entrega</span>';
+              $badge_pago = '<span class="badge badge-danger"><i class="fa fa-truck"></i> Contra entrega</span>';
               $info_pago  = $pendiente > 0
                   ? '<span class="text-danger">Pendiente: $' . number_format($pendiente, 0, '.', ',') . '</span>'
                   : '<span class="text-success">Liquidado</span>';

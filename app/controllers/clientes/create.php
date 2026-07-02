@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $errores = validarDatos(['tipo_cliente', 'nombre_completo', 'telefono', 'calle_numero', 'colonia', 'municipio', 'estado', 'cp']);
 if (!empty($errores)) {
     error400('Faltan datos obligatorios', $errores);
-    $_SESSION['mensaje'] = "❌ Faltan datos obligatorios";
+    $_SESSION['mensaje'] = "Faltan datos obligatorios";
     $_SESSION['icono'] = "error";
     header("Location: ".$URL."/clientes/create.php");
     exit;
@@ -51,7 +51,7 @@ if ($id_rol_sesion == 21) {
 $stmt_check = $pdo->prepare("SELECT id_cliente FROM clientes WHERE nombre_completo = ? LIMIT 1");
 $stmt_check->execute([$nombre]);
 if ($stmt_check->fetch()) {
-    $_SESSION['mensaje'] = "⚠️ Ya existe un cliente con ese nombre";
+    $_SESSION['mensaje'] = "Ya existe un cliente con ese nombre";
     $_SESSION['icono']   = "warning";
     header("Location: ".$URL."/clientes/create.php");
     exit;
@@ -105,7 +105,7 @@ try {
     $nombre_audit = $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null;
     registrarAuditoria($pdo, $id_usuario_audit, $nombre_audit, 'CREAR CLIENTE', 'clientes', $id_cliente_nuevo, $nombre);
 
-    $_SESSION['mensaje'] = "✅ Cliente registrado correctamente";
+    $_SESSION['mensaje'] = "Cliente registrado correctamente";
     $_SESSION['icono']   = "success";
 
     header("Location: ".$URL."/clientes/create.php");
@@ -118,7 +118,7 @@ try {
     }
     
     error500('Error guardando cliente en BD', ['error' => $e->getMessage()]);
-    $_SESSION['mensaje'] = "❌ Error al guardar el cliente";
+    $_SESSION['mensaje'] = "Error al guardar el cliente";
     $_SESSION['icono']   = "error";
     header("Location: ".$URL."/clientes/create.php");
     exit;

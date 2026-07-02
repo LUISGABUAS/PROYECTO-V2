@@ -15,7 +15,7 @@ $permisos = array_unique(array_map('intval', $permisos));
 // Validaciones
 if(!$rol){
     error400('El nombre del rol es obligatorio');
-    $_SESSION['mensaje'] = "❌ El nombre del rol es obligatorio";
+    $_SESSION['mensaje'] = "El nombre del rol es obligatorio";
     $_SESSION['icono'] = "error";
     header("Location: ../../../roles/create.php");
     exit;
@@ -23,7 +23,7 @@ if(!$rol){
 
 if(empty($permisos)){
     error400('Debe asignar al menos un permiso al rol');
-    $_SESSION['mensaje'] = "❌ Debe asignar al menos un permiso";
+    $_SESSION['mensaje'] = "Debe asignar al menos un permiso";
     $_SESSION['icono'] = "error";
     header("Location: ../../../roles/create.php");
     exit;
@@ -34,7 +34,7 @@ $check = $pdo->prepare("SELECT COUNT(*) FROM tb_roles WHERE rol = :nombre");
 $check->execute([':nombre' => $rol]);
 if($check->fetchColumn() > 0){
     error400('El rol ya existe');
-    $_SESSION['mensaje'] = "❌ Ya existe un rol con ese nombre";
+    $_SESSION['mensaje'] = "Ya existe un rol con ese nombre";
     $_SESSION['icono'] = "error";
     header("Location: ../../../roles/create.php");
     exit;
@@ -68,13 +68,13 @@ try {
     unset($_SESSION['_cache_time']);
 
     $_SESSION['icono'] = "success";
-    $_SESSION['mensaje'] = "✅ Rol creado correctamente";
+    $_SESSION['mensaje'] = "Rol creado correctamente";
     header("Location: ../../../roles/index.php");
 } catch (Exception $e){
     $pdo->rollBack();
     error500('Error creando rol', ['error' => $e->getMessage()]);
     $_SESSION['icono'] = "error";
-    $_SESSION['mensaje'] = "❌ Error al crear el rol";
+    $_SESSION['mensaje'] = "Error al crear el rol";
     header("Location: ../../../roles/create.php");
 }
 ?>

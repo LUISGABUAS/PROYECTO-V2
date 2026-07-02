@@ -8,7 +8,7 @@ include('../helpers/auditoria.php');
 $errores = validarDatos(['nombres', 'email', 'rol', 'password_user', 'password_repeat']);
 if (!empty($errores)) {
     error400('Faltan datos obligatorios', $errores);
-    $_SESSION['mensaje'] = "❌ Faltan datos obligatorios";
+    $_SESSION['mensaje'] = "Faltan datos obligatorios";
     $_SESSION['icono'] = "error";
     header("Location: " . $URL . "/usuarios/create.php");
     exit;
@@ -23,7 +23,7 @@ $id_usuario = $_SESSION['id_usuario_sesion'] ?? $_SESSION['id_usuario'] ?? null;
 
 if (empty($password_user) || empty($password_repeat)) {
     error400('Contraseña requerida');
-    $_SESSION['mensaje'] = "❌ Contraseña requerida";
+    $_SESSION['mensaje'] = "Contraseña requerida";
     $_SESSION['icono'] = "error";
     header("Location: " . $URL . "/usuarios/create.php");
     exit;
@@ -31,7 +31,7 @@ if (empty($password_user) || empty($password_repeat)) {
 
 if ($password_user !== $password_repeat) {
     error400('Las contraseñas no coinciden');
-    $_SESSION['mensaje'] = "❌ Las contraseñas no coinciden";
+    $_SESSION['mensaje'] = "Las contraseñas no coinciden";
     $_SESSION['icono'] = "error";
     header("Location: " . $URL . "/usuarios/create.php");
     exit;
@@ -51,12 +51,12 @@ try {
     registrarAuditoria($pdo, $id_usuario, $_SESSION['sesion_nombres'] ?? $_SESSION['nombre_usuario'] ?? null, 'CREAR USUARIO', 'tb_usuario', $id_nuevo_usuario, $nombres);
     
     $_SESSION['icono'] = "success";
-    $_SESSION['mensaje'] = "✅ Usuario creado correctamente";
+    $_SESSION['mensaje'] = "Usuario creado correctamente";
     header("Location: " . $URL . "/usuarios");
 } catch (Exception $e) {
     error500('Error creando usuario', ['error' => $e->getMessage()]);
     $_SESSION['icono'] = "error";
-    $_SESSION['mensaje'] = "❌ Error al crear usuario";
+    $_SESSION['mensaje'] = "Error al crear usuario";
     header("Location: " . $URL . "/usuarios/create.php");
 }
 

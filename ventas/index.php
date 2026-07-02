@@ -269,7 +269,7 @@ if (!in_array(20, $_SESSION['permisos'])) {
       <!-- GRAFICA VENTAS USUARIO -->
       <div class="card card-outline card-info mb-4">
         <div class="card-header">
-          <h3 class="card-title">📊 Mis ventas del mes</h3>
+          <h3 class="card-title"><i class="fa fa-chart-bar"></i> Mis ventas del mes</h3>
         </div>
         <div class="card-body">
           <canvas id="graficaVentas" height="120"></canvas>
@@ -317,9 +317,9 @@ if (!in_array(20, $_SESSION['permisos'])) {
                 <td class="text-right text-danger font-weight-bold">$<?= number_format($cp['monto_pendiente'], 2) ?></td>
                 <td>
                   <?php if ($cp['metodo_pendiente'] === 'efectivo'): ?>
-                    <span class="badge badge-success">💵 Efectivo</span>
+                    <span class="badge badge-success"><i class="fa fa-money-bill-wave"></i> Efectivo</span>
                   <?php elseif ($cp['metodo_pendiente'] === 'comprobante'): ?>
-                    <span class="badge badge-primary">🧾 Comprobante</span>
+                    <span class="badge badge-primary"><i class="fa fa-receipt"></i> Comprobante</span>
                   <?php else: ?>
                     <span class="badge badge-secondary">—</span>
                   <?php endif; ?>

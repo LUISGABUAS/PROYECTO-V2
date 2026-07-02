@@ -12,7 +12,7 @@ csrf_verify();
 $errores = validarDatos(['codigo', 'id_categoria', 'id_proovedor', 'nombre', 'descripcion', 'stock_minimo', 'stock_maximo', 'precio_compra', 'precio_venta', 'fecha_ingreso', 'calidad']);
 if (!empty($errores)) {
     error400('Faltan datos obligatorios', $errores);
-    $_SESSION['mensaje'] = "❌ Faltan datos obligatorios";
+    $_SESSION['mensaje'] = "Faltan datos obligatorios";
     $_SESSION['icono'] = "error";
     header('Location: ' . $URL . '/almacen/create.php');
     exit;
@@ -39,7 +39,7 @@ $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
 
 if (!in_array($mimeReal, $tiposPermitidos) || !in_array($ext, $extensionesPermitidas)) {
     error400('Tipo de archivo no permitido', ['archivo' => $_FILES['image']['name'], 'mime' => $mimeReal]);
-    $_SESSION['mensaje'] = "❌ Solo imágenes (JPG, PNG, GIF, WEBP)";
+    $_SESSION['mensaje'] = "Solo imágenes (JPG, PNG, GIF, WEBP)";
     $_SESSION['icono'] = "error";
     header("Location: " . $URL . "/almacen/create.php");
     exit;
@@ -48,7 +48,7 @@ if (!in_array($mimeReal, $tiposPermitidos) || !in_array($ext, $extensionesPermit
 $maxSize = 5 * 1024 * 1024;
 if ($_FILES['image']['size'] > $maxSize) {
     error400('Archivo demasiado grande', ['tamaño' => $_FILES['image']['size'], 'máximo' => $maxSize]);
-    $_SESSION['mensaje'] = "❌ Imagen no puede superar 5MB";
+    $_SESSION['mensaje'] = "Imagen no puede superar 5MB";
     $_SESSION['icono'] = "error";
     header("Location: " . $URL . "/almacen/create.php");
     exit;
@@ -83,20 +83,20 @@ try {
     $sentencia->bindParam(':fyh_actualizacion', $fechaHora);
 
     if ($sentencia->execute()) {
-        $_SESSION['mensaje'] = "✅ Producto creado correctamente";
+        $_SESSION['mensaje'] = "Producto creado correctamente";
         $_SESSION['icono'] = "success";
         include('../helpers/auditoria.php');
         registrarAuditoria($pdo, $id_usuario, null, 'CREAR PRODUCTO', 'tb_almacen', $pdo->lastInsertId(), "Producto: $nombre (Código: $codigo)");
         header("Location: " . $URL . "/almacen");
     } else {
         error500('Error ejecutando query de inserción');
-        $_SESSION['mensaje'] = "❌ Error al crear producto";
+        $_SESSION['mensaje'] = "Error al crear producto";
         $_SESSION['icono'] = "error";
         header("Location: " . $URL . "/almacen/create.php");
     }
 } catch (Exception $e) {
     error500('Error creando producto', ['error' => $e->getMessage()]);
-    $_SESSION['mensaje'] = "❌ Error al crear producto";
+    $_SESSION['mensaje'] = "Error al crear producto";
     $_SESSION['icono'] = "error";
     header("Location: " . $URL . "/almacen/create.php");
 }

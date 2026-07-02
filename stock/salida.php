@@ -508,7 +508,7 @@ if (formSalida) formSalida.addEventListener('submit', function(e) {
   })
   .then(res => res.json())
   .then(data => {
-    // 🔊 REPRODUCIR SONIDO
+    // REPRODUCIR SONIDO
     if(data.success) {
       new Audio('<?= $URL ?>/app/controllers/sounds/ok.mp3').play();
     } else {
@@ -520,27 +520,27 @@ if (formSalida) formSalida.addEventListener('submit', function(e) {
       let guiaHtml = '';
       if (data.guias_paca && data.guias_paca.length > 0) {
         guiaHtml = `<div class="mt-2 p-2" style="background:#dc3545;border-radius:6px;color:#fff;">
-          <strong>📦 Paca #${data.num_paca} — Pegar esta(s) guía(s):</strong><br>
+          <strong><i class="fa fa-box"></i> Paca #${data.num_paca} — Pegar esta(s) guía(s):</strong><br>
           ${data.guias_paca.map(g =>
             `<a href="<?= $URL ?>/dashboard/guia_pdf/${g.archivo}" target="_blank"
                 style="display:inline-block;margin:4px;padding:4px 12px;background:#fff;color:#dc3545;border-radius:4px;font-weight:bold;text-decoration:none;">
-               📄 Ver Guía ${g.numero}
+               <i class="fa fa-file-pdf"></i> Ver Guía ${g.numero}
              </a>
              <a href="<?= $URL ?>/dashboard/guia_pdf/${g.archivo}" target="_blank"
                 onclick="setTimeout(()=>document.querySelector('[name=codigo_unico]').focus(),500)"
                 style="display:inline-block;margin:4px;padding:4px 12px;background:#ffc107;color:#000;border-radius:4px;font-weight:bold;text-decoration:none;">
-               🖨️ Imprimir Guía ${g.numero}
+               <i class="fa fa-print"></i> Imprimir Guía ${g.numero}
              </a>`
           ).join('')}
         </div>`;
       } else if (data.paqueteria) {
         guiaHtml = `<div class="alert alert-warning mt-2 mb-0">
-          ⚠️ Paca #${data.num_paca} — <strong>Sin guía asignada aún</strong> para esta paca
+          <i class="fa fa-exclamation-triangle text-warning"></i> Paca #${data.num_paca} — <strong>Sin guía asignada aún</strong> para esta paca
         </div>`;
       }
 
       alerta.innerHTML = `<div class="alert alert-success mt-3 mb-0">
-        ✅ ${data.message}
+        <i class="fa fa-check-circle text-success"></i> ${data.message}
         ${guiaHtml}
       </div>`;
 
