@@ -41,6 +41,14 @@ if (isset($_SESSION['mensaje'])) {
             <h1 class="m-0">Stock</h1>
           </div><!-- /.col -->
           <div class="col-sm-6 text-right">
+            <?php if(in_array(8, $_SESSION['permisos']) || in_array(24, $_SESSION['permisos'])): ?>
+            <button type="button" class="btn btn-danger btn-sm mr-2" onclick="togglePendientes(this)">
+              <i class="fas fa-clock"></i> Ventas pendientes por entregar
+              <?php if (!empty($ventas_pendientes_global)): ?>
+                <span class="badge badge-light ml-1"><?= $total_pacas_pendientes ?> pacas</span>
+              <?php endif; ?>
+            </button>
+            <?php endif; ?>
             <?php if(in_array(11, $_SESSION['permisos'])): ?>
             <a href="faltantes.php" class="btn btn-warning btn-sm mr-2">
               <i class="fas fa-barcode"></i> Etiquetas Faltantes
@@ -118,7 +126,7 @@ if (isset($_SESSION['mensaje'])) {
       ?>
 
       <?php if (!empty($ventas_pendientes_global)): ?>
-      <div class="card card-outline card-warning mb-3">
+      <div class="card card-outline card-warning mb-3" id="cardPendientes" style="display:none;">
         <div class="card-header d-flex justify-content-between align-items-center">
           <h3 class="card-title">
             <i class="fas fa-clock text-warning"></i>
@@ -126,8 +134,8 @@ if (isset($_SESSION['mensaje'])) {
             <span class="badge badge-warning ml-2" style="font-size:14px;"><?= count($ventas_pendientes_global) ?> ventas</span>
             <span class="badge badge-danger ml-1" style="font-size:14px;"><?= $total_pacas_pendientes ?> pacas</span>
           </h3>
-          <button type="button" class="btn btn-tool" data-card-widget="collapse">
-            <i class="fas fa-minus"></i>
+          <button type="button" class="btn btn-tool" onclick="togglePendientes()">
+            <i class="fas fa-times"></i>
           </button>
         </div>
         <div class="card-body p-0">
@@ -375,6 +383,16 @@ if (isset($_SESSION['mensaje'])) {
     </div>
   </div>
 </div>
+
+<script>
+function togglePendientes(btn) {
+  const card = document.getElementById('cardPendientes');
+  if (!card) return;
+  const visible = card.style.display !== 'none';
+  card.style.display = visible ? 'none' : 'block';
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+</script>
 
 <script>
 function verPendientes(idProducto, nombre) {
