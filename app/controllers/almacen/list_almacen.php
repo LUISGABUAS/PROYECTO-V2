@@ -24,7 +24,9 @@ $sql_productos = "SELECT
 
     COALESCE(sb.stock_bodega, 0) AS stock_bodega,
     COALESCE(sp.stock_pendiente, 0) AS stock_pendiente,
-    COALESCE(sb.stock_bodega, 0) - COALESCE(sp.stock_pendiente, 0) AS stock_disponible
+    COALESCE(sb.stock_bodega, 0) - COALESCE(sp.stock_pendiente, 0) AS stock_disponible,
+    COALESCE(se.stock_video, 0)   AS stock_video,
+    COALESCE(se.stock_flejada, 0) AS stock_flejada
 
 FROM tb_almacen a
 INNER JOIN tb_categorias cat ON a.id_categoria = cat.id_categoria
@@ -33,9 +35,17 @@ INNER JOIN tb_usuario u ON u.id = a.id_usuario
 LEFT JOIN (
     SELECT id_producto, COUNT(*) AS stock_bodega
     FROM stock
-    WHERE estado = 'EN BODEGA'
+    WHERE estado = 'EN BODEGA' AND tipo_especial IS NULL
     GROUP BY id_producto
 ) sb ON sb.id_producto = a.id_producto
+LEFT JOIN (
+    SELECT id_producto,
+        SUM(tipo_especial = 'VIDEO')   AS stock_video,
+        SUM(tipo_especial = 'FLEJADA') AS stock_flejada
+    FROM stock
+    WHERE estado = 'EN BODEGA' AND tipo_especial IS NOT NULL
+    GROUP BY id_producto
+) se ON se.id_producto = a.id_producto
 LEFT JOIN (
     SELECT id_producto, SUM(cantidad - cantidad_entregada) AS stock_pendiente
     FROM tb_ventas_detalle

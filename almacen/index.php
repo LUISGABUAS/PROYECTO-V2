@@ -217,9 +217,11 @@ if (isset($_SESSION['mensaje'])) {
                         <th class="no-export"><center>Imagen</center></th>
                         <th><center>Nombre</center></th>
                         <th><center>Descripcion</center></th>
-                        <th><center>En Bodega</center></th> 
-                        <th><center>Pendiente</center></th> 
+                        <th><center>En Bodega</center></th>
+                        <th><center>Pendiente</center></th>
                         <th><center>Disponible</center></th>
+                        <th><center>Video</center></th>
+                        <th><center>Flejada</center></th>
                         <?php if(in_array(34, $_SESSION['permisos'])):?>
                         <th><center>Precio Compra</center></th>
                         <?php endif;  ?>
@@ -264,7 +266,22 @@ if (isset($_SESSION['mensaje'])) {
                               <?= (int)$dato['stock_disponible'] ?>
                             </span>
                           </td>
-
+                          <td class="text-center">
+                            <?php if ((int)($dato['stock_video'] ?? 0) > 0): ?>
+                              <a href="<?= $URL ?>/stock/especiales.php?tipo=VIDEO&id_producto=<?= $dato['id_producto'] ?>"
+                                 class="badge badge-danger" style="font-size:12px;"><?= (int)$dato['stock_video'] ?></a>
+                            <?php else: ?>
+                              <span class="text-muted">0</span>
+                            <?php endif; ?>
+                          </td>
+                          <td class="text-center">
+                            <?php if ((int)($dato['stock_flejada'] ?? 0) > 0): ?>
+                              <a href="<?= $URL ?>/stock/especiales.php?tipo=FLEJADA&id_producto=<?= $dato['id_producto'] ?>"
+                                 class="badge badge-warning" style="font-size:12px;"><?= (int)$dato['stock_flejada'] ?></a>
+                            <?php else: ?>
+                              <span class="text-muted">0</span>
+                            <?php endif; ?>
+                          </td>
 
                           <?php if(in_array(34, $_SESSION['permisos'])):?>
                           <td>

@@ -353,6 +353,14 @@ $badge_tickets           = $cache['tickets'];
                 </a>
               </li>
               <?php endif; ?>
+              <?php if(in_array(11, $_SESSION['permisos']) || in_array(24, $_SESSION['permisos'])): ?>
+              <li class="nav-item">
+                <a href="<?php echo $URL;?>/stock/especiales.php" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Pacas Especiales</p>
+                </a>
+              </li>
+              <?php endif; ?>
             </ul>
           </li>
           <?php endif; ?>

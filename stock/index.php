@@ -100,6 +100,12 @@ endif;
                                             <i class="fa fa-barcode"></i> Zebra
                                         </button>
                                     </div>
+                                    <?php if (in_array(11, $_SESSION['permisos']) || in_array(24, $_SESSION['permisos'])): ?>
+                                    <button id="btn-marcar-especial" class="btn btn-warning btn-sm ml-1" style="display:none;"
+                                            data-toggle="modal" data-target="#modalEspecial">
+                                        <i class="fa fa-exclamation-triangle"></i> Marcar como Especial
+                                    </button>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="col-md-6">
                                     <h3 class="card-title">
@@ -119,6 +125,7 @@ endif;
                                             <th>Seleccionar</th>
                                             <th>Codigo</th>
                                             <th>Estado</th>
+                                            <th>Tipo especial</th>
                                             <th>Categoria</th>
                                             <th>Producto</th>
                                             <th>Fecha Ingreso</th>
@@ -141,6 +148,18 @@ endif;
                                             </td>
                                             <td><?= $dato['codigo_unico'] ?></td>
                                             <td><span class="badge badge-<?= $color ?>"><?= $estado ?></span></td>
+                                            <td>
+                                              <?php if (!empty($dato['tipo_especial'])): ?>
+                                                <span class="badge badge-<?= $dato['tipo_especial']==='VIDEO' ? 'danger' : 'warning' ?>">
+                                                  <?= $dato['tipo_especial'] ?>
+                                                </span>
+                                                <?php if (!empty($dato['notas_especial'])): ?>
+                                                  <small class="d-block text-muted"><?= htmlspecialchars($dato['notas_especial']) ?></small>
+                                                <?php endif; ?>
+                                              <?php else: ?>
+                                                <span class="text-muted">—</span>
+                                              <?php endif; ?>
+                                            </td>
                                             <td><?= $dato['nombre_categoria'] ?></td>
                                             <td><?= $dato['nombre_producto'] ?></td>
                                             <td><?= $dato['fecha_ingreso'] ?></td>
@@ -171,6 +190,113 @@ endif;
         </div><!-- /.container-fluid -->
     </div><!-- /.content -->
 </div><!-- /.content-wrapper -->
+
+<!-- MODAL MARCAR ESPECIAL -->
+<div class="modal fade" id="modalEspecial" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Marcar como Paca Especial</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted mb-3">Pacas seleccionadas: <strong id="me-cantidad">0</strong></p>
+        <div class="form-group">
+          <label><strong>Tipo</strong></label>
+          <div class="d-flex" style="gap:12px;">
+            <div class="card border-danger flex-fill text-center p-3" id="card-video" style="cursor:pointer;" onclick="selTipo('VIDEO')">
+              <i class="fa fa-video fa-2x text-danger mb-1"></i>
+              <strong>VIDEO</strong>
+              <small class="text-muted d-block">Abierta para grabar</small>
+            </div>
+            <div class="card border-warning flex-fill text-center p-3" id="card-flejada" style="cursor:pointer;" onclick="selTipo('FLEJADA')">
+              <i class="fa fa-undo fa-2x text-warning mb-1"></i>
+              <strong>FLEJADA</strong>
+              <small class="text-muted d-block">Rembolsada / abierta</small>
+            </div>
+          </div>
+          <input type="hidden" id="me-tipo" value="">
+        </div>
+        <div class="form-group mt-3">
+          <label>Notas <small class="text-muted">(opcional)</small></label>
+          <textarea id="me-notas" class="form-control" rows="2" placeholder="Ej: Abierta para TikTok del 01/07..."></textarea>
+        </div>
+        <div class="form-group" id="grp-venta-origen">
+          <label># Venta de origen <small class="text-muted">(si fue rembolsada, opcional)</small></label>
+          <input type="number" id="me-venta-origen" class="form-control" placeholder="ej. 147">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-warning" id="btn-confirmar-especial" onclick="confirmarEspecial()">
+          <i class="fa fa-check"></i> Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let _tipoEspecial = '';
+
+function selTipo(tipo) {
+  _tipoEspecial = tipo;
+  document.getElementById('me-tipo').value = tipo;
+  document.getElementById('card-video').classList.toggle('bg-danger', tipo === 'VIDEO');
+  document.getElementById('card-video').classList.toggle('text-white', tipo === 'VIDEO');
+  document.getElementById('card-flejada').classList.toggle('bg-warning', tipo === 'FLEJADA');
+  document.getElementById('card-flejada').classList.toggle('text-dark', tipo === 'FLEJADA');
+}
+
+// Mostrar botón especial al seleccionar pacas EN BODEGA sin tipo
+document.querySelectorAll('.select-stock').forEach(cb => {
+  cb.addEventListener('change', actualizarBtnEspecial);
+});
+document.getElementById('deselect-all')?.addEventListener('click', () => setTimeout(actualizarBtnEspecial, 50));
+
+function actualizarBtnEspecial() {
+  const selEN = Array.from(document.querySelectorAll('.select-stock:checked'))
+    .filter(cb => cb.dataset.estado === 'EN BODEGA');
+  const btn = document.getElementById('btn-marcar-especial');
+  if (btn) {
+    btn.style.display = selEN.length > 0 ? 'inline-block' : 'none';
+    document.getElementById('me-cantidad').textContent = selEN.length;
+  }
+}
+
+function confirmarEspecial() {
+  if (!_tipoEspecial) {
+    Swal.fire({ icon: 'warning', title: 'Selecciona el tipo', text: 'VIDEO o FLEJADA' });
+    return;
+  }
+  const ids = Array.from(document.querySelectorAll('.select-stock:checked'))
+    .filter(cb => cb.dataset.estado === 'EN BODEGA')
+    .map(cb => cb.value);
+
+  if (!ids.length) {
+    Swal.fire({ icon: 'warning', title: 'Sin pacas', text: 'Selecciona pacas EN BODEGA' });
+    return;
+  }
+
+  const fd = new FormData();
+  fd.append('tipo_especial', _tipoEspecial);
+  fd.append('notas_especial', document.getElementById('me-notas').value);
+  fd.append('id_venta_origen', document.getElementById('me-venta-origen').value);
+  ids.forEach(id => fd.append('ids[]', id));
+
+  fetch('<?= $URL ?>/app/controllers/stock/marcar_especial.php', { method: 'POST', body: fd, credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(res => {
+      $('#modalEspecial').modal('hide');
+      if (res.success) {
+        Swal.fire({ icon: 'success', title: res.message, timer: 2000, showConfirmButton: false })
+          .then(() => location.reload());
+      } else {
+        Swal.fire({ icon: 'error', title: 'Error', text: res.message });
+      }
+    });
+}
+</script>
 
 <?php include('../layout/mensajes.php')?>
 <?php include('../layout/parte2.php'); ?>
