@@ -34,15 +34,40 @@ try {
      * 1️⃣ Validar que el código exista, esté EN BODEGA
      *    y pertenezca a ESTA venta
      */
+
+    $_colCheck = $pdo->query("SHOW COLUMNS FROM stock LIKE 'tipo_especial'")->fetchAll();
+    $_hasTipoEspecial = count($_colCheck) > 0;
+
+    // ¿Es una paca ya VENDIDA? → ofrecer devolución
+    if ($_hasTipoEspecial) {
+        $stmtV = $pdo->prepare("SELECT id_stock, tipo_especial FROM stock WHERE codigo_unico = ? AND estado = 'VENDIDO' LIMIT 1");
+    } else {
+        $stmtV = $pdo->prepare("SELECT id_stock FROM stock WHERE codigo_unico = ? AND estado = 'VENDIDO' LIMIT 1");
+    }
+    $stmtV->execute([$codigo_unico]);
+    $stockVendido = $stmtV->fetch(PDO::FETCH_ASSOC);
+    if ($stockVendido) {
+        echo json_encode([
+            'success'      => false,
+            'action'       => 'devolver',
+            'id_stock'     => $stockVendido['id_stock'],
+            'codigo'       => $codigo_unico,
+            'message'      => "Esta paca ya fue vendida. ¿Deseas devolverla?"
+        ]);
+        exit;
+    }
+
+    $tipoEspecialSelect = $_hasTipoEspecial ? "s.tipo_especial," : "NULL AS tipo_especial,";
     $stmt = $pdo->prepare("
-        SELECT 
+        SELECT
             s.id_stock,
             s.id_producto,
+            {$tipoEspecialSelect}
             vd.id_detalle,
             vd.cantidad,
             vd.estado
         FROM stock s
-        INNER JOIN tb_ventas_detalle vd 
+        INNER JOIN tb_ventas_detalle vd
             ON vd.id_producto = s.id_producto
            AND vd.id_venta = ?
         WHERE s.codigo_unico = ?
@@ -54,6 +79,11 @@ try {
 
     if (!$stock) {
         throw new Exception("El código no existe, no está en bodega o no pertenece a esta venta.");
+    }
+
+    // ¿Es paca especial (FLEJADA/VIDEO)? → bloquear entrega normal
+    if (!empty($stock['tipo_especial'])) {
+        throw new Exception("Esta paca es {$stock['tipo_especial']} y no puede entregarse como paca normal. Véndela desde Bodega → Pacas Especiales.");
     }
 
     $id_stock    = $stock['id_stock'];

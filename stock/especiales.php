@@ -10,29 +10,35 @@ if (!in_array(11, $_SESSION['permisos']) && !in_array(24, $_SESSION['permisos'])
     exit;
 }
 
+$_col = $pdo->query("SHOW COLUMNS FROM stock LIKE 'tipo_especial'")->fetchAll();
+$hasTipoEspecial = count($_col) > 0;
+
 $filtro_tipo = $_GET['tipo'] ?? '';
 $filtro_prod = (int)($_GET['id_producto'] ?? 0);
+$especiales  = [];
 
-$where = ["s.estado = 'EN BODEGA'", "s.tipo_especial IS NOT NULL"];
-$params = [];
-if (in_array($filtro_tipo, ['VIDEO','FLEJADA'])) {
-    $where[] = "s.tipo_especial = ?"; $params[] = $filtro_tipo;
+if ($hasTipoEspecial) {
+    $where = ["s.estado = 'EN BODEGA'", "s.tipo_especial IS NOT NULL"];
+    $params = [];
+    if (in_array($filtro_tipo, ['VIDEO','FLEJADA'])) {
+        $where[] = "s.tipo_especial = ?"; $params[] = $filtro_tipo;
+    }
+    if ($filtro_prod) {
+        $where[] = "s.id_producto = ?"; $params[] = $filtro_prod;
+    }
+    $sql = "SELECT s.id_stock, s.codigo_unico, s.tipo_especial, s.notas_especial,
+                   s.id_venta_origen, s.fecha_ingreso,
+                   a.id_producto, a.nombre AS producto, a.codigo AS cod_prod,
+                   u.nombres AS creado_por
+            FROM stock s
+            JOIN tb_almacen a ON s.id_producto = a.id_producto
+            JOIN tb_usuario u ON s.creado_por = u.id
+            WHERE " . implode(' AND ', $where) . "
+            ORDER BY s.tipo_especial, a.nombre";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $especiales = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-if ($filtro_prod) {
-    $where[] = "s.id_producto = ?"; $params[] = $filtro_prod;
-}
-$sql = "SELECT s.id_stock, s.codigo_unico, s.tipo_especial, s.notas_especial,
-               s.id_venta_origen, s.fecha_ingreso,
-               a.id_producto, a.nombre AS producto, a.codigo AS cod_prod,
-               u.nombres AS creado_por
-        FROM stock s
-        JOIN tb_almacen a ON s.id_producto = a.id_producto
-        JOIN tb_usuario u ON s.creado_por = u.id
-        WHERE " . implode(' AND ', $where) . "
-        ORDER BY s.tipo_especial, a.nombre";
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$especiales = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <div class="content-wrapper">
@@ -84,7 +90,13 @@ $especiales = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
       </div>
 
-      <?php if (empty($especiales)): ?>
+      <?php if (!$hasTipoEspecial): ?>
+        <div class="alert alert-warning text-center">
+          <i class="fa fa-exclamation-triangle fa-2x mb-2"></i><br>
+          <strong>Migración pendiente.</strong> La columna <code>tipo_especial</code> no existe aún en la base de datos.
+          Ejecuta el script SQL de actualización para habilitar esta funcionalidad.
+        </div>
+      <?php elseif (empty($especiales)): ?>
         <div class="alert alert-info text-center">
           <i class="fa fa-box-open fa-2x mb-2"></i><br>
           No hay pacas especiales registradas.

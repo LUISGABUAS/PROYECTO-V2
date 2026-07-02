@@ -515,6 +515,19 @@ if (formSalida) formSalida.addEventListener('submit', function(e) {
       new Audio('<?= $URL ?>/app/controllers/sounds/error.mp3').play();
     }
 
+    // Paca ya vendida → modal de devolución
+    if (!data.success && data.action === 'devolver') {
+      new Audio('<?= $URL ?>/app/controllers/sounds/error.mp3').play();
+      document.getElementById('dev-id-stock').value = data.id_stock;
+      document.getElementById('dev-codigo').textContent = data.codigo;
+      document.getElementById('dev-notas').value = '';
+      document.getElementById('dev-tipo-flejada').checked = false;
+      document.getElementById('dev-tipo-normal').checked = false;
+      $('#modalDevolver').modal('show');
+      this.codigo_unico.value = '';
+      return;
+    }
+
     if(data.success) {
       // Construir alerta con guía asignada
       let guiaHtml = '';
@@ -584,6 +597,78 @@ function verGuia(url, numero) {
   document.getElementById('modalGuiaDescargar').href = url;
   document.getElementById('modalGuiaImprimir').href = url;
   $('#modalGuia').modal('show');
+}
+</script>
+
+<!-- MODAL DEVOLVER PACA -->
+<div class="modal fade" id="modalDevolver" tabindex="-1" data-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title"><i class="fa fa-undo"></i> Paca ya vendida — Devolución</h5>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning mb-3">
+          <strong>Código:</strong> <span id="dev-codigo"></span><br>
+          Esta paca ya fue entregada en una venta anterior. ¿Cómo deseas regresarla?
+        </div>
+        <input type="hidden" id="dev-id-stock">
+        <div class="d-flex" style="gap:12px; margin-bottom:16px;">
+          <label class="card border-warning flex-fill text-center p-3" style="cursor:pointer;">
+            <input type="radio" name="dev_tipo" id="dev-tipo-flejada" value="FLEJADA">
+            <i class="fa fa-undo fa-2x text-warning d-block mb-1"></i>
+            <strong>FLEJADA</strong>
+            <small class="text-muted d-block">Paca abierta/rembolsada</small>
+          </label>
+          <label class="card border-success flex-fill text-center p-3" style="cursor:pointer;">
+            <input type="radio" name="dev_tipo" id="dev-tipo-normal" value="normal">
+            <i class="fa fa-box fa-2x text-success d-block mb-1"></i>
+            <strong>Normal</strong>
+            <small class="text-muted d-block">Regresa a bodega normal</small>
+          </label>
+        </div>
+        <div class="form-group mb-0">
+          <label>Notas <small class="text-muted">(opcional)</small></label>
+          <input type="text" id="dev-notas" class="form-control" placeholder="Motivo de la devolución...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                onclick="document.querySelector('[name=codigo_unico]').focus()">Cancelar</button>
+        <button type="button" class="btn btn-warning" onclick="confirmarDevolucion()">
+          <i class="fa fa-check"></i> Confirmar devolución
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function confirmarDevolucion() {
+  const tipo = document.querySelector('input[name="dev_tipo"]:checked')?.value;
+  if (!tipo) {
+    Swal.fire({ icon: 'warning', title: 'Elige el tipo', text: 'FLEJADA o Normal' });
+    return;
+  }
+  const fd = new FormData();
+  fd.append('id_stock', document.getElementById('dev-id-stock').value);
+  fd.append('tipo', tipo);
+  fd.append('notas', document.getElementById('dev-notas').value);
+
+  fetch('<?= $URL ?>/app/controllers/stock/devolver_paca.php', { method: 'POST', body: fd, credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(res => {
+      $('#modalDevolver').modal('hide');
+      const alerta = document.getElementById('alerta');
+      if (res.success) {
+        new Audio('<?= $URL ?>/app/controllers/sounds/ok.mp3').play();
+        alerta.innerHTML = `<div class="alert alert-success mt-3"><i class="fa fa-check-circle"></i> ${res.message}</div>`;
+      } else {
+        new Audio('<?= $URL ?>/app/controllers/sounds/error.mp3').play();
+        alerta.innerHTML = `<div class="alert alert-danger mt-3">${res.message}</div>`;
+      }
+      setTimeout(() => document.querySelector('[name=codigo_unico]').focus(), 400);
+    });
 }
 </script>
 
