@@ -189,17 +189,18 @@ if(in_array(15, $_SESSION['permisos'])):
               </div>
 
               <!-- Datos del cliente -->
-              <div class="alert alert-info text-left">
-                <strong>Cliente:</strong> <?= htmlspecialchars($cliente['nombre_completo']) ?><br>
-                <strong>Dirección:</strong> <?= htmlspecialchars($cliente['calle_numero'] . ', ' . $cliente['colonia'] . ', ' . $cliente['municipio'] . ', ' . $cliente['estado'] . ', CP ' . $cliente['cp']) ?><br>
-                <strong>Teléfono:</strong> <?= htmlspecialchars($cliente['telefono']) ?><br>
-                <strong>Envio:</strong> <?= htmlspecialchars(strtoupper($cliente['envio'])) ?><br>
-                <strong>Total:</strong> $<?= number_format($cliente['total'],2) ?>
-                <?php if (!empty($cliente['notas'])): ?>
-                <br><hr class="my-1">
-                <strong><i class="fas fa-sticky-note text-warning"></i> Notas:</strong>
-                <span class="text-dark"><?= nl2br(htmlspecialchars($cliente['notas'])) ?></span>
-                <?php endif; ?>
+              <div class="card mb-3" style="border:2px solid #17a2b8; background:#f0faff;">
+                <div class="card-body py-2 px-3" style="color:#212529;">
+                  <p class="mb-1"><strong style="color:#0c7a8a;">Cliente:</strong> <?= htmlspecialchars($cliente['nombre_completo']) ?></p>
+                  <p class="mb-1"><strong style="color:#0c7a8a;">Dirección:</strong> <?= htmlspecialchars($cliente['calle_numero'] . ', ' . $cliente['colonia'] . ', ' . $cliente['municipio'] . ', ' . $cliente['estado'] . ', CP ' . $cliente['cp']) ?></p>
+                  <p class="mb-1"><strong style="color:#0c7a8a;">Teléfono:</strong> <?= htmlspecialchars($cliente['telefono']) ?></p>
+                  <p class="mb-1"><strong style="color:#0c7a8a;">Envío:</strong> <?= htmlspecialchars(strtoupper($cliente['envio'])) ?></p>
+                  <p class="mb-0"><strong style="color:#0c7a8a;">Total:</strong> <span class="font-weight-bold text-success">$<?= number_format($cliente['total'],2) ?></span></p>
+                  <?php if (!empty($cliente['notas'])): ?>
+                  <hr class="my-2">
+                  <p class="mb-0"><strong><i class="fas fa-sticky-note text-warning"></i> Notas:</strong> <?= nl2br(htmlspecialchars($cliente['notas'])) ?></p>
+                  <?php endif; ?>
+                </div>
               </div>
 
               <!-- Guías (solo foráneos) -->
@@ -334,18 +335,24 @@ if(in_array(15, $_SESSION['permisos'])):
                   foreach($productos as $p){
                     $porcentaje = min(100, round(($p['entregados'] / $p['vendidos']) * 100));
                     $completo = $p['entregados'] >= $p['vendidos'];
-                    $html .= "<tr class='text-center " . ($completo ? "table-success" : "table-danger") . "' style='color:#212529;'>
-                                <td class='text-left font-weight-bold'>".htmlspecialchars($p['nombre'])."</td>
-                                <td>{$p['vendidos']}</td>
-                                <td>{$p['entregados']}</td>
-                                <td>
-                                  <div class='progress'>
-                                    <div class='progress-bar ".($completo ? "bg-success" : "bg-warning")."' style='width: {$porcentaje}%'>
-                                      {$porcentaje}%
+                    $tdStyle   = "style='color:#000 !important; font-weight:600;'";
+                    $barColor  = $completo ? '#28a745' : '#ffc107';
+                    $barW      = $porcentaje > 0 ? $porcentaje : 100;
+                    $barText   = $porcentaje > 0 ? "{$porcentaje}%" : "0%";
+                    $barBg     = $porcentaje > 0 ? $barColor : '#dee2e6';
+                    $barTxt    = $porcentaje > 0 ? ($completo ? '#fff' : '#000') : '#666';
+                    $html .= "<tr class='text-center " . ($completo ? "table-success" : "table-danger") . "'>
+                                <td class='text-left' $tdStyle>".htmlspecialchars($p['nombre'])."</td>
+                                <td $tdStyle>{$p['vendidos']}</td>
+                                <td $tdStyle>{$p['entregados']}</td>
+                                <td $tdStyle>
+                                  <div class='progress' style='background:#dee2e6;'>
+                                    <div class='progress-bar' style='width:{$barW}%;background:{$barBg};color:{$barTxt};font-weight:bold;'>
+                                      {$barText}
                                     </div>
                                   </div>
                                 </td>
-                                <td>".($completo ? "<span class='badge badge-success'>COMPLETO</span>" : "<span class='badge badge-warning'>PENDIENTE</span>")."</td>
+                                <td $tdStyle>".($completo ? "<span class='badge badge-success'>COMPLETO</span>" : "<span class='badge badge-warning'>PENDIENTE</span>")."</td>
                               </tr>";
                   }
 
