@@ -285,7 +285,6 @@ Swal.fire({
                   $bloqueado = (int)($d['cantidad_entregada'] ?? 0) > 0;
                 ?>
                 <?php if ($bloqueado): ?>
-                {{/* Producto ya entregado: solo lectura */}}
                 <tr class="table-success" style="color:#000 !important;">
                   <td style="color:#000 !important;">
                     <input type="hidden" name="productos[]" value="<?= $d['id_producto'] ?>">
