@@ -281,7 +281,37 @@ Swal.fire({
               </thead>
 
               <tbody id="detalle_venta">
-                <?php foreach($detalle as $d): ?>
+                <?php foreach($detalle as $d):
+                  $bloqueado = (int)($d['cantidad_entregada'] ?? 0) > 0;
+                ?>
+                <?php if ($bloqueado): ?>
+                {{/* Producto ya entregado: solo lectura */}}
+                <tr class="table-success" style="color:#000 !important;">
+                  <td style="color:#000 !important;">
+                    <input type="hidden" name="productos[]" value="<?= $d['id_producto'] ?>">
+                    <span class="font-weight-bold">
+                      <i class="fa fa-lock text-success mr-1"></i>
+                      <?= htmlspecialchars($d['codigo'] . ' - ' . $d['nombre_producto']) ?>
+                    </span>
+                    <small class="text-success d-block">✅ Ya entregado — no se puede cambiar</small>
+                  </td>
+                  <td style="color:#000 !important;">
+                    <input type="hidden" name="cantidades[]" value="<?= $d['cantidad'] ?>">
+                    <span class="font-weight-bold"><?= $d['cantidad'] ?></span>
+                  </td>
+                  <td style="color:#000 !important;">
+                    <input type="hidden" name="precios[]" value="<?= $d['precio'] ?>">
+                    <span>$<?= number_format($d['precio'],2) ?></span>
+                  </td>
+                  <td style="color:#000 !important;">
+                    <span>$<?= number_format($d['cantidad']*$d['precio'],2) ?></span>
+                    <input type="number" class="subtotal" value="<?= number_format($d['cantidad']*$d['precio'],2,'.','') ?>" style="display:none;" readonly>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge badge-success"><i class="fa fa-check"></i> Entregado</span>
+                  </td>
+                </tr>
+                <?php else: ?>
                 <tr>
                   <td>
                     <select name="productos[]" class="form-control form-control-sm producto"
@@ -289,33 +319,30 @@ Swal.fire({
                       <?php foreach($datos_productos as $p): ?>
                         <option value="<?= $p['id_producto'] ?>"
                                 data-precio="<?= $p['precio_venta'] ?>"
+                                data-stock="<?= $p['stock_disponible'] ?>"
                                 <?= $p['id_producto']==$d['id_producto']?'selected':'' ?>>
                           <?= htmlspecialchars($p['codigo'] . ' - ' . $p['nombre']) ?>
                         </option>
                       <?php endforeach ?>
                     </select>
                   </td>
-
                   <td>
                     <input type="number" name="cantidades[]"
                            class="form-control form-control-sm text-center cantidad"
                            value="<?= $d['cantidad'] ?>"
                            min="1" oninput="calcularFila(this)" required>
                   </td>
-
                   <td>
                     <input type="number" name="precios[]"
                            class="form-control form-control-sm text-center precio"
                            value="<?= $d['precio'] ?>" readonly>
                   </td>
-
                   <td>
                     <input type="number"
                            class="form-control form-control-sm text-center subtotal"
                            value="<?= number_format($d['cantidad']*$d['precio'],2,'.','') ?>"
                            readonly>
                   </td>
-
                   <td class="text-center">
                     <button type="button" class="btn btn-danger btn-sm"
                             onclick="eliminarFila(this)">
@@ -323,6 +350,7 @@ Swal.fire({
                     </button>
                   </td>
                 </tr>
+                <?php endif; ?>
                 <?php endforeach ?>
               </tbody>
             </table>

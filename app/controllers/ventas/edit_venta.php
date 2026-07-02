@@ -37,7 +37,7 @@ $clientes_lista = $stmt->fetchAll(PDO::FETCH_ASSOC);
 /* =========================
    DETALLE DE VENTA
 ========================= */
-$stmt = $pdo->prepare("SELECT d.id_producto, d.cantidad, d.precio,
+$stmt = $pdo->prepare("SELECT d.id_producto, d.cantidad, d.cantidad_entregada, d.precio,
     a.nombre AS nombre_producto,
     a.codigo
     FROM tb_ventas_detalle d

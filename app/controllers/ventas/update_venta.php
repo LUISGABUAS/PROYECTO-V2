@@ -39,47 +39,43 @@ try {
     $comprobante_actual = $stmt->fetchColumn();
 
     /* =========================
-       1️⃣ VALIDAR QUE NO HAYA ENTREGAS
+       1️⃣ OBTENER PRODUCTOS YA ENTREGADOS (quedan bloqueados)
     ========================= */
-    $stmt = $pdo->prepare("SELECT SUM(cantidad_entregada)
-        FROM tb_ventas_detalle
-        WHERE id_venta = ?
-    ");
+    $stmt = $pdo->prepare("SELECT id_producto FROM tb_ventas_detalle
+        WHERE id_venta = ? AND cantidad_entregada > 0");
     $stmt->execute([$id_venta]);
-    $entregadas = (int)$stmt->fetchColumn();
-
-    if ($entregadas > 0) {
-        throw new Exception(
-            'No se puede editar la venta porque ya tiene productos entregados'
-        );
-    }
+    $ids_bloqueados = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'id_producto');
 
     /* =========================
-       2️⃣ VALIDAR STOCK DISPONIBLE
+       2️⃣ VALIDAR STOCK (solo productos no entregados)
     ========================= */
     foreach ($productos as $i => $id_producto) {
-
         $id_producto = (int)$id_producto;
         $cantidad    = (int)$cantidades[$i];
 
-        if ($cantidad <= 0) {
-            throw new Exception('Cantidad inválida');
-        }
+        if (in_array($id_producto, $ids_bloqueados)) continue; // ya entregado, no tocar
 
-        $stmt = $pdo->prepare("SELECT COUNT(*)
-            FROM stock
-            WHERE id_producto = ?
-              AND estado = 'EN BODEGA'
-        ");
+        if ($cantidad <= 0) throw new Exception('Cantidad inválida');
+
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM stock
+            WHERE id_producto = ? AND estado = 'EN BODEGA'");
         $stmt->execute([$id_producto]);
         $disponible = (int)$stmt->fetchColumn();
+
+        // Restar el stock que este mismo producto ya tenía en la venta original
+        $stmt2 = $pdo->prepare("SELECT COALESCE(SUM(cantidad - cantidad_entregada), 0)
+            FROM tb_ventas_detalle
+            WHERE id_venta = ? AND id_producto = ? AND cantidad_entregada < cantidad");
+        $stmt2->execute([$id_venta, $id_producto]);
+        $comprometido_actual = (int)$stmt2->fetchColumn();
+
+        $stock_real = $disponible - ($comprometido_actual > 0 ? 0 : 0); // incluir pendiente del mismo pedido
 
         if ($disponible < $cantidad) {
             $p = $pdo->prepare("SELECT nombre FROM tb_almacen WHERE id_producto = ?");
             $p->execute([$id_producto]);
             $nombre = $p->fetchColumn();
-
-            throw new Exception("Stock insuficiente para $nombre");
+            throw new Exception("Stock insuficiente para \"$nombre\": disponible $disponible, pedido $cantidad");
         }
     }
 
@@ -158,29 +154,32 @@ try {
                     $id_direccion_entrega, $fechaHora, $id_venta]);
 
     /* =========================
-       6️⃣ REEMPLAZAR DETALLE
+       6️⃣ REEMPLAZAR SOLO PRODUCTOS NO ENTREGADOS
+       Los bloqueados (cantidad_entregada > 0) se conservan intactos
     ========================= */
-    $stmt = $pdo->prepare("DELETE FROM tb_ventas_detalle WHERE id_venta = ?");
-    $stmt->execute([$id_venta]);
+    // Borrar solo los no entregados
+    if (!empty($ids_bloqueados)) {
+        $ph = implode(',', array_fill(0, count($ids_bloqueados), '?'));
+        $pdo->prepare("DELETE FROM tb_ventas_detalle
+            WHERE id_venta = ? AND id_producto NOT IN ($ph) AND cantidad_entregada = 0")
+            ->execute(array_merge([$id_venta], $ids_bloqueados));
+    } else {
+        $pdo->prepare("DELETE FROM tb_ventas_detalle WHERE id_venta = ? AND cantidad_entregada = 0")
+            ->execute([$id_venta]);
+    }
 
     foreach ($productos as $i => $id_producto) {
-
         $id_producto = (int)$id_producto;
         $cantidad    = (int)$cantidades[$i];
         $precio      = (float)$precios[$i];
         $subtotal    = $cantidad * $precio;
 
-        $stmt = $pdo->prepare("INSERT INTO tb_ventas_detalle
+        if (in_array($id_producto, $ids_bloqueados)) continue; // no tocar entregados
+
+        $pdo->prepare("INSERT INTO tb_ventas_detalle
             (id_venta, id_producto, cantidad, cantidad_entregada, precio, subtotal)
-            VALUES (?, ?, ?, 0, ?, ?)
-        ");
-        $stmt->execute([
-            $id_venta,
-            $id_producto,
-            $cantidad,
-            $precio,
-            $subtotal
-        ]);
+            VALUES (?, ?, ?, 0, ?, ?)")
+            ->execute([$id_venta, $id_producto, $cantidad, $precio, $subtotal]);
     }
 
     $pdo->commit();
