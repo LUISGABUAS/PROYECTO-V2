@@ -145,7 +145,7 @@ try {
         $pendiente   = (int)($pendiente_map[$id_producto] ?? 0);
         $disponible  = $en_bodega - $pendiente;
 
-        if ($cantidad > $disponible) {
+        if (BLOQUEAR_STOCK_INSUFICIENTE && $cantidad > $disponible) {
             $nombre = $nombres_map[$id_producto] ?? "Producto #$id_producto";
             throw new Exception("Stock insuficiente para \"$nombre\": pedido $cantidad, disponible $disponible");
         }

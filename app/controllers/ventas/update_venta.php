@@ -71,7 +71,7 @@ try {
 
         $stock_real = $disponible - ($comprometido_actual > 0 ? 0 : 0); // incluir pendiente del mismo pedido
 
-        if ($disponible < $cantidad) {
+        if (BLOQUEAR_STOCK_INSUFICIENTE && $disponible < $cantidad) {
             $p = $pdo->prepare("SELECT nombre FROM tb_almacen WHERE id_producto = ?");
             $p->execute([$id_producto]);
             $nombre = $p->fetchColumn();
