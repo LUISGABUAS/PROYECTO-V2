@@ -72,18 +72,19 @@ try {
         $stmt->execute([$d['id_producto']]);
         $stocks = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-        if (count($stocks) !== $cantidad) {
+        if (BLOQUEAR_STOCK_INSUFICIENTE && count($stocks) !== $cantidad) {
             throw new Exception('Inconsistencia en el stock vendido');
         }
 
-        $in = implode(',', array_fill(0, count($stocks), '?'));
-
-        $upd = $pdo->prepare("UPDATE stock
-            SET estado = 'EN BODEGA',
-                fecha_salida = NULL
-            WHERE id_stock IN ($in)
-        ");
-        $upd->execute($stocks);
+        if (!empty($stocks)) {
+            $in  = implode(',', array_fill(0, count($stocks), '?'));
+            $upd = $pdo->prepare("UPDATE stock
+                SET estado = 'EN BODEGA',
+                    fecha_salida = NULL
+                WHERE id_stock IN ($in)
+            ");
+            $upd->execute($stocks);
+        }
     }
 
     /* ===============================
