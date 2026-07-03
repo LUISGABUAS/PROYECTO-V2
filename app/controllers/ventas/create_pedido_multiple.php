@@ -118,7 +118,7 @@ try {
             $pendiente = (int)$stmt_pend->fetchColumn();
 
             $disponible = $en_bodega - $pendiente;
-            if ($cantidad > $disponible) {
+            if (BLOQUEAR_STOCK_INSUFICIENTE && $cantidad > $disponible) {
                 $nombre = $pdo->prepare("SELECT nombre FROM tb_almacen WHERE id_producto = ?");
                 $nombre->execute([$id_prod]);
                 $nom = $nombre->fetchColumn() ?: "Producto #$id_prod";

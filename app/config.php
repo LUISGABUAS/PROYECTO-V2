@@ -49,6 +49,13 @@ date_default_timezone_set("America/Mexico_City");
 $fechaHora = date("Y-m-d H:i:s");
 
 // ================================================
+// CONTROL DE STOCK
+// false → permite ventas aunque no haya stock (carga histórica)
+// true  → bloquea ventas si el stock es insuficiente
+// ================================================
+define('BLOQUEAR_STOCK_INSUFICIENTE', false);
+
+// ================================================
 // MIGRACIONES DE BASE DE DATOS
 // ================================================
 require_once __DIR__ . '/database/migrations/add_foto_perfil_column.php';
