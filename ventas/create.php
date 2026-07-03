@@ -682,7 +682,7 @@ document.getElementById('form_venta').addEventListener('submit', function(e) {
     const cantidad = parseInt(inputCant.value || 0);
     const nombre   = prod.text ? prod.text.split('—')[1]?.split('(')[0]?.trim() : selectProd.value;
 
-    if(cantidad > stock){
+    if(BLOQUEAR_STOCK && cantidad > stock){
       stockOk      = false;
       mensajeStock = `"${nombre}" solo tiene ${stock} unidad(es) disponibles y se pidieron ${cantidad}`;
     }
