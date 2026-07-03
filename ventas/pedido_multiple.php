@@ -136,6 +136,7 @@ Swal.fire({
 <script src="<?= $URL ?>/public/templates/AdminLTE-3.2.0/plugins/select2/js/select2.full.min.js"></script>
 
 <script>
+const BLOQUEAR_STOCK = <?= BLOQUEAR_STOCK_INSUFICIENTE ? 'true' : 'false' ?>;
 const URL_APP    = '<?= $URL ?>';
 const PRODUCTOS  = <?= json_encode(array_values(array_map(function($p){
   return [
@@ -407,7 +408,7 @@ function agregarProducto(btn) {
     const prod = PROD_MAP[this.value];
     if (!prod) return;
     fila.querySelector('.inp-precio').value = prod.precio;
-    fila.querySelector('.inp-cantidad').max  = prod.stock;
+    if(BLOQUEAR_STOCK) fila.querySelector('.inp-cantidad').max = prod.stock;
     calcularFila(fila);
   });
 }
