@@ -296,7 +296,7 @@ if (isset($_SESSION['mensaje'])) {
                                 <div class="btn-group">
                                 <a href="show.php?id=<?php echo $id_producto;?>" type="button" class="btn btn-info btn-sm"><i class="fa fa-eye"></i> Show</a>
                                 <?php if(in_array(10, $_SESSION['permisos'])):?>
-                                <a href="update.php?id=<?php echo $id_producto;?>" type="button" class="btn btn-success btn-sm"><i class="fa fa-pencil-alt"></i> Edit</a>
+                                <a href="update.php?id=<?php echo $id_producto;?>&fp=<?= (int)$filtro_proveedor ?>" type="button" class="btn btn-success btn-sm"><i class="fa fa-pencil-alt"></i> Edit</a>
                                 <?php endif; ?>
                                 <?php if(in_array(13, $_SESSION['permisos'])):?>
                                 <button type="button" class="btn btn-danger btn-sm" onclick="confirmarEliminar(<?= $id_producto ?>, '<?= addslashes($dato['nombre']) ?>')"><i class="fa fa-trash"></i> Eliminate</button>
@@ -580,6 +580,7 @@ function confirmarEliminar(id, nombre) {
     $(document).on('click', 'a[href^="update.php"]', function () {
       sessionStorage.setItem('almacen_page', table.page());
     });
+
 
     // DataTable para ventas pendientes
     $("#tablaPendientes").DataTable({

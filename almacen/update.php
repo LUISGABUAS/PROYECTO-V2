@@ -57,6 +57,7 @@ include('../app/controllers/almacen/cargar_producto.php');
                         <form action="../app/controllers/almacen/update.php" method="post" enctype="multipart/form-data">
                           <?= csrf_field() ?>
                         <input type="text" name="id_producto" value="<?php echo $id_producto_get;?>" hidden>
+                        <input type="hidden" name="fp" value="<?= (int)($_GET['fp'] ?? 0) ?>">
 
                         <div class="row">
                           <div class="col-md-9">
