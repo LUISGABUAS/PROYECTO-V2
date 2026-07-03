@@ -115,7 +115,9 @@ try {
         registrarAuditoria($pdo, $id_usuario, $_SESSION['nombre_usuario'] ?? null, 'ACTUALIZAR PRODUCTO', 'tb_almacen', $id_producto, "Producto: $nombre (Código: $codigo)");
         $_SESSION['mensaje'] = "Producto actualizado correctamente";
         $_SESSION['icono'] = "success";
-        header("Location: " . $URL . "/almacen");
+        $fp = (int)($_POST['fp'] ?? 0);
+        $returnUrl = $URL . "/almacen" . ($fp ? "?proveedor=$fp" : "");
+        header("Location: " . $returnUrl);
     } else {
         error500('Error ejecutando query de actualización');
         $_SESSION['mensaje'] = "Error al actualizar producto";
