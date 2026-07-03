@@ -508,7 +508,10 @@ function confirmarEliminar(id, nombre) {
 <!-- Page specific script -->
 <script>
   $(function () {
-    $("#example1").DataTable({
+    var _savedPage = parseInt(sessionStorage.getItem('almacen_page') || '0', 10);
+    sessionStorage.removeItem('almacen_page');
+
+    var table = $("#example1").DataTable({
       "responsive": true, "lengthChange": false, "autoWidth": false,
       "buttons": [{ 
         extend: 'collection',
@@ -567,6 +570,15 @@ function confirmarEliminar(id, nombre) {
       }
       ],
     }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+
+    if (_savedPage > 0) {
+      table.page(_savedPage).draw(false);
+    }
+
+    // Guardar página al hacer clic en Editar
+    $(document).on('click', 'a[href^="update.php"]', function () {
+      sessionStorage.setItem('almacen_page', table.page());
+    });
 
     // DataTable para ventas pendientes
     $("#tablaPendientes").DataTable({
