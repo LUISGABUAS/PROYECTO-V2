@@ -308,6 +308,8 @@ Swal.fire({
 <!-- ========================================= -->
 
 <script>
+const BLOQUEAR_STOCK = <?= BLOQUEAR_STOCK_INSUFICIENTE ? 'true' : 'false' ?>;
+
 // ============ DATOS DE PRODUCTOS (JSON — sin opciones duplicadas en HTML) ============
 const PRODUCTOS_DATA = <?= json_encode(array_values(array_map(function($p){
   return [
@@ -362,14 +364,14 @@ function asignarPrecio(select){
   if (!prod) return;
   const fila  = select.closest('tr');
 
-  if(prod.stock <= 0){
+  if(BLOQUEAR_STOCK && prod.stock <= 0){
     Swal.fire({ icon:'warning', title:'Sin stock', text:'Este producto no tiene unidades disponibles en bodega' });
     $(select).val('').trigger('change');
     return;
   }
 
   fila.querySelector('.precio').value   = prod.precio;
-  fila.querySelector('.cantidad').max   = prod.stock;
+  if(BLOQUEAR_STOCK) fila.querySelector('.cantidad').max = prod.stock;
   calcularFila(select);
 }
 
@@ -380,7 +382,7 @@ function calcularFila(elemento){
   const maxStock      = parseInt(inputCantidad.max || 0);
   let   cantidad      = parseFloat(inputCantidad.value || 0);
 
-  if(maxStock > 0 && cantidad > maxStock){
+  if(BLOQUEAR_STOCK && maxStock > 0 && cantidad > maxStock){
     inputCantidad.value = maxStock;
     cantidad = maxStock;
     Swal.fire({ icon:'warning', title:'Stock insuficiente', text:`Solo hay ${maxStock} unidad(es) disponibles en bodega` });
