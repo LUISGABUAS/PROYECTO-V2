@@ -513,7 +513,7 @@ function confirmarEliminar(id, nombre) {
 
     var table = $("#example1").DataTable({
       "responsive": true, "lengthChange": false, "autoWidth": false,
-      "buttons": [{ 
+      "buttons": [{
         extend: 'collection',
         text: 'Export',
         orientation: 'landscape',
@@ -569,7 +569,8 @@ function confirmarEliminar(id, nombre) {
         collectionLayout: 'fixed three-column'
       }
       ],
-    }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+    });
+    table.buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
 
     if (_savedPage > 0) {
       table.page(_savedPage).draw(false);
