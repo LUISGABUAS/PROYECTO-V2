@@ -62,10 +62,12 @@ Swal.fire({
               <div class="col-md-4">
                 <div class="form-group">
                   <label><strong>Cliente</strong></label>
-                  <select name="cliente" class="form-control" required>
+                  <select name="cliente" id="select_cliente" class="form-control" required>
                     <option value="">Seleccione cliente</option>
                     <?php foreach($clientes_lista as $cli): ?>
-                      <option value="<?= $cli['id_cliente'] ?>" <?= $venta['cliente'] == $cli['id_cliente'] ? 'selected' : '' ?>>
+                      <option value="<?= $cli['id_cliente'] ?>"
+                              data-envio="<?= htmlspecialchars($cli['tipo_cliente']) ?>"
+                              <?= $venta['cliente'] == $cli['id_cliente'] ? 'selected' : '' ?>>
                         <?= htmlspecialchars($cli['nombre_completo']) ?>
                       </option>
                     <?php endforeach; ?>
@@ -76,10 +78,8 @@ Swal.fire({
               <div class="col-md-2">
                 <div class="form-group">
                   <label><strong>Tipo de envío</strong></label>
-                  <select name="envio" id="tipo_envio" class="form-control" required onchange="actualizarPorEnvio()">
-                    <option value="local"   <?= $venta['envio']=='local'   ?'selected':'' ?>>Local</option>
-                    <option value="foraneo" <?= $venta['envio']=='foraneo' ?'selected':'' ?>>Foráneo</option>
-                  </select>
+                  <input type="text" id="tipo_envio_display" class="form-control" readonly>
+                  <input type="hidden" name="envio" id="tipo_envio" value="<?= htmlspecialchars($venta['envio']) ?>" required>
                 </div>
               </div>
 
@@ -117,7 +117,13 @@ Swal.fire({
               <div class="col-md-2">
                 <div class="form-group">
                   <label><strong>Vendedor</strong></label>
-                  <input type="text" class="form-control" value="<?= $venta['vendedor_nombre'] ?? $venta['id_usuario'] ?>" disabled>
+                  <select name="id_usuario" class="form-control" required>
+                    <?php foreach($vendedores_lista as $u): ?>
+                      <option value="<?= $u['id'] ?>" <?= $venta['id_usuario'] == $u['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($u['nombres']) ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
                 </div>
               </div>
 
@@ -458,12 +464,14 @@ function seleccionarMetodoPendiente(metodo) {
   }
 }
 
-function actualizarPorEnvio(){
-  const envio           = document.getElementById('tipo_envio').value;
+function actualizarPorEnvio(envio) {
   const colTipoPago     = document.getElementById('col_tipo_pago');
   const filaComprobante = document.getElementById('fila_comprobante');
 
-  if(envio === 'local'){
+  document.getElementById('tipo_envio').value = envio;
+  document.getElementById('tipo_envio_display').value = envio === 'local' ? 'Local' : 'Foráneo';
+
+  if (envio === 'local') {
     colTipoPago.style.display = 'block';
     seleccionarPago(document.getElementById('tipo_pago').value || 'efectivo');
   } else {
@@ -852,12 +860,20 @@ $(document).ready(function(){
     width: '100%'
   }).on('change', function(){ asignarPrecio(this); });
 
+  // Inicializar display de envío con el valor actual
+  const envioInicial = document.getElementById('tipo_envio').value;
+  document.getElementById('tipo_envio_display').value = envioInicial === 'local' ? 'Local' : 'Foráneo';
+  actualizarPorEnvio(envioInicial);
+
   // Cargar direcciones al iniciar con el cliente actual
   const idClienteActual = <?= (int)$venta['cliente'] ?>;
   cargarDireccionesCliente(idClienteActual, _idDireccionGuardada);
 
-  // Recargar cuando cambia el cliente
-  $('select[name="cliente"]').on('change', function() {
+  // Cuando cambia el cliente: actualizar envío y direcciones
+  $('#select_cliente').on('change', function() {
+    const opt = this.options[this.selectedIndex];
+    const envio = opt?.dataset?.envio || 'local';
+    actualizarPorEnvio(envio);
     cargarDireccionesCliente(this.value, 0);
   });
 });

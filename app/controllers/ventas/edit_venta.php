@@ -30,9 +30,16 @@ if (!$venta) {
 /* =========================
    LISTA DE CLIENTES
 ========================= */
-$stmt = $pdo->prepare("SELECT id_cliente, nombre_completo FROM clientes ORDER BY nombre_completo");
+$stmt = $pdo->prepare("SELECT id_cliente, nombre_completo, tipo_cliente FROM clientes ORDER BY nombre_completo");
 $stmt->execute();
 $clientes_lista = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+/* =========================
+   LISTA DE VENDEDORES
+========================= */
+$stmt = $pdo->prepare("SELECT id, nombres FROM tb_usuario WHERE activo = 1 ORDER BY nombres");
+$stmt->execute();
+$vendedores_lista = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 /* =========================
    DETALLE DE VENTA
