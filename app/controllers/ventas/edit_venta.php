@@ -37,7 +37,7 @@ $clientes_lista = $stmt->fetchAll(PDO::FETCH_ASSOC);
 /* =========================
    LISTA DE VENDEDORES
 ========================= */
-$stmt = $pdo->prepare("SELECT id, nombres FROM tb_usuario WHERE activo = 1 ORDER BY nombres");
+$stmt = $pdo->prepare("SELECT id, nombres FROM tb_usuario ORDER BY nombres");
 $stmt->execute();
 $vendedores_lista = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
