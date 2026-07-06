@@ -35,9 +35,16 @@ $stmt = $pdo->prepare("SELECT
     COALESCE(u.nombres, 'Sin asignar') as vendedor,
     COUNT(DISTINCT v.id_venta) as total_ventas,
     COALESCE(SUM(v.total), 0) as monto_total,
-    COALESCE(ROUND(AVG(v.total), 2), 0) as promedio
+    COALESCE(ROUND(AVG(v.total), 2), 0) as promedio,
+    COALESCE(SUM(vd.pacas), 0) as total_pacas,
+    COALESCE(SUM(vd.pacas), 0) * 50 as comision
     FROM tb_ventas v
     LEFT JOIN tb_usuario u ON v.id_usuario = u.id
+    LEFT JOIN (
+        SELECT id_venta, SUM(cantidad) as pacas
+        FROM tb_ventas_detalle
+        GROUP BY id_venta
+    ) vd ON v.id_venta = vd.id_venta
     WHERE DATE(v.fecha) BETWEEN :desde AND :hasta
     GROUP BY v.id_usuario
     ORDER BY monto_total DESC
@@ -180,13 +187,15 @@ $ventas_tipo = $stmt->fetchAll(PDO::FETCH_ASSOC);
                       <th>#</th>
                       <th>Vendedor</th>
                       <th class="text-center"># Ventas</th>
+                      <th class="text-center">Pacas Totales</th>
                       <th class="text-right">Total $</th>
                       <th class="text-right">Promedio $</th>
+                      <th class="text-right">Comisión $</th>
                     </tr>
                   </thead>
                   <tbody>
                     <?php if(empty($ventas_vendedor)): ?>
-                    <tr><td colspan="5" class="text-center text-muted">Sin datos en el período seleccionado</td></tr>
+                    <tr><td colspan="7" class="text-center text-muted">Sin datos en el período seleccionado</td></tr>
                     <?php else: ?>
                     <?php $num = 1; ?>
                     <?php foreach($ventas_vendedor as $vv): ?>
@@ -194,8 +203,10 @@ $ventas_tipo = $stmt->fetchAll(PDO::FETCH_ASSOC);
                       <td><?= $num++ ?></td>
                       <td><?= htmlspecialchars($vv['vendedor']) ?></td>
                       <td class="text-center"><span class="badge badge-info"><?= $vv['total_ventas'] ?></span></td>
+                      <td class="text-center"><span class="badge badge-secondary"><?= number_format($vv['total_pacas']) ?></span></td>
                       <td class="text-right font-weight-bold">$<?= number_format($vv['monto_total'], 2) ?></td>
                       <td class="text-right">$<?= number_format($vv['promedio'], 2) ?></td>
+                      <td class="text-right text-success font-weight-bold">$<?= number_format($vv['comision'], 2) ?></td>
                     </tr>
                     <?php endforeach; ?>
                     <?php endif; ?>
