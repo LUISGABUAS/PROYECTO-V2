@@ -860,6 +860,12 @@ $(document).ready(function(){
     width: '100%'
   }).on('change', function(){ asignarPrecio(this); });
 
+  $('#select_cliente').select2({
+    theme: 'bootstrap4',
+    placeholder: 'Buscar cliente...',
+    width: '100%'
+  });
+
   // Inicializar display de envío con el valor actual
   const envioInicial = document.getElementById('tipo_envio').value;
   document.getElementById('tipo_envio_display').value = envioInicial === 'local' ? 'Local' : 'Foráneo';
@@ -871,8 +877,7 @@ $(document).ready(function(){
 
   // Cuando cambia el cliente: actualizar envío y direcciones
   $('#select_cliente').on('change', function() {
-    const opt = this.options[this.selectedIndex];
-    const envio = opt?.dataset?.envio || 'local';
+    const envio = $(this).find(':selected').data('envio') || 'local';
     actualizarPorEnvio(envio);
     cargarDireccionesCliente(this.value, 0);
   });
