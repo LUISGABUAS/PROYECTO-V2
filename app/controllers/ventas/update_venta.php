@@ -17,6 +17,7 @@ $id_venta             = (int)$_POST['id_venta'];
 $fecha                = $_POST['fecha'];
 $cliente              = $_POST['cliente'];
 $envio                = $_POST['envio'];
+$id_usuario           = (int)$_POST['id_usuario'];
 $total                = (float)$_POST['total'];
 $tipo_pago            = $_POST['tipo_pago'] ?? 'comprobante';
 $monto_pendiente      = ($tipo_pago === 'contra_entrega') ? (float)($_POST['monto_pendiente'] ?? 0) : 0.00;
@@ -146,12 +147,12 @@ try {
     $stmt = $pdo->prepare("UPDATE tb_ventas
         SET fecha = ?, cliente = ?, envio = ?, tipo_pago = ?, total = ?,
             monto_pendiente = ?, metodo_pendiente = ?, notas = ?,
-            id_direccion_entrega = ?, updated_at = ?
+            id_direccion_entrega = ?, id_usuario = ?, updated_at = ?
         WHERE id_venta = ?
     ");
     $stmt->execute([$fecha, $cliente, $envio, $tipo_pago, $total,
                     $monto_pendiente, $metodo_pendiente, $notas,
-                    $id_direccion_entrega, $fechaHora, $id_venta]);
+                    $id_direccion_entrega, $id_usuario, $fechaHora, $id_venta]);
 
     /* =========================
        6. REEMPLAZAR SOLO PRODUCTOS NO ENTREGADOS
