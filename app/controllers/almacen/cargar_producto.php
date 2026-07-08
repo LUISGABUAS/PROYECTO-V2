@@ -20,6 +20,18 @@ $query_productos->bindParam(':id_producto', $id_producto_get, PDO::PARAM_INT);
 $query_productos->execute();
 $datos_productos = $query_productos->fetchAll(PDO::FETCH_ASSOC);
 
+// Descuento activo del producto
+$_tiene_descuentos = (bool)$pdo->query("SHOW TABLES LIKE 'tb_descuentos'")->fetchColumn();
+$descuento_activo = null;
+if ($_tiene_descuentos) {
+    $stmt_d = $pdo->prepare("SELECT id, precio_descuento, porcentaje, fecha_inicio, fecha_fin
+        FROM tb_descuentos
+        WHERE id_producto = ? AND NOW() BETWEEN fecha_inicio AND fecha_fin
+        ORDER BY id DESC LIMIT 1");
+    $stmt_d->execute([$id_producto_get]);
+    $descuento_activo = $stmt_d->fetch(PDO::FETCH_ASSOC) ?: null;
+}
+
 foreach ($datos_productos as $pro) {
     $id            = $pro['id_producto'];
     $codigo        = $pro['codigo'];

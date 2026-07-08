@@ -203,6 +203,43 @@ if (in_array(24, $_SESSION['permisos'] ?? [])) {
 }
 
 /* =========================
+   DESCUENTOS ACTIVOS Y VENTAS CON DESCUENTO
+========================= */
+$descuentos_activos  = [];
+$ventas_con_descuento = [];
+$_tiene_desc = (bool)$pdo->query("SHOW TABLES LIKE 'tb_descuentos'")->fetchColumn();
+if ($_tiene_desc && in_array(24, $_SESSION['permisos'] ?? [])) {
+    $stmt = $pdo->query("SELECT d.id, a.codigo, a.nombre, a.precio_venta,
+        d.precio_descuento, d.porcentaje, d.fecha_inicio, d.fecha_fin
+        FROM tb_descuentos d
+        INNER JOIN tb_almacen a ON a.id_producto = d.id_producto
+        WHERE NOW() BETWEEN d.fecha_inicio AND d.fecha_fin
+        ORDER BY d.fecha_fin ASC");
+    $descuentos_activos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Verificar si la columna id_descuento existe en tb_ventas_detalle
+    $_col_desc = $pdo->query("SHOW COLUMNS FROM tb_ventas_detalle LIKE 'id_descuento'")->fetchAll();
+    if (!empty($_col_desc)) {
+        $stmt = $pdo->prepare("SELECT
+            v.id_venta, DATE(v.fecha) AS fecha,
+            a.codigo, a.nombre AS producto,
+            vd.cantidad, vd.precio, d.porcentaje,
+            d.precio_original,
+            (vd.cantidad * (d.precio_original - vd.precio)) AS ahorro
+            FROM tb_ventas_detalle vd
+            INNER JOIN tb_ventas v ON v.id_venta = vd.id_venta
+            INNER JOIN tb_almacen a ON a.id_producto = vd.id_producto
+            INNER JOIN tb_descuentos d ON d.id = vd.id_descuento
+            WHERE DATE(v.fecha) BETWEEN :desde AND :hasta
+            ORDER BY v.fecha DESC
+            LIMIT 50
+        ");
+        $stmt->execute([':desde' => $fecha_inicio, ':hasta' => $fecha_fin]);
+        $ventas_con_descuento = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+}
+
+/* =========================
    STOCK BAJO (productos bajo mínimo)
 ========================= */
 $stock_bajo = [];
@@ -498,6 +535,95 @@ $stock_bajo = $stmt->fetchAll(PDO::FETCH_ASSOC);
       </div>
       <?php endif; ?>
 
+      <!-- DESCUENTOS ACTIVOS -->
+      <?php if (!empty($descuentos_activos)): ?>
+      <div class="row mt-4">
+        <div class="col-md-12">
+          <div class="card card-danger">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-tags"></i> Descuentos Activos (<?= count($descuentos_activos) ?>)</h3>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered mb-0">
+                  <thead class="thead-light">
+                    <tr>
+                      <th>Producto</th>
+                      <th class="text-center">Descuento</th>
+                      <th class="text-right">Precio Normal</th>
+                      <th class="text-right">Precio con Descuento</th>
+                      <th class="text-center">Termina</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach($descuentos_activos as $da): ?>
+                    <tr>
+                      <td><?= htmlspecialchars($da['codigo'] . ' — ' . $da['nombre']) ?></td>
+                      <td class="text-center"><span class="badge badge-danger"><?= $da['porcentaje'] ?>%</span></td>
+                      <td class="text-right text-muted"><s>$<?= number_format($da['precio_venta'], 2) ?></s></td>
+                      <td class="text-right font-weight-bold text-success">$<?= number_format($da['precio_descuento'], 2) ?></td>
+                      <td class="text-center text-warning"><i class="far fa-clock"></i> <?= date('d/m/Y H:i', strtotime($da['fecha_fin'])) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <?php endif; ?>
+
+      <!-- VENTAS CON DESCUENTO EN EL PERÍODO -->
+      <?php if (!empty($ventas_con_descuento)): ?>
+      <?php $ahorro_total = array_sum(array_column($ventas_con_descuento, 'ahorro')); ?>
+      <div class="row mt-2">
+        <div class="col-md-12">
+          <div class="card card-outline card-danger">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-tag"></i> Ventas con Descuento en el Período
+                <span class="badge badge-danger ml-2"><?= count($ventas_con_descuento) ?> líneas</span>
+                <span class="badge badge-secondary ml-1">Ahorro total cliente: $<?= number_format($ahorro_total, 2) ?></span>
+              </h3>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table id="tablaDescuentos" class="table table-sm table-bordered table-striped">
+                  <thead class="thead-light">
+                    <tr>
+                      <th>#Venta</th>
+                      <th>Fecha</th>
+                      <th>Producto</th>
+                      <th class="text-center">Cant.</th>
+                      <th class="text-center">Desc. %</th>
+                      <th class="text-right">P. Normal</th>
+                      <th class="text-right">P. Vendido</th>
+                      <th class="text-right">Ahorro</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach($ventas_con_descuento as $vd): ?>
+                    <tr>
+                      <td><a href="<?= $URL ?>/dashboard/detalle_venta.php?id=<?= $vd['id_venta'] ?>">#<?= $vd['id_venta'] ?></a></td>
+                      <td><?= date('d/m/Y', strtotime($vd['fecha'])) ?></td>
+                      <td><?= htmlspecialchars($vd['codigo'] . ' — ' . $vd['producto']) ?></td>
+                      <td class="text-center"><?= $vd['cantidad'] ?></td>
+                      <td class="text-center"><span class="badge badge-warning"><?= $vd['porcentaje'] ?>%</span></td>
+                      <td class="text-right text-muted"><s>$<?= number_format($vd['precio_original'], 2) ?></s></td>
+                      <td class="text-right text-success font-weight-bold">$<?= number_format($vd['precio'], 2) ?></td>
+                      <td class="text-right text-danger">$<?= number_format($vd['ahorro'], 2) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <?php endif; ?>
+
       <!-- TABLA DE STOCK -->
       <div class="row mt-4">
         <div class="col-md-12">
@@ -718,6 +844,18 @@ const chartTipoPeriodo = new Chart(ctxTipoPeriodo, {
         }
     }
 });
+
+// DataTable para ventas con descuento
+<?php if (!empty($ventas_con_descuento)): ?>
+$(function () {
+    $("#tablaDescuentos").DataTable({
+        "responsive": true, "lengthChange": false, "autoWidth": false,
+        "buttons": [{ extend: 'collection', text: 'Exportar',
+            buttons: [{ text: 'Excel', extend: 'excel' }, { text: 'PDF', extend: 'pdf' }]
+        }]
+    }).buttons().container().appendTo('#tablaDescuentos_wrapper .col-md-6:eq(0)');
+});
+<?php endif; ?>
 
 // DataTable para la tabla de stock
 $(function () {

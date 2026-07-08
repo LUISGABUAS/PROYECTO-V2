@@ -28,6 +28,22 @@ if ($_tiene_especial) {
     $select_especial = "0 AS stock_video, 0 AS stock_flejada,";
 }
 
+// Detectar si tb_descuentos existe
+$_tiene_descuentos = (bool)$pdo->query("SHOW TABLES LIKE 'tb_descuentos'")->fetchColumn();
+$join_descuento  = $_tiene_descuentos ? "LEFT JOIN (
+    SELECT id_producto, id AS id_descuento, precio_descuento, porcentaje, fecha_fin
+    FROM tb_descuentos
+    WHERE NOW() BETWEEN fecha_inicio AND fecha_fin
+    ORDER BY id DESC
+) d_activo ON d_activo.id_producto = a.id_producto" : "";
+$select_descuento = $_tiene_descuentos ? "COALESCE(d_activo.precio_descuento, a.precio_venta) AS precio_efectivo,
+    d_activo.id_descuento,
+    d_activo.porcentaje   AS descuento_porcentaje,
+    d_activo.fecha_fin    AS descuento_fecha_fin," : "a.precio_venta AS precio_efectivo,
+    NULL AS id_descuento,
+    NULL AS descuento_porcentaje,
+    NULL AS descuento_fecha_fin,";
+
 $sql_productos = "SELECT
     a.id_producto,
     a.codigo,
@@ -48,8 +64,9 @@ $sql_productos = "SELECT
     COALESCE(sp.stock_pendiente, 0) AS stock_pendiente,
     COALESCE(sb.stock_bodega, 0) - COALESCE(sp.stock_pendiente, 0) AS stock_disponible,
     $select_especial
+    $select_descuento
 
-    a.id_producto AS _id -- dummy para evitar trailing comma
+    a.id_producto AS _id
 
 FROM tb_almacen a
 INNER JOIN tb_categorias cat ON a.id_categoria = cat.id_categoria
@@ -68,6 +85,7 @@ LEFT JOIN (
     GROUP BY id_producto
 ) sp ON sp.id_producto = a.id_producto
 $join_especial
+$join_descuento
 WHERE 1=1
 ";
 
