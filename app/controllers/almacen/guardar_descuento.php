@@ -19,14 +19,10 @@ if (!$id_producto) {
 }
 
 if ($accion === 'guardar') {
-    $porcentaje  = (float)($_POST['porcentaje'] ?? 0);
-    $fecha_inicio = trim($_POST['fecha_inicio'] ?? '');
-    $fecha_fin    = trim($_POST['fecha_fin']    ?? '');
+    $precio_descuento = (float)($_POST['precio_descuento'] ?? 0);
+    $fecha_inicio     = trim($_POST['fecha_inicio'] ?? '');
+    $fecha_fin        = trim($_POST['fecha_fin']    ?? '');
 
-    if ($porcentaje <= 0 || $porcentaje >= 100) {
-        echo json_encode(['success' => false, 'message' => 'El porcentaje debe ser entre 1 y 99']);
-        exit;
-    }
     if (!$fecha_inicio || !$fecha_fin || $fecha_fin <= $fecha_inicio) {
         echo json_encode(['success' => false, 'message' => 'Fechas inválidas']);
         exit;
@@ -42,6 +38,11 @@ if ($accion === 'guardar') {
         exit;
     }
 
+    if ($precio_descuento <= 0 || $precio_descuento >= $precio_original) {
+        echo json_encode(['success' => false, 'message' => 'El precio con descuento debe ser menor al precio de venta ($' . number_format($precio_original, 2) . ')']);
+        exit;
+    }
+
     // No permitir solapamiento con descuento activo
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM tb_descuentos
         WHERE id_producto = ?
@@ -53,7 +54,7 @@ if ($accion === 'guardar') {
         exit;
     }
 
-    $precio_descuento = round($precio_original * (1 - $porcentaje / 100), 2);
+    $porcentaje = round((1 - $precio_descuento / $precio_original) * 100, 2);
 
     $stmt = $pdo->prepare("INSERT INTO tb_descuentos
         (id_producto, precio_original, precio_descuento, porcentaje, fecha_inicio, fecha_fin)
