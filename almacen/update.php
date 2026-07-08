@@ -290,20 +290,20 @@ include('../app/controllers/almacen/cargar_producto.php');
               <div class="row align-items-end">
                 <div class="col-md-2">
                   <div class="form-group mb-0">
-                    <label><strong>Descuento %</strong></label>
+                    <label><strong>Precio con descuento</strong></label>
                     <div class="input-group">
-                      <input type="number" id="desc_porcentaje" class="form-control"
-                             min="1" max="99" step="0.01" placeholder="Ej: 15">
-                      <div class="input-group-append"><span class="input-group-text">%</span></div>
+                      <div class="input-group-prepend"><span class="input-group-text">$</span></div>
+                      <input type="number" id="desc_precio_descuento" class="form-control"
+                             min="0.01" step="0.01" placeholder="Ej: 850">
                     </div>
                   </div>
                 </div>
                 <div class="col-md-2">
                   <div class="form-group mb-0">
-                    <label><strong>Precio resultante</strong></label>
+                    <label><strong>Descuento calculado</strong></label>
                     <div class="input-group">
-                      <div class="input-group-prepend"><span class="input-group-text">$</span></div>
-                      <input type="text" id="desc_precio_resultado" class="form-control" readonly>
+                      <input type="text" id="desc_porcentaje_resultado" class="form-control" readonly>
+                      <div class="input-group-append"><span class="input-group-text">%</span></div>
                     </div>
                   </div>
                 </div>
@@ -347,23 +347,23 @@ const _precioVenta   = <?= (float)$precio_venta ?>;
 const _idProducto    = <?= (int)$id_producto_get ?>;
 const _urlDescuento  = '<?= $URL ?>/app/controllers/almacen/guardar_descuento.php';
 
-document.getElementById('desc_porcentaje')?.addEventListener('input', function(){
-  const pct = parseFloat(this.value);
-  const res  = document.getElementById('desc_precio_resultado');
-  if (pct > 0 && pct < 100) {
-    res.value = (_precioVenta * (1 - pct / 100)).toFixed(2);
+document.getElementById('desc_precio_descuento')?.addEventListener('input', function(){
+  const precio = parseFloat(this.value);
+  const res    = document.getElementById('desc_porcentaje_resultado');
+  if (precio > 0 && precio < _precioVenta) {
+    res.value = (100 - (precio / _precioVenta * 100)).toFixed(2);
   } else {
     res.value = '';
   }
 });
 
 function guardarDescuento() {
-  const pct    = parseFloat(document.getElementById('desc_porcentaje').value);
-  const inicio = document.getElementById('desc_inicio').value;
-  const fin    = document.getElementById('desc_fin').value;
+  const precioDesc = parseFloat(document.getElementById('desc_precio_descuento').value);
+  const inicio     = document.getElementById('desc_inicio').value;
+  const fin        = document.getElementById('desc_fin').value;
 
-  if (!pct || pct <= 0 || pct >= 100) {
-    Swal.fire({ icon: 'warning', title: 'Descuento inválido', text: 'Ingresa un porcentaje entre 1 y 99' });
+  if (!precioDesc || precioDesc <= 0 || precioDesc >= _precioVenta) {
+    Swal.fire({ icon: 'warning', title: 'Precio inválido', text: 'El precio con descuento debe ser menor al precio de venta ($' + _precioVenta.toFixed(2) + ')' });
     return;
   }
   if (!fin || fin <= inicio) {
@@ -374,7 +374,7 @@ function guardarDescuento() {
   const fd = new FormData();
   fd.append('accion', 'guardar');
   fd.append('id_producto', _idProducto);
-  fd.append('porcentaje', pct);
+  fd.append('precio_descuento', precioDesc);
   fd.append('fecha_inicio', inicio.replace('T', ' '));
   fd.append('fecha_fin',    fin.replace('T', ' '));
 
