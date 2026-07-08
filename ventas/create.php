@@ -229,6 +229,8 @@ Swal.fire({
                         </td>
                         <td>
                           <input type="number" name="precios[]" class="form-control form-control-sm text-center precio" step="0.01" readonly>
+                          <input type="hidden" name="descuentos[]" class="id_descuento" value="">
+                          <span class="badge badge-warning badge-descuento mt-1" style="display:none;font-size:11px;"></span>
                         </td>
                         <td>
                           <input type="number" class="form-control form-control-sm text-center subtotal" step="0.01" readonly>
@@ -312,11 +314,16 @@ const BLOQUEAR_STOCK = <?= BLOQUEAR_STOCK_INSUFICIENTE ? 'true' : 'false' ?>;
 
 // ============ DATOS DE PRODUCTOS (JSON — sin opciones duplicadas en HTML) ============
 const PRODUCTOS_DATA = <?= json_encode(array_values(array_map(function($p){
+  $tiene_descuento = !empty($p['id_descuento']);
+  $label_descuento = $tiene_descuento ? ' 🏷️ -' . number_format($p['descuento_porcentaje'], 0) . '%' : '';
   return [
-    'id'     => (string)$p['id_producto'],
-    'text'   => $p['codigo'] . ' — ' . $p['nombre'] . ' (' . $p['proveedor'] . ') [' . (int)$p['stock_disponible'] . ' disp.]',
-    'precio' => (float)$p['precio_venta'],
-    'stock'  => (int)$p['stock_disponible'],
+    'id'           => (string)$p['id_producto'],
+    'text'         => $p['codigo'] . ' — ' . $p['nombre'] . ' (' . $p['proveedor'] . ') [' . (int)$p['stock_disponible'] . ' disp.]' . $label_descuento,
+    'precio'       => (float)$p['precio_efectivo'],
+    'precio_base'  => (float)$p['precio_venta'],
+    'stock'        => (int)$p['stock_disponible'],
+    'id_descuento' => $p['id_descuento'] ? (int)$p['id_descuento'] : null,
+    'descuento_pct'=> $tiene_descuento ? (float)$p['descuento_porcentaje'] : 0,
   ];
 }, $datos_productos)), JSON_UNESCAPED_UNICODE) ?>;
 const PRODUCTOS_MAP = Object.fromEntries(PRODUCTOS_DATA.map(p => [p.id, p]));
@@ -337,7 +344,11 @@ function agregarFila(){
   <tr>
     <td><select name="productos[]" class="form-control form-control-sm producto select2-producto" required></select></td>
     <td><input type="number" name="cantidades[]" class="form-control form-control-sm text-center cantidad" min="1" value="1" oninput="calcularFila(this)" required></td>
-    <td><input type="number" name="precios[]" class="form-control form-control-sm text-center precio" step="0.01" readonly></td>
+    <td>
+      <input type="number" name="precios[]" class="form-control form-control-sm text-center precio" step="0.01" readonly>
+      <input type="hidden" name="descuentos[]" class="id_descuento" value="">
+      <span class="badge badge-warning badge-descuento mt-1" style="display:none;font-size:11px;"></span>
+    </td>
     <td><input type="number" class="form-control form-control-sm text-center subtotal" step="0.01" readonly></td>
     <td class="text-center"><button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)"><i class="fa fa-trash"></i></button></td>
   </tr>`;
@@ -370,7 +381,20 @@ function asignarPrecio(select){
     return;
   }
 
-  fila.querySelector('.precio').value   = prod.precio;
+  fila.querySelector('.precio').value       = prod.precio;
+  fila.querySelector('.id_descuento').value = prod.id_descuento || '';
+
+  // Badge de descuento
+  const badge = fila.querySelector('.badge-descuento');
+  if (badge) {
+    if (prod.descuento_pct > 0) {
+      badge.textContent = '-' + prod.descuento_pct.toFixed(0) + '%';
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
   if(BLOQUEAR_STOCK) fila.querySelector('.cantidad').max = prod.stock;
   calcularFila(select);
 }

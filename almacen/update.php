@@ -258,6 +258,82 @@ include('../app/controllers/almacen/cargar_producto.php');
       </div>
 
 
+      <!-- SECCIÓN DESCUENTOS -->
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card card-warning">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-tags"></i> Descuento del Producto</h3>
+            </div>
+            <div class="card-body">
+
+              <?php if ($descuento_activo): ?>
+              <!-- Descuento activo -->
+              <div class="alert alert-warning d-flex align-items-center justify-content-between">
+                <div>
+                  <strong><i class="fas fa-tag"></i> Descuento activo:</strong>
+                  <?= $descuento_activo['porcentaje'] ?>% — Precio con descuento:
+                  <strong>$<?= number_format($descuento_activo['precio_descuento'], 2) ?></strong>
+                  &nbsp;|&nbsp; Termina: <strong><?= date('d/m/Y H:i', strtotime($descuento_activo['fecha_fin'])) ?></strong>
+                </div>
+                <button type="button" class="btn btn-danger btn-sm ml-3"
+                        onclick="cancelarDescuento(<?= $descuento_activo['id'] ?>)">
+                  <i class="fas fa-times"></i> Cancelar descuento
+                </button>
+              </div>
+              <?php else: ?>
+              <p class="text-muted mb-3">Sin descuento activo. Precio de venta actual: <strong>$<?= number_format($precio_venta, 2) ?></strong></p>
+              <?php endif; ?>
+
+              <!-- Formulario nuevo descuento -->
+              <?php if (!$descuento_activo): ?>
+              <div class="row align-items-end">
+                <div class="col-md-2">
+                  <div class="form-group mb-0">
+                    <label><strong>Descuento %</strong></label>
+                    <div class="input-group">
+                      <input type="number" id="desc_porcentaje" class="form-control"
+                             min="1" max="99" step="0.01" placeholder="Ej: 15">
+                      <div class="input-group-append"><span class="input-group-text">%</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group mb-0">
+                    <label><strong>Precio resultante</strong></label>
+                    <div class="input-group">
+                      <div class="input-group-prepend"><span class="input-group-text">$</span></div>
+                      <input type="text" id="desc_precio_resultado" class="form-control" readonly>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group mb-0">
+                    <label><strong>Inicio</strong></label>
+                    <input type="datetime-local" id="desc_inicio" class="form-control"
+                           value="<?= date('Y-m-d\TH:i') ?>">
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group mb-0">
+                    <label><strong>Fin</strong></label>
+                    <input type="datetime-local" id="desc_fin" class="form-control">
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <button type="button" class="btn btn-warning btn-block"
+                          onclick="guardarDescuento()">
+                    <i class="fas fa-tag"></i> Aplicar descuento
+                  </button>
+                </div>
+              </div>
+              <?php endif; ?>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
       </div><!-- /.container-fluid -->
     </div>
     <!-- /.content -->
@@ -265,3 +341,81 @@ include('../app/controllers/almacen/cargar_producto.php');
   <!-- /.content-wrapper -->
 <?php include('../layout/mensajes.php') ?>
 <?php include('../layout/parte2.php'); ?>
+
+<script>
+const _precioVenta   = <?= (float)$precio_venta ?>;
+const _idProducto    = <?= (int)$id_producto_get ?>;
+const _urlDescuento  = '<?= $URL ?>/app/controllers/almacen/guardar_descuento.php';
+
+document.getElementById('desc_porcentaje')?.addEventListener('input', function(){
+  const pct = parseFloat(this.value);
+  const res  = document.getElementById('desc_precio_resultado');
+  if (pct > 0 && pct < 100) {
+    res.value = (_precioVenta * (1 - pct / 100)).toFixed(2);
+  } else {
+    res.value = '';
+  }
+});
+
+function guardarDescuento() {
+  const pct    = parseFloat(document.getElementById('desc_porcentaje').value);
+  const inicio = document.getElementById('desc_inicio').value;
+  const fin    = document.getElementById('desc_fin').value;
+
+  if (!pct || pct <= 0 || pct >= 100) {
+    Swal.fire({ icon: 'warning', title: 'Descuento inválido', text: 'Ingresa un porcentaje entre 1 y 99' });
+    return;
+  }
+  if (!fin || fin <= inicio) {
+    Swal.fire({ icon: 'warning', title: 'Fechas inválidas', text: 'La fecha de fin debe ser posterior al inicio' });
+    return;
+  }
+
+  const fd = new FormData();
+  fd.append('accion', 'guardar');
+  fd.append('id_producto', _idProducto);
+  fd.append('porcentaje', pct);
+  fd.append('fecha_inicio', inicio.replace('T', ' '));
+  fd.append('fecha_fin',    fin.replace('T', ' '));
+
+  fetch(_urlDescuento, { method: 'POST', body: fd, credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        Swal.fire({ icon: 'success', title: '¡Descuento aplicado!',
+          text: 'Precio con descuento: $' + parseFloat(data.precio_descuento).toFixed(2),
+          confirmButtonText: 'OK'
+        }).then(() => location.reload());
+      } else {
+        Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+      }
+    });
+}
+
+function cancelarDescuento(idDescuento) {
+  Swal.fire({
+    icon: 'question',
+    title: '¿Cancelar descuento?',
+    text: 'El precio volverá al precio de venta original.',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, cancelar',
+    cancelButtonText: 'No'
+  }).then(res => {
+    if (!res.isConfirmed) return;
+    const fd = new FormData();
+    fd.append('accion', 'cancelar');
+    fd.append('id_producto', _idProducto);
+    fd.append('id_descuento', idDescuento);
+    fetch(_urlDescuento, { method: 'POST', body: fd, credentials: 'same-origin' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          Swal.fire({ icon: 'success', title: 'Descuento cancelado', timer: 1500, showConfirmButton: false })
+            .then(() => location.reload());
+        } else {
+          Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+        }
+      });
+  });
+}
+</script>

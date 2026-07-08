@@ -30,9 +30,10 @@ try {
     $notas                = trim($_POST['notas'] ?? '') ?: null;
     $id_direccion_entrega = !empty($_POST['id_direccion_entrega']) ? (int)$_POST['id_direccion_entrega'] : null;
 
-    $productos  = $_POST['productos'];
-    $cantidades = $_POST['cantidades'];
-    $precios    = $_POST['precios'];
+    $productos   = $_POST['productos'];
+    $cantidades  = $_POST['cantidades'];
+    $precios     = $_POST['precios'];
+    $descuentos  = $_POST['descuentos'] ?? [];
 
     if (empty($productos)) {
         throw new Exception("No hay productos en la venta");
@@ -156,21 +157,23 @@ try {
     ====================== */
     foreach ($productos as $i => $id_producto) {
 
-        $cantidad = (int)$cantidades[$i];
-        $precio   = (float)$precios[$i];
-        $subtotal = $cantidad * $precio;
+        $cantidad     = (int)$cantidades[$i];
+        $precio       = (float)$precios[$i];
+        $subtotal     = $cantidad * $precio;
+        $id_descuento = !empty($descuentos[$i]) ? (int)$descuentos[$i] : null;
 
         $stmt = $pdo->prepare("
             INSERT INTO tb_ventas_detalle
-            (id_venta, id_producto, cantidad, cantidad_entregada, precio, subtotal)
-            VALUES (?, ?, ?, 0, ?, ?)
+            (id_venta, id_producto, cantidad, cantidad_entregada, precio, subtotal, id_descuento)
+            VALUES (?, ?, ?, 0, ?, ?, ?)
         ");
         $stmt->execute([
             $id_venta,
             $id_producto,
             $cantidad,
             $precio,
-            $subtotal
+            $subtotal,
+            $id_descuento
         ]);
     }
 
