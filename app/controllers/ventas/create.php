@@ -162,19 +162,26 @@ try {
         $subtotal     = $cantidad * $precio;
         $id_descuento = !empty($descuentos[$i]) ? (int)$descuentos[$i] : null;
 
-        $stmt = $pdo->prepare("
-            INSERT INTO tb_ventas_detalle
-            (id_venta, id_producto, cantidad, cantidad_entregada, precio, subtotal, id_descuento)
-            VALUES (?, ?, ?, 0, ?, ?, ?)
-        ");
-        $stmt->execute([
-            $id_venta,
-            $id_producto,
-            $cantidad,
-            $precio,
-            $subtotal,
-            $id_descuento
-        ]);
+        static $_tiene_col_descuento = null;
+        if ($_tiene_col_descuento === null) {
+            $_tiene_col_descuento = (bool)$pdo->query("SHOW COLUMNS FROM tb_ventas_detalle LIKE 'id_descuento'")->fetchColumn();
+        }
+
+        if ($_tiene_col_descuento) {
+            $stmt = $pdo->prepare("
+                INSERT INTO tb_ventas_detalle
+                (id_venta, id_producto, cantidad, cantidad_entregada, precio, subtotal, id_descuento)
+                VALUES (?, ?, ?, 0, ?, ?, ?)
+            ");
+            $stmt->execute([$id_venta, $id_producto, $cantidad, $precio, $subtotal, $id_descuento]);
+        } else {
+            $stmt = $pdo->prepare("
+                INSERT INTO tb_ventas_detalle
+                (id_venta, id_producto, cantidad, cantidad_entregada, precio, subtotal)
+                VALUES (?, ?, ?, 0, ?, ?)
+            ");
+            $stmt->execute([$id_venta, $id_producto, $cantidad, $precio, $subtotal]);
+        }
     }
 
     $pdo->commit();
