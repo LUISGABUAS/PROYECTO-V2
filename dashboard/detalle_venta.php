@@ -39,7 +39,6 @@ try {
             v.id_venta,
             v.fecha,
             v.total,
-            v.updated_at as salida_fecha,
             v.estado_logistico,
             v.id_direccion_entrega,
             c.nombre_completo AS cliente_nombre,
@@ -52,7 +51,11 @@ try {
             d.nombre_destinatario AS dir_nombre_destinatario,
             d.es_principal AS dir_es_principal,
             u.nombres AS vendedor_nombre,
-            u.email AS vendedor_email
+            u.email AS vendedor_email,
+            (SELECT MAX(s.fecha_salida)
+             FROM tb_ventas_stock vs
+             JOIN stock s ON s.id_stock = vs.id_stock
+             WHERE vs.id_venta = v.id_venta) AS salida_fecha
         FROM tb_ventas v
         JOIN clientes c ON v.cliente = c.id_cliente
         JOIN tb_usuario u ON v.id_usuario = u.id
@@ -140,12 +143,7 @@ try {
             </div>
 
             <style>
-              .card-body dl dt { color: rgba(255,255,255,0.55) !important; font-size:.85em; font-weight:600; }
-              .card-body dl dd { color: #fff !important; }
-              @media (prefers-color-scheme: light) {
-                .card-body dl dt { color: #555 !important; }
-                .card-body dl dd { color: #212529 !important; }
-              }
+              .card-body dl dt { font-size:.85em; font-weight:600; }
             </style>
 
             <div class="row">
@@ -176,7 +174,7 @@ try {
                                 <dd class="col-sm-7">
                                     <?php
                                         $ts = !empty($venta['salida_fecha']) ? strtotime($venta['salida_fecha']) : false;
-                                        echo ($ts && $ts > 0) ? date('d/m/Y H:i', $ts) : '<span class="text-muted">—</span>';
+                                        echo ($ts > 0) ? '<i class="far fa-calendar-check text-success mr-1"></i>' . date('d/m/Y H:i', $ts) : '<span class="text-muted">Sin salida registrada</span>';
                                     ?>
                                 </dd>
 
