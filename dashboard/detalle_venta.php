@@ -85,6 +85,18 @@ try {
     $sqlDetalle->execute([':id' => $id_venta]);
     $detalles = $sqlDetalle->fetchAll(PDO::FETCH_ASSOC);
 
+    // Etiquetas (pacas escaneadas) asignadas a esta venta
+    $sqlEtiquetas = $pdo->prepare("
+        SELECT s.codigo_unico, a.codigo AS codigo_producto, a.nombre AS producto
+        FROM tb_ventas_stock vs
+        JOIN stock s      ON s.id_stock    = vs.id_stock
+        JOIN tb_almacen a ON a.id_producto = s.id_producto
+        WHERE vs.id_venta = :id
+        ORDER BY a.nombre ASC, s.codigo_unico ASC
+    ");
+    $sqlEtiquetas->execute([':id' => $id_venta]);
+    $etiquetas = $sqlEtiquetas->fetchAll(PDO::FETCH_ASSOC);
+
 } catch (PDOException $e) {
     echo "<script>Swal.fire('Error al cargar la venta', '" . htmlspecialchars($e->getMessage()) . "', 'error')</script>";
     exit;
@@ -324,6 +336,34 @@ try {
                                     </tfoot>
                                 </table>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ETIQUETAS / PACAS ESCANEADAS -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-dark">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-barcode"></i> Etiquetas escaneadas
+                                <span class="badge badge-secondary ml-2"><?= count($etiquetas) ?> paca(s)</span>
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <?php if (empty($etiquetas)): ?>
+                                <p class="text-muted mb-0"><i class="fas fa-info-circle"></i> Aún no se han escaneado etiquetas para esta venta.</p>
+                            <?php else: ?>
+                                <div class="d-flex flex-wrap" style="gap:8px;">
+                                    <?php foreach ($etiquetas as $et): ?>
+                                        <span class="badge badge-dark" style="font-size:13px; padding:6px 10px; letter-spacing:1px;">
+                                            <i class="fas fa-tag mr-1"></i><?= htmlspecialchars($et['codigo_unico']) ?>
+                                            <small class="text-muted ml-1">(<?= htmlspecialchars($et['codigo_producto']) ?>)</small>
+                                        </span>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
