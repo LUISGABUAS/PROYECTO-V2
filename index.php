@@ -2,6 +2,13 @@
 
 include('app/config.php');
 include('layout/sesion.php');
+
+// Rol GUÍAS: redirigir directo a foráneos
+if (in_array(40, $_SESSION['permisos'] ?? []) && !in_array(24, $_SESSION['permisos'] ?? []) && !in_array(25, $_SESSION['permisos'] ?? [])) {
+    header('Location: ' . $URL . '/dashboard/foraneos.php');
+    exit;
+}
+
 include('layout/parte1.php');
 
 include('app/controllers/usuarios/listado_de_usuarios.php');
@@ -36,82 +43,48 @@ include('app/controllers/ventas/reporte_ventas.php');
       <div class="container-fluid">
         
      <div class="row">
-         
+
+          <!-- USUARIOS -->
+          <?php if (in_array(1, $_SESSION['permisos']) || in_array(2, $_SESSION['permisos'])): ?>
           <div class="col-lg-3 col-6">
-            <!-- small box -->
             <div class="small-box bg-warning">
               <div class="inner">
-                <?php 
-                $contador_de_usuarios = 0;
-                foreach($datos_usuarios as $usuario){
-                  // Aquí podrías procesar cada usuario si es necesario
-                  $contador_de_usuarios = $contador_de_usuarios + 1;
-                }
-                ?>
-                <h3><?php echo $contador_de_usuarios;?></h3>
-
+                <h3><?php echo count($datos_usuarios); ?></h3>
                 <p>Usuarios registrados</p>
               </div>
-              <a href="<?php echo $URL?>/usuarios/create.php">
-                <div class="icon">
-                <i class="fa fas fa-user-plus"></i>
-              </div>
-              </a>
+              <div class="icon"><i class="fa fas fa-user-plus"></i></div>
               <a href="<?php echo $URL?>/usuarios/" class="small-box-footer">Ver más <i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
+          <?php endif; ?>
 
           <!-- PRODUCTOS -->
-
-                <div class="col-lg-3 col-6">
-            <!-- small box -->
+          <?php if (in_array(8, $_SESSION['permisos']) || in_array(9, $_SESSION['permisos'])): ?>
+          <div class="col-lg-3 col-6">
             <div class="small-box bg-info">
               <div class="inner">
-                <?php 
-                $contador_de_productos = 0;
-                foreach($datos_productos as $producto){
-                  // Aquí podrías procesar cada usuario si es necesario
-                  $contador_de_productos = $contador_de_productos + 1;
-                }
-                ?>
-                <h3><?php echo $contador_de_productos;?></h3>
-
+                <h3><?php echo count($datos_productos); ?></h3>
                 <p>Productos registrados</p>
               </div>
-              <a href="<?php echo $URL?>/almacen/create.php">
-                <div class="icon">
-                <i class="nav-icon fas fa-list"></i>
-              </div>
-              </a>
+              <div class="icon"><i class="nav-icon fas fa-list"></i></div>
               <a href="<?php echo $URL?>/almacen/" class="small-box-footer">Ver más <i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
+          <?php endif; ?>
 
           <!-- PROVEEDORES -->
-
-                <div class="col-lg-3 col-6">
-            <!-- small box -->
+          <?php if (in_array(16, $_SESSION['permisos'])): ?>
+          <div class="col-lg-3 col-6">
             <div class="small-box bg-dark">
               <div class="inner">
-                <?php 
-                $contador_de_usuarios = 0;
-                foreach($proovedores_datos as $proovedor){
-                  // Aquí podrías procesar cada usuario si es necesario
-                  $contador_de_usuarios = $contador_de_usuarios + 1;
-                }
-                ?>
-                <h3><?php echo $contador_de_usuarios;?></h3>
-
+                <h3><?php echo count($proovedores_datos); ?></h3>
                 <p>Proveedores registrados</p>
               </div>
-              
-                <div class="icon">
-                <i class="nav-icon fas fa-building"></i>
-              </div>
-              </a>
+              <div class="icon"><i class="nav-icon fas fa-building"></i></div>
               <a href="<?php echo $URL?>/provedores/" class="small-box-footer">Ver más <i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
+          <?php endif; ?>
 
          <?php if (in_array(24, $permisos)) { ?>
           <!-- Ventas Totales -->

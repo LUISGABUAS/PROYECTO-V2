@@ -157,6 +157,16 @@ $badge_tickets           = $cache['tickets'];
       <nav class="mt-2">
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
 
+          <!-- GUÍAS (rol Guías) -->
+          <?php if(in_array(40, $_SESSION['permisos']) && !in_array(24, $_SESSION['permisos'])): ?>
+          <li class="nav-item">
+            <a href="<?php echo $URL;?>/dashboard/foraneos.php" class="nav-link">
+              <i class="nav-icon fas fa-shipping-fast"></i>
+              <p>Ventas Foráneas</p>
+            </a>
+          </li>
+          <?php endif; ?>
+
           <!-- DASHBOARDS -->
           <?php if(in_array(24, $_SESSION['permisos']) || in_array(2, $_SESSION['permisos'])): ?>
           <li class="nav-item">

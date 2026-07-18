@@ -59,6 +59,9 @@ $permisos = [
     ],
     'Changelog' => [
         ['id_permiso' => 39, 'nombre' => 'Ver Changelog']
+    ],
+    'Guías' => [
+        ['id_permiso' => 40, 'nombre' => 'Gestionar Ventas Foráneas']
     ]
 ];
 

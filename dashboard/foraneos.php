@@ -27,7 +27,7 @@ if (isset($_SESSION['mensaje'])) {
 /* =========================
    PERMISO DE ACCESO
 ========================= */
-if (!in_array(20, $_SESSION['permisos'])) {
+if (!in_array(20, $_SESSION['permisos']) && !in_array(40, $_SESSION['permisos'])) {
   include('../layout/parte2.php');
   echo "<script>Swal.fire('Acceso denegado','','error')</script>";
   exit;
@@ -146,7 +146,7 @@ if (!in_array(20, $_SESSION['permisos'])) {
         <span class="badge" style="background:#e9ecef;color:#212529;padding:6px 10px;">Otra / Sin asignar</span>
       </div>
 
-      <?php if (in_array(24, $_SESSION['permisos'])): ?>
+      <?php if (in_array(24, $_SESSION['permisos']) || in_array(40, $_SESSION['permisos'])): ?>
 
       <!-- TABLA VENTAS -->
       <div class="card card-outline card-primary">
@@ -170,8 +170,8 @@ if (!in_array(20, $_SESSION['permisos'])) {
 
 
                 <?php if (
-                  in_array(24, $_SESSION['permisos']) &&
-                  (in_array(22, $_SESSION['permisos']) || in_array(28, $_SESSION['permisos']))
+                  (in_array(24, $_SESSION['permisos']) || in_array(40, $_SESSION['permisos'])) &&
+                  (in_array(22, $_SESSION['permisos']) || in_array(28, $_SESSION['permisos']) || in_array(40, $_SESSION['permisos']))
                 ): ?>
                   <th>Acciones</th>
                 <?php endif; ?>
@@ -211,7 +211,7 @@ if (!in_array(20, $_SESSION['permisos'])) {
                     <?php endif; ?>
                   </td>
 
-                  <?php if (in_array(24, $_SESSION['permisos'])): ?>
+                  <?php if (in_array(24, $_SESSION['permisos']) || in_array(40, $_SESSION['permisos'])): ?>
                     <td><?= htmlspecialchars($v['calle']) ?>, <?= htmlspecialchars($v['colonia']) ?>, <?= htmlspecialchars($v['municipio']) ?>, <?= htmlspecialchars($v['estado']) ?>, <?= htmlspecialchars($v['cp']) ?></td>
                   <?php endif; ?>
 
@@ -293,14 +293,14 @@ if (!in_array(20, $_SESSION['permisos'])) {
                   ): ?>
                     <td>
                       <center>
-                        <?php if (in_array(22, $_SESSION['permisos'])): ?>
+                        <?php if (in_array(22, $_SESSION['permisos']) || in_array(40, $_SESSION['permisos'])): ?>
                           <a href="<?= $URL ?>/ventas/edit.php?id=<?= $v['id_venta'] ?>"
                              class="btn btn-warning btn-sm">
                             <i class="fa fa-edit"></i>
                           </a>
                         <?php endif; ?>
 
-                        <?php if (in_array(28, $_SESSION['permisos'])): ?>
+                        <?php if (in_array(28, $_SESSION['permisos']) || in_array(40, $_SESSION['permisos'])): ?>
                           <button class="btn btn-danger btn-sm delete-venta"
                                   data-id="<?= $v['id_venta'] ?>">
                             <i class="fa fa-trash"></i>
