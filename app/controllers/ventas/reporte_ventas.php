@@ -84,14 +84,15 @@ if (in_array(25, $permisos)) {
 $ventas = [];
 
 if (in_array(24, $permisos)) {
-    $stmt = $pdo->prepare("SELECT 
+    $stmt = $pdo->prepare("SELECT
         v.id_venta,
         v.fecha,
         c.nombre_completo AS cliente,
         v.total,
         v.id_usuario,
         u.nombres AS vendedor,
-        COALESCE(SUM(vd.cantidad), 0) as total_pacas
+        COALESCE(SUM(vd.cantidad), 0) as total_pacas,
+        (SELECT COUNT(*) FROM tb_ventas_stock vs WHERE vs.id_venta = v.id_venta) as pacas_escaneadas
         FROM tb_ventas v
         JOIN tb_usuario u ON u.id = v.id_usuario
         JOIN clientes c ON v.cliente = c.id_cliente
@@ -113,12 +114,13 @@ if (in_array(24, $permisos)) {
 $mis_ventas = [];
 
 if (in_array(25, $permisos)) {
-    $stmt = $pdo->prepare("SELECT 
+    $stmt = $pdo->prepare("SELECT
         v.id_venta,
         v.fecha,
         c.nombre_completo AS cliente,
         v.total,
-        COALESCE(SUM(vd.cantidad), 0) as total_pacas
+        COALESCE(SUM(vd.cantidad), 0) as total_pacas,
+        (SELECT COUNT(*) FROM tb_ventas_stock vs WHERE vs.id_venta = v.id_venta) as pacas_escaneadas
         FROM tb_ventas v
         JOIN clientes c ON v.cliente = c.id_cliente
         LEFT JOIN tb_ventas_detalle vd ON v.id_venta = vd.id_venta
