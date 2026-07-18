@@ -198,7 +198,8 @@ if (!in_array(20, $_SESSION['permisos'])) {
 
                         <?php if (in_array(28, $_SESSION['permisos'])): ?>
                           <button class="btn btn-danger btn-sm delete-venta"
-                                  data-id="<?= $v['id_venta'] ?>">
+                                  data-id="<?= $v['id_venta'] ?>"
+                                  data-escaneadas="<?= (int)($v['pacas_escaneadas'] ?? 0) ?>">
                             <i class="fa fa-trash"></i>
                           </button>
                         <?php endif; ?>
@@ -568,15 +569,31 @@ $('#formCobro').on('submit', function (e) {
 <!-- ELIMINAR VENTA -->
 <script>
 $(document).on('click', '.delete-venta', function () {
-  let id_venta = $(this).data('id');
+  let id_venta    = $(this).data('id');
+  let escaneadas  = parseInt($(this).data('escaneadas')) || 0;
+
+  let titulo, texto, icono, btnConfirm;
+
+  if (escaneadas > 0) {
+    titulo     = '⚠️ Esta venta ya tiene pacas escaneadas';
+    texto      = `Se escanearon ${escaneadas} paca(s) para esta venta. Si el cliente canceló, se regresarán a bodega y se eliminará la venta. ¿Deseas continuar?`;
+    icono      = 'warning';
+    btnConfirm = 'Sí, regresar pacas a bodega y cancelar';
+  } else {
+    titulo     = '¿Eliminar venta?';
+    texto      = 'La venta será eliminada y el stock devuelto a bodega.';
+    icono      = 'question';
+    btnConfirm = 'Sí, eliminar';
+  }
 
   Swal.fire({
-    title: '¿Eliminar venta?',
-    text: 'El stock será devuelto a bodega',
-    icon: 'warning',
+    title: titulo,
+    text: texto,
+    icon: icono,
     showCancelButton: true,
-    confirmButtonText: 'Sí, eliminar',
-    cancelButtonText: 'Cancelar'
+    confirmButtonText: btnConfirm,
+    confirmButtonColor: escaneadas > 0 ? '#e74c3c' : '#3085d6',
+    cancelButtonText: 'No, cancelar'
   }).then((result) => {
     if (result.isConfirmed) {
       $.ajax({
@@ -586,9 +603,7 @@ $(document).on('click', '.delete-venta', function () {
         data: { id_venta: id_venta, csrf_token: '<?= csrf_token() ?>' },
         success: function (r) {
           if (r.success) {
-            Swal.fire('Eliminada', r.message, 'success').then(() => {
-              location.reload();
-            });
+            Swal.fire('Eliminada', r.message, 'success').then(() => location.reload());
           } else {
             Swal.fire('Error', r.message, 'error');
           }
