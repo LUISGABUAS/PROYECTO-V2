@@ -1,5 +1,5 @@
 <?php
-ini_set('display_errors', 0); // Evita que warnings/notices corrompan el JSON
+ini_set('display_errors', 0);
 require_once(dirname(__DIR__, 2) . '/config.php');
 include(__DIR__ . '/../helpers/csrf.php');
 if (session_status() === PHP_SESSION_NONE) {
@@ -8,10 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
 header('Content-Type: application/json');
 csrf_verify();
 
-$response = [
-    'success' => false,
-    'message' => ''
-];
+$response = ['success' => false, 'message' => ''];
 
 if (empty($_POST['id_venta'])) {
     $response['message'] = 'ID de venta no recibido';
@@ -22,95 +19,102 @@ if (empty($_POST['id_venta'])) {
 $id_venta = (int)$_POST['id_venta'];
 
 try {
-
     $pdo->beginTransaction();
 
     /* ===============================
-       0️⃣ VALIDAR QUE NO HAYA ENTREGA
+       1️⃣ VERIFICAR QUE LA VENTA EXISTA
     =============================== */
-    $stmt = $pdo->prepare("SELECT SUM(cantidad_entregada) AS entregadas
-        FROM tb_ventas_detalle
-        WHERE id_venta = ?
-    ");
+    $stmt = $pdo->prepare("SELECT id_venta FROM tb_ventas WHERE id_venta = ?");
     $stmt->execute([$id_venta]);
-    $entregadas = (int)$stmt->fetchColumn();
-
-    if ($entregadas > 0) {
-        throw new Exception('No se puede eliminar una venta con productos ya entregados');
+    if (!$stmt->fetch()) {
+        throw new Exception('La venta no existe');
     }
 
     /* ===============================
-       1️⃣ OBTENER DETALLE DE VENTA
+       2️⃣ DEVOLVER PACAS ESCANEADAS (tb_ventas_stock)
+       — Regresa a EN BODEGA las pacas que ya habían salido
     =============================== */
-    $stmt = $pdo->prepare("SELECT id_producto, cantidad
-        FROM tb_ventas_detalle
-        WHERE id_venta = ?
-    ");
+    $stmt = $pdo->prepare("SELECT id_stock FROM tb_ventas_stock WHERE id_venta = ?");
+    $stmt->execute([$id_venta]);
+    $stocks_escaneados = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+    if (!empty($stocks_escaneados)) {
+        $in = implode(',', array_fill(0, count($stocks_escaneados), '?'));
+        $pdo->prepare("UPDATE stock
+            SET estado = 'EN BODEGA',
+                fecha_salida = NULL,
+                tipo_especial = NULL,
+                notas_especial = NULL,
+                id_venta_origen = NULL
+            WHERE id_stock IN ($in)")
+            ->execute($stocks_escaneados);
+
+        $pdo->prepare("DELETE FROM tb_ventas_stock WHERE id_venta = ?")
+            ->execute([$id_venta]);
+    }
+
+    /* ===============================
+       3️⃣ DEVOLVER STOCK PENDIENTE (no escaneado aún)
+       — Pacas reservadas pero no salidas (cantidad_entregada = 0)
+    =============================== */
+    $stmt = $pdo->prepare("SELECT id_producto, cantidad, cantidad_entregada
+        FROM tb_ventas_detalle WHERE id_venta = ?");
     $stmt->execute([$id_venta]);
     $detalles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    if (!$detalles) {
-        throw new Exception('La venta no tiene detalle o no existe');
-    }
-
-    /* ===============================
-       2️⃣ DEVOLVER STOCK (POR UNIDAD)
-    =============================== */
     foreach ($detalles as $d) {
+        $pendiente = max(0, (int)$d['cantidad'] - (int)$d['cantidad_entregada']);
+        if ($pendiente <= 0) continue;
 
-        $cantidad = (int)$d['cantidad'];
+        // Busca pacas VENDIDO que NO estén en tb_ventas_stock (reservadas pero no escaneadas)
+        $stmt2 = $pdo->prepare("SELECT s.id_stock
+            FROM stock s
+            WHERE s.id_producto = ?
+              AND s.estado = 'VENDIDO'
+              AND s.id_stock NOT IN (
+                  SELECT id_stock FROM tb_ventas_stock WHERE id_venta = ?
+              )
+            LIMIT ?");
+        $stmt2->execute([$d['id_producto'], $id_venta, $pendiente]);
+        $stocks_pendientes = $stmt2->fetchAll(PDO::FETCH_COLUMN);
 
-        if ($cantidad <= 0) continue;
-
-        $stmt = $pdo->prepare("SELECT id_stock
-            FROM stock
-            WHERE id_producto = ?
-              AND estado = 'EN BODEGA'
-            ORDER BY fecha_salida DESC
-            LIMIT $cantidad
-        ");
-        $stmt->execute([$d['id_producto']]);
-        $stocks = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-        if (BLOQUEAR_STOCK_INSUFICIENTE && count($stocks) !== $cantidad) {
-            throw new Exception('Inconsistencia en el stock vendido');
-        }
-
-        if (!empty($stocks)) {
-            $in  = implode(',', array_fill(0, count($stocks), '?'));
-            $upd = $pdo->prepare("UPDATE stock
-                SET estado = 'EN BODEGA',
-                    fecha_salida = NULL
-                WHERE id_stock IN ($in)
-            ");
-            $upd->execute($stocks);
+        if (!empty($stocks_pendientes)) {
+            $in = implode(',', array_fill(0, count($stocks_pendientes), '?'));
+            $pdo->prepare("UPDATE stock SET estado = 'EN BODEGA', fecha_salida = NULL
+                WHERE id_stock IN ($in)")
+                ->execute($stocks_pendientes);
         }
     }
 
     /* ===============================
-       3️⃣ ELIMINAR DETALLE
+       4️⃣ ELIMINAR REGISTROS RELACIONADOS
     =============================== */
-    $stmt = $pdo->prepare("DELETE FROM tb_ventas_detalle WHERE id_venta = ?");
-    $stmt->execute([$id_venta]);
+    $pdo->prepare("DELETE FROM tb_ventas_detalle WHERE id_venta = ?")->execute([$id_venta]);
+    $pdo->prepare("DELETE FROM tb_ventas_comprobantes WHERE id_venta = ?")->execute([$id_venta]);
+
+    // Guías (si existe la tabla)
+    $hayGuias = (bool)$pdo->query("SHOW TABLES LIKE 'tb_ventas_guias'")->fetchColumn();
+    if ($hayGuias) {
+        $pdo->prepare("DELETE FROM tb_ventas_guias WHERE id_venta = ?")->execute([$id_venta]);
+    }
 
     /* ===============================
-       4️⃣ ELIMINAR VENTA
+       5️⃣ ELIMINAR LA VENTA
     =============================== */
-    $stmt = $pdo->prepare("DELETE FROM tb_ventas WHERE id_venta = ?");
-    $stmt->execute([$id_venta]);
+    $pdo->prepare("DELETE FROM tb_ventas WHERE id_venta = ?")->execute([$id_venta]);
 
     $pdo->commit();
 
     include('../helpers/auditoria.php');
-    $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+    $id_usuario_sesion     = $_SESSION['id_usuario'] ?? null;
     $nombre_usuario_sesion = $_SESSION['nombre_usuario'] ?? null;
-    registrarAuditoria($pdo, $id_usuario_sesion, $nombre_usuario_sesion, 'ELIMINAR VENTA', 'tb_ventas', $id_venta, "Venta #$id_venta eliminada y stock restaurado");
+    registrarAuditoria($pdo, $id_usuario_sesion, $nombre_usuario_sesion, 'ELIMINAR VENTA', 'tb_ventas', $id_venta,
+        "Venta #$id_venta eliminada por cancelación de cliente — stock restaurado");
 
     $response['success'] = true;
-    $response['message'] = 'Venta pendiente eliminada y stock restaurado correctamente';
+    $response['message'] = 'Venta eliminada y stock restaurado correctamente';
 
 } catch (Exception $e) {
-
     $pdo->rollBack();
     $response['message'] = $e->getMessage();
 }
