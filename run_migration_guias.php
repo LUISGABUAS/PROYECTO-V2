@@ -20,10 +20,10 @@ if (!$existe) {
 
 // 2. Crear rol GUIAS si no existe
 $id_rol_guias = null;
-$existe_rol = $pdo->query("SELECT id_rol FROM tb_roles WHERE nombre_rol = 'GUIAS' LIMIT 1")->fetch();
+$existe_rol = $pdo->query("SELECT id_rol FROM tb_roles WHERE rol = 'GUIAS' LIMIT 1")->fetch();
 if (!$existe_rol) {
     try {
-        $pdo->exec("INSERT INTO tb_roles (nombre_rol) VALUES ('GUIAS')");
+        $pdo->exec("INSERT INTO tb_roles (rol, fyh_creacion) VALUES ('GUIAS', NOW())");
         $id_rol_guias = $pdo->lastInsertId();
         $resultados[] = ['ok', "Rol GUIAS creado (ID: $id_rol_guias)"];
     } catch (Exception $e) {
