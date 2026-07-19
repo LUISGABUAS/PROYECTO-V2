@@ -157,6 +157,16 @@ $badge_tickets           = $cache['tickets'];
       <nav class="mt-2">
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
 
+          <!-- REPARTOS -->
+          <?php if(in_array(41, $_SESSION['permisos'])): ?>
+          <li class="nav-item">
+            <a href="<?php echo $URL;?>/repartos/" class="nav-link">
+              <i class="nav-icon fas fa-motorcycle"></i>
+              <p>Mis Repartos</p>
+            </a>
+          </li>
+          <?php endif; ?>
+
           <!-- GUÍAS (rol Guías) -->
           <?php if(in_array(40, $_SESSION['permisos']) && !in_array(24, $_SESSION['permisos'])): ?>
           <li class="nav-item">
