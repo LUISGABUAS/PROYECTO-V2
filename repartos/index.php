@@ -21,6 +21,15 @@ $_col_rep = (bool)$pdo->query("SHOW COLUMNS FROM tb_ventas LIKE 'estado_reparto'
 $fecha = $_GET['fecha'] ?? date('Y-m-d');
 
 if ($_col_rep) {
+    // Admin: ve todo. Repartidor: PENDIENTES libres + sus propios EN_CAMINO/ENTREGADOS
+    if ($es_admin) {
+        $where_extra = "";
+        $params = [':fecha' => $fecha];
+    } else {
+        $where_extra = "AND (v.estado_reparto = 'PENDIENTE' OR v.id_repartidor = :yo)";
+        $params = [':fecha' => $fecha, ':yo' => $id_usuario_sesion];
+    }
+
     $stmt = $pdo->prepare("SELECT
         v.id_venta, v.fecha, v.total, v.estado_reparto, v.id_repartidor, v.fecha_entrega,
         c.nombre_completo AS cliente, c.telefono,
@@ -40,10 +49,11 @@ if ($_col_rep) {
         LEFT JOIN tb_ventas_detalle vd ON vd.id_venta = v.id_venta
         WHERE v.envio = 'local'
         AND DATE(v.fecha) = :fecha
+        $where_extra
         GROUP BY v.id_venta
         ORDER BY FIELD(v.estado_reparto,'PENDIENTE','EN_CAMINO','ENTREGADO'), v.fecha ASC
     ");
-    $stmt->execute([':fecha' => $fecha]);
+    $stmt->execute($params);
 } else {
     $stmt = $pdo->prepare("SELECT
         v.id_venta, v.fecha, v.total, 'PENDIENTE' AS estado_reparto,
@@ -297,19 +307,19 @@ function tarjeta_entrega($e, $id_yo, $es_admin, $URL) {
                   onclick="accionReparto(<?= $id_venta ?>, 'entregar')">
             <i class="fas fa-check-circle"></i> Marcar como ENTREGADO
           </button>
-          <?php endif; ?>
-          <?php if ($es_admin): ?>
           <button class="btn-accion mt-1" style="background:#6c757d;color:#fff;font-size:13px;padding:8px"
                   onclick="accionReparto(<?= $id_venta ?>, 'devolver')">
-            <i class="fas fa-undo"></i> Devolver a pendiente
+            <i class="fas fa-undo"></i> Me equivoqué — devolver a pendiente
           </button>
           <?php endif; ?>
 
-        <?php elseif ($estado === 'ENTREGADO' && $es_admin): ?>
+        <?php elseif ($estado === 'ENTREGADO'): ?>
+          <?php if ($es_mia || $es_admin): ?>
           <button class="btn-accion mt-1" style="background:#6c757d;color:#fff;font-size:13px;padding:8px"
                   onclick="accionReparto(<?= $id_venta ?>, 'devolver')">
-            <i class="fas fa-undo"></i> Revertir
+            <i class="fas fa-undo"></i> Revertir entrega
           </button>
+          <?php endif; ?>
         <?php endif; ?>
 
       </div>
