@@ -27,7 +27,16 @@ try {
             ->execute([$id_venta]);
 
     } elseif ($accion === 'devolver') {
-        $pdo->prepare("UPDATE tb_ventas SET estado_reparto = 'PENDIENTE', id_repartidor = NULL WHERE id_venta = ? AND envio = 'local'")
+        // Admin puede devolver cualquiera; repartidor solo las suyas
+        if (!in_array(24, $perms)) {
+            $stmt_check = $pdo->prepare("SELECT id_repartidor FROM tb_ventas WHERE id_venta = ?");
+            $stmt_check->execute([$id_venta]);
+            $propietario = (int)$stmt_check->fetchColumn();
+            if ($propietario !== (int)$id_yo) {
+                echo json_encode(['success' => false, 'message' => 'Solo puedes devolver tus propias entregas']); exit;
+            }
+        }
+        $pdo->prepare("UPDATE tb_ventas SET estado_reparto = 'PENDIENTE', id_repartidor = NULL, fecha_entrega = NULL WHERE id_venta = ? AND envio = 'local'")
             ->execute([$id_venta]);
 
     } else {
