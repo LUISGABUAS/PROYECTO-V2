@@ -37,7 +37,7 @@ if (!$existe_rol) {
 // 3. Asignar permisos al rol GUIAS
 // Permiso 40: Gestionar Ventas Foráneas (acceso completo a foraneos)
 if ($id_rol_guias) {
-    $permisos_guias = [40, 20]; // Gestionar Foráneas + Ver Ventas
+    $permisos_guias = [40]; // Solo Gestionar Ventas Foráneas
     foreach ($permisos_guias as $p) {
         $existe_p = $pdo->prepare("SELECT COUNT(*) FROM tb_roles_permisos WHERE id_rol = ? AND id_permiso = ?");
         $existe_p->execute([$id_rol_guias, $p]);
