@@ -205,6 +205,12 @@ $badge_tickets           = $cache['tickets'];
                 </a>
               </li>
               <li class="nav-item">
+                <a href="<?php echo $URL;?>/repartos/" class="nav-link">
+                  <i class="fas fa-motorcycle nav-icon"></i>
+                  <p>Tablero de Repartos</p>
+                </a>
+              </li>
+              <li class="nav-item">
                 <a href="<?php echo $URL;?>/ventas/reportes.php" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
                   <p>Reportes Ampliados</p>
