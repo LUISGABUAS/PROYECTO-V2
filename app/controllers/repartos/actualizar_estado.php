@@ -3,8 +3,9 @@ require_once dirname(__DIR__, 2) . '/config.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 header('Content-Type: application/json');
 
-$perms = $_SESSION['permisos'] ?? [];
-if (!in_array(41, $perms) && !in_array(24, $perms)) {
+$perms    = $_SESSION['permisos'] ?? [];
+$_rol_rep = strtoupper(trim($_SESSION['rol_sesion'] ?? ''));
+if (!in_array(41, $perms) && !in_array(24, $perms) && $_rol_rep !== 'REPARTIDOR') {
     echo json_encode(['success' => false, 'message' => 'Sin permisos']); exit;
 }
 
