@@ -394,7 +394,7 @@ $badge_tickets           = $cache['tickets'];
           <?php endif; ?>
 
           <!-- VENTAS -->
-          <?php if(in_array(20, $_SESSION['permisos'])): ?>
+          <?php if(in_array(20, $_SESSION['permisos']) && !in_array(40, $_SESSION['permisos'])): ?>
           <li class="nav-item">
             <a href="#" class="nav-link active" style="position:relative;">
               <i class="nav-icon fas fa-dollar-sign"></i>

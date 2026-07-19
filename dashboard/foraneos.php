@@ -155,6 +155,7 @@ if (!in_array(20, $_SESSION['permisos']) && !in_array(40, $_SESSION['permisos'])
         </div>
 
         <div class="card-body">
+          <div class="table-responsive">
           <table id="ventas" class="table table-bordered table-striped table-sm">
             <thead>
               <tr>
@@ -313,6 +314,7 @@ if (!in_array(20, $_SESSION['permisos']) && !in_array(40, $_SESSION['permisos'])
               <?php endforeach; ?>
             </tbody>
           </table>
+          </div><!-- /.table-responsive -->
         </div>
       </div>
 
@@ -446,7 +448,7 @@ $(document).on('click', '.btn-eliminar-guia', function () {
 <script>
   $(function () {
     $("#ventas").DataTable({
-      "responsive": true, "lengthChange": false, "autoWidth": false,
+      "responsive": false, "lengthChange": false, "autoWidth": false, "scrollX": true,
       "buttons": [{ 
         extend: 'collection',
         text: 'Export',
