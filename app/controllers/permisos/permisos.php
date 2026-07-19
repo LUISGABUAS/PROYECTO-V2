@@ -62,6 +62,9 @@ $permisos = [
     ],
     'Guías' => [
         ['id_permiso' => 40, 'nombre' => 'Gestionar Ventas Foráneas']
+    ],
+    'Repartos' => [
+        ['id_permiso' => 41, 'nombre' => 'Gestionar Repartos']
     ]
 ];
 
