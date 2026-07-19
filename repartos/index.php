@@ -3,7 +3,8 @@ include('../app/config.php');
 include('../layout/sesion.php');
 
 $perms = $_SESSION['permisos'] ?? [];
-if (!in_array(41, $perms) && !in_array(24, $perms)) {
+$_rol_rep = strtoupper(trim($_SESSION['rol_sesion'] ?? ''));
+if (!in_array(41, $perms) && !in_array(24, $perms) && $_rol_rep !== 'REPARTIDOR') {
     include('../layout/parte1.php');
     include('../layout/parte2.php');
     echo "<script>Swal.fire('Acceso denegado','','error').then(()=>location='<?= $URL ?>')</script>";

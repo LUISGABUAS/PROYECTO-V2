@@ -4,7 +4,8 @@ include('app/config.php');
 include('layout/sesion.php');
 
 // Rol REPARTIDOR: redirigir directo al tablero de repartos
-if (in_array(41, $_SESSION['permisos'] ?? []) && !in_array(24, $_SESSION['permisos'] ?? []) && !in_array(25, $_SESSION['permisos'] ?? [])) {
+$_rol = strtoupper(trim($_SESSION['rol_sesion'] ?? ''));
+if ($_rol === 'REPARTIDOR' || (in_array(41, $_SESSION['permisos'] ?? []) && !in_array(24, $_SESSION['permisos'] ?? []) && !in_array(25, $_SESSION['permisos'] ?? []))) {
     header('Location: ' . $URL . '/repartos/');
     exit;
 }
