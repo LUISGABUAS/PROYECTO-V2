@@ -181,136 +181,120 @@ if (!in_array(20, $_SESSION['permisos']) && !in_array(40, $_SESSION['permisos'])
 
             <tbody>
               <?php
-              $colores_paq = [
-                  'DHL'                 => '#fff9cc',
-                  'Estafeta'            => '#ccd6f0',
-                  'FedEx'               => '#ede0f7',
-                  'Paquetería Express'  => '#d4edda',
-                  'J&T Express'         => '#f8d7da',
-              ];
               $badges_paq = [
-                  'DHL'                => '<span class="badge" style="background:#ffcc00;color:#000;">DHL</span>',
-                  'Estafeta'           => '<span class="badge" style="background:#003087;color:#fff;">Estafeta</span>',
-                  'FedEx'              => '<span class="badge" style="background:#4d148c;color:#fff;">FedEx</span>',
-                  'Paquetería Express' => '<span class="badge" style="background:#28a745;color:#fff;">Paq. Express</span>',
-                  'J&T Express'        => '<span class="badge" style="background:#d40511;color:#fff;">J&T</span>',
+                  'DHL'                => ['bg'=>'#ffcc00','fg'=>'#000','txt'=>'DHL'],
+                  'Estafeta'           => ['bg'=>'#003087','fg'=>'#fff','txt'=>'Estafeta'],
+                  'FedEx'              => ['bg'=>'#4d148c','fg'=>'#fff','txt'=>'FedEx'],
+                  'Paquetería Express' => ['bg'=>'#28a745','fg'=>'#fff','txt'=>'Paq. Express'],
+                  'J&T Express'        => ['bg'=>'#d40511','fg'=>'#fff','txt'=>'J&T'],
               ];
+              $puede_acciones = (in_array(24, $_SESSION['permisos']) || in_array(40, $_SESSION['permisos'])) &&
+                                (in_array(22, $_SESSION['permisos']) || in_array(28, $_SESSION['permisos']) || in_array(40, $_SESSION['permisos']));
               $c = 1; foreach ($ventas_foraneos as $v):
-                $paq   = $v['paqueteria'] ?? '';
-                $bgRow = $colores_paq[$paq] ?? '';
+                $paq         = $v['paqueteria'] ?? '';
+                $guias_venta = $guias_por_venta[$v['id_venta']] ?? [];
+                $pacas_v     = $pacas_por_venta[$v['id_venta']] ?? 1;
+                $mult_v      = ($paq === 'Estafeta') ? 2 : 1;
+                $requeridas_v = $pacas_v * $mult_v;
+                $subidas_v    = count($guias_venta);
+                $faltantes_v  = $requeridas_v - $subidas_v;
               ?>
-                <tr <?= $bgRow ? "style=\"background-color:{$bgRow}\"" : '' ?>>
-                  <td><?= $c++ ?></td>
-                  <td><?= $v['fecha'] ?></td>
-                  <td>
-                    <?= htmlspecialchars($v['cliente']) ?>
-                    <?php if ($v['destinatario'] !== $v['cliente']): ?>
-                      <br><small class="text-muted"><i class="fas fa-shipping-fast"></i> Para: <strong><?= htmlspecialchars($v['destinatario']) ?></strong></small>
-                    <?php endif; ?>
-                    <?php if ($v['id_pedido']): ?>
-                      <br><span class="badge badge-primary" title="Parte de un pedido múltiple"><i class="fa fa-layer-group"></i> Pedido #<?= $v['id_pedido'] ?></span>
-                    <?php endif; ?>
-                  </td>
-
-                  <?php if (in_array(24, $_SESSION['permisos']) || in_array(40, $_SESSION['permisos'])): ?>
-                    <td><?= htmlspecialchars($v['calle']) ?>, <?= htmlspecialchars($v['colonia']) ?>, <?= htmlspecialchars($v['municipio']) ?>, <?= htmlspecialchars($v['estado']) ?>, <?= htmlspecialchars($v['cp']) ?></td>
+              <tr>
+                <td class="text-center text-muted" style="width:40px"><?= $c++ ?></td>
+                <td style="white-space:nowrap;width:150px">
+                  <small><?= date('d/m/Y', strtotime($v['fecha'])) ?></small><br>
+                  <small class="text-muted"><?= date('H:i', strtotime($v['fecha'])) ?></small>
+                </td>
+                <td>
+                  <strong><?= htmlspecialchars($v['cliente']) ?></strong>
+                  <?php if (!empty($v['destinatario']) && $v['destinatario'] !== $v['cliente']): ?>
+                    <br><small class="text-muted"><i class="fas fa-user mr-1"></i><?= htmlspecialchars($v['destinatario']) ?></small>
                   <?php endif; ?>
-
-                  <td><?= ($v['telefono']) ?></td>
-                  <td><?php if (!empty($v['referencia']) && $v['referencia'] !== ''): ?>
-                                                    <span class="badge badge-success"><?= $v['referencia'] ?></span>
-                                                <?php else: ?>
-                                                    <span class="badge badge-warning">Sin referencia</span>
-                                                <?php endif; ?> </td>
-
-                  <td class="text-center">
-                    <?php if ($paq && isset($badges_paq[$paq])): ?>
-                      <?= $badges_paq[$paq] ?>
-                    <?php elseif ($paq): ?>
-                      <span class="badge badge-secondary"><?= htmlspecialchars($paq) ?></span>
-                    <?php else: ?>
-                      <span class="text-muted small">—</span>
-                    <?php endif; ?>
-                  </td>
-
-                  <td class="text-center">
-                  <?php
-                    $guias_venta = $guias_por_venta[$v['id_venta']] ?? [];
-                    if (!empty($guias_venta)):
-                      foreach ($guias_venta as $g):
-                  ?>
-                      <div class="guia-preview mb-1">
-                        <iframe src="<?= $URL ?>/dashboard/guia_pdf/<?= $g['archivo'] ?>#page=1"
-                                width="90" height="120" loading="lazy"></iframe>
-                        <div class="guia-overlay">
-                          <small class="d-block text-white font-weight-bold">G<?= $g['numero'] ?></small>
-                          <a href="<?= $URL ?>/dashboard/guia_pdf/<?= $g['archivo'] ?>" target="_blank"
-                             class="btn btn-xs btn-info"><i class="fas fa-eye"></i></a>
-                          <button class="btn btn-xs btn-danger btn-eliminar-guia-individual"
-                                  data-id="<?= $g['id'] ?>" data-venta="<?= $v['id_venta'] ?>">
-                            <i class="fas fa-trash"></i>
-                          </button>
-                        </div>
-                      </div>
-                  <?php endforeach; ?>
-                  <?php else: ?>
-                    <span class="badge badge-warning">Sin guía</span><br>
+                  <?php if (!empty($v['id_pedido'])): ?>
+                    <br><span class="badge badge-primary" style="font-size:10px;"><i class="fa fa-layer-group"></i> Pedido #<?= $v['id_pedido'] ?></span>
                   <?php endif; ?>
-                  <a href="subir_guia.php?id=<?= $v['id_venta'] ?>" class="badge badge-primary mt-1 d-block">
-                    <i class="fas fa-plus"></i> <?= empty($guias_venta) ? 'Agregar guías' : 'Más guías' ?>
+                </td>
+                <td>
+                  <small>
+                    <?= htmlspecialchars($v['calle']) ?>,
+                    <?= htmlspecialchars($v['colonia']) ?>,<br>
+                    <?= htmlspecialchars($v['municipio']) ?>,
+                    <?= htmlspecialchars($v['estado']) ?>
+                    CP <?= htmlspecialchars($v['cp']) ?>
+                  </small>
+                </td>
+                <td style="white-space:nowrap">
+                  <a href="tel:<?= htmlspecialchars($v['telefono']) ?>" class="font-weight-bold" style="font-size:13px;">
+                    <?= htmlspecialchars($v['telefono']) ?>
                   </a>
-                  <?php if (count($guias_venta) > 0): ?>
-                  <button class="btn btn-xs btn-danger btn-eliminar-guia mt-1"
-                          data-id="<?= $v['id_venta'] ?>"
-                          title="Eliminar todas las guías">
-                    <i class="fas fa-trash"></i> Eliminar <?= count($guias_venta) > 1 ? 'todas' : '' ?>
+                </td>
+                <td>
+                  <?php if (!empty($v['referencia'])): ?>
+                    <span class="badge badge-success" style="white-space:normal;text-align:left;"><?= htmlspecialchars($v['referencia']) ?></span>
+                  <?php else: ?>
+                    <span class="badge badge-secondary">Sin referencia</span>
+                  <?php endif; ?>
+                </td>
+                <td class="text-center" style="width:110px">
+                  <?php if ($paq && isset($badges_paq[$paq])): $bp = $badges_paq[$paq]; ?>
+                    <span class="badge" style="background:<?= $bp['bg'] ?>;color:<?= $bp['fg'] ?>;font-size:12px;padding:4px 8px;"><?= $bp['txt'] ?></span>
+                  <?php elseif ($paq): ?>
+                    <span class="badge badge-secondary"><?= htmlspecialchars($paq) ?></span>
+                  <?php else: ?>
+                    <span class="text-muted">—</span>
+                  <?php endif; ?>
+                </td>
+                <td class="text-center" style="width:160px">
+                  <?php if (!empty($guias_venta)): ?>
+                    <?php foreach ($guias_venta as $g): ?>
+                    <div class="d-flex align-items-center justify-content-center gap-1 mb-1">
+                      <span class="badge badge-info" style="font-size:11px;">G<?= $g['numero'] ?></span>
+                      <a href="<?= $URL ?>/dashboard/guia_pdf/<?= $g['archivo'] ?>" target="_blank"
+                         class="btn btn-xs btn-outline-info" title="Ver guía"><i class="fas fa-eye"></i></a>
+                      <button class="btn btn-xs btn-outline-danger btn-eliminar-guia-individual"
+                              data-id="<?= $g['id'] ?>" data-venta="<?= $v['id_venta'] ?>" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                    <?php endforeach; ?>
+                  <?php else: ?>
+                    <span class="badge badge-warning" style="font-size:11px;">Sin guía</span>
+                  <?php endif; ?>
+                  <a href="subir_guia.php?id=<?= $v['id_venta'] ?>" class="btn btn-xs btn-primary mt-1">
+                    <i class="fas fa-plus"></i> <?= empty($guias_venta) ? 'Agregar' : 'Más' ?>
+                  </a>
+                  <?php if ($subidas_v > 1): ?>
+                  <button class="btn btn-xs btn-danger btn-eliminar-guia mt-1" data-id="<?= $v['id_venta'] ?>">
+                    <i class="fas fa-trash"></i> Todas
                   </button>
                   <?php endif; ?>
-                  </td>
-                  <td>
-                  <?php
-                    $pacas_v     = $pacas_por_venta[$v['id_venta']] ?? 1;
-                    $paq_v       = $v['paqueteria'] ?? '';
-                    $multiplicador_v = ($paq_v === 'Estafeta') ? 2 : 1;
-                    $requeridas_v    = $pacas_v * $multiplicador_v;
-                    $subidas_v       = count($guias_por_venta[$v['id_venta']] ?? []);
-                    $faltantes_v     = $requeridas_v - $subidas_v;
-                  ?>
-                  <?php if ($v['estado_logistico'] == 'ENVIADA'): ?>
-                    <span class="badge badge-success">Enviado</span>
+                </td>
+                <td class="text-center" style="width:120px">
+                  <?php if ($v['estado_logistico'] === 'ENVIADA'): ?>
+                    <span class="badge badge-success"><i class="fas fa-check mr-1"></i>Enviado</span>
                   <?php elseif ($faltantes_v > 0): ?>
-                    <span class="badge badge-danger">
-                      Faltan <?= $faltantes_v ?> guía<?= $faltantes_v > 1 ? 's' : '' ?>
-                    </span>
+                    <span class="badge badge-danger">Faltan <?= $faltantes_v ?> guía<?= $faltantes_v > 1 ? 's' : '' ?></span>
                   <?php else: ?>
-                    <span class="badge badge-info">Guías completas ✓</span>
+                    <span class="badge badge-info"><i class="fas fa-check-double mr-1"></i>Guías OK</span>
                   <?php endif; ?>
-                  </td>
-                
-
-                  <?php if (
-                    in_array(24, $_SESSION['permisos']) &&
-                    (in_array(22, $_SESSION['permisos']) || in_array(28, $_SESSION['permisos']))
-                  ): ?>
-                    <td>
-                      <center>
-                        <?php if (in_array(22, $_SESSION['permisos']) || in_array(40, $_SESSION['permisos'])): ?>
-                          <a href="<?= $URL ?>/ventas/edit.php?id=<?= $v['id_venta'] ?>"
-                             class="btn btn-warning btn-sm">
-                            <i class="fa fa-edit"></i>
-                          </a>
-                        <?php endif; ?>
-
-                        <?php if (in_array(28, $_SESSION['permisos']) || in_array(40, $_SESSION['permisos'])): ?>
-                          <button class="btn btn-danger btn-sm delete-venta"
-                                  data-id="<?= $v['id_venta'] ?>">
-                            <i class="fa fa-trash"></i>
-                          </button>
-                        <?php endif; ?>
-                      </center>
-                    </td>
+                </td>
+                <?php if ($puede_acciones): ?>
+                <td class="text-center" style="width:90px;white-space:nowrap">
+                  <?php if (in_array(22, $_SESSION['permisos']) || in_array(40, $_SESSION['permisos'])): ?>
+                    <a href="<?= $URL ?>/ventas/edit.php?id=<?= $v['id_venta'] ?>"
+                       class="btn btn-warning btn-sm" title="Editar">
+                      <i class="fa fa-edit"></i>
+                    </a>
                   <?php endif; ?>
-                </tr>
+                  <?php if (in_array(28, $_SESSION['permisos']) || in_array(40, $_SESSION['permisos'])): ?>
+                    <button class="btn btn-danger btn-sm delete-venta"
+                            data-id="<?= $v['id_venta'] ?>" data-escaneadas="0" title="Eliminar">
+                      <i class="fa fa-trash"></i>
+                    </button>
+                  <?php endif; ?>
+                </td>
+                <?php endif; ?>
+              </tr>
               <?php endforeach; ?>
             </tbody>
           </table>
