@@ -74,8 +74,8 @@ try {
               AND s.id_stock NOT IN (
                   SELECT id_stock FROM tb_ventas_stock WHERE id_venta = ?
               )
-            LIMIT ?");
-        $stmt2->execute([$d['id_producto'], $id_venta, $pendiente]);
+            LIMIT $pendiente");
+        $stmt2->execute([$d['id_producto'], $id_venta]);
         $stocks_pendientes = $stmt2->fetchAll(PDO::FETCH_COLUMN);
 
         if (!empty($stocks_pendientes)) {
