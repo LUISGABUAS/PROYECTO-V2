@@ -86,4 +86,8 @@ if ($cache_valido) {
     $_SESSION['_cache_time']       = time();
     unset($_SESSION['_session_refresh']);
 }
+
+// Verificar licencia mensual (bloquea a partir del día 22 si no hay pago)
+require_once __DIR__ . '/../app/controllers/helpers/licencia.php';
+licencia_verificar($pdo, $URL);
 ?>

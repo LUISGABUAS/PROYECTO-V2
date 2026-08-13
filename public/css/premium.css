@@ -261,8 +261,29 @@ label { color: var(--py-text) !important; font-weight: 500 !important; }
 
 /* ── Badges ───────────────────────────────────────────────────── */
 .badge { border-radius: 6px !important; font-weight: 500 !important; }
-.badge-primary  { background: var(--py-accent) !important; }
-.badge-secondary{ background: var(--py-badge-bg) !important; color: var(--py-text) !important; }
+.badge-primary   { background: var(--py-accent)   !important; color: #fff !important; }
+.badge-secondary { background: var(--py-badge-bg) !important; color: var(--py-text) !important; }
+.badge-success   { background: #10b981 !important; color: #fff !important; }
+.badge-danger    { background: #ef4444 !important; color: #fff !important; }
+.badge-warning   { background: #f59e0b !important; color: #fff !important; }
+.badge-info      { background: #06b6d4 !important; color: #fff !important; }
+.badge-dark      { background: #1e293b !important; color: #fff !important; }
+
+/* badge-light adaptado al tema activo */
+.badge-light {
+  background: var(--py-bg3)          !important;
+  color:      var(--py-text)         !important;
+  border: 1px solid var(--py-card-border) !important;
+}
+[data-theme="light"] .badge-light {
+  background:  #e2e8f0 !important;
+  color:       #1e293b !important;
+  border-color: #cbd5e1 !important;
+}
+[data-theme="light"] .badge-secondary {
+  background: rgba(0,0,0,.1) !important;
+  color:      #1e293b        !important;
+}
 
 /* ── Alertas ──────────────────────────────────────────────────── */
 .alert {
@@ -393,6 +414,18 @@ label { color: var(--py-text) !important; font-weight: 500 !important; }
 [data-theme="light"] .form-control { color: #1e293b !important; }
 [data-theme="light"] .text-muted { color: #64748b !important; }
 [data-theme="light"] .main-header.navbar { border-bottom: 1px solid #e2e8f0 !important; }
+
+/* bg-light adaptado a temas oscuros (Bootstrap lo deja blanco y rompe contraste) */
+[data-theme="dark"] .bg-light,
+[data-theme="rose"] .bg-light {
+  background: var(--py-bg3) !important;
+  color:      var(--py-text) !important;
+}
+/* text-dark dentro de temas oscuros: aseguramos que no quede texto negro invisible */
+[data-theme="dark"] .text-dark,
+[data-theme="rose"] .text-dark {
+  color: var(--py-text) !important;
+}
 
 /* ── Selector de tema en perfil ───────────────────────────────── */
 .theme-option {

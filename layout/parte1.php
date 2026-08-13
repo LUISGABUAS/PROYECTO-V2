@@ -113,6 +113,28 @@ $badge_tickets           = $cache['tickets'];
       <li class="nav-item d-none d-sm-inline-block">
         <a href="https://wa.me/5218119058201?text=Hola,%20necesito%20ayuda%20con%20el%20sistema%20de%20inventario%20de%20Pacas%20Yadira" class="nav-link">Contacto</a>
       </li>
+      <?php
+      // Botón de mensualidad — solo visible para el propietario
+      require_once __DIR__ . '/../app/controllers/helpers/licencia.php';
+      if (es_propietario()):
+        $hoy_lic   = new DateTime('now', new DateTimeZone('America/Monterrey'));
+        $dia_lic   = (int)$hoy_lic->format('d');
+        $bloqueado = licencia_bloqueada($pdo);
+        $dias_para_vencer = 22 - $dia_lic; // negativo si ya venció
+        $mostrar_alerta   = $dia_lic >= 18; // aviso desde el día 18
+      ?>
+      <li class="nav-item">
+        <a class="nav-link" href="<?= $URL ?>/licencia/bloqueado.php"
+           title="<?= $bloqueado ? 'Sistema BLOQUEADO — clic para pagar' : ($mostrar_alerta ? "Mensualidad vence en $dias_para_vencer día(s)" : 'Mensualidad al día') ?>"
+           style="<?= $bloqueado ? 'color:#ef4444!important;animation:blink 1s step-start infinite;' : ($mostrar_alerta ? 'color:#f59e0b!important;' : 'color:#10b981!important;') ?>">
+          <i class="fas <?= $bloqueado ? 'fa-lock' : ($mostrar_alerta ? 'fa-exclamation-triangle' : 'fa-shield-alt') ?>"></i>
+          <span class="d-none d-md-inline ml-1" style="font-size:12px;font-weight:600;">
+            <?= $bloqueado ? 'SIN PAGO' : ($mostrar_alerta ? "Vence día 22" : 'Al día') ?>
+          </span>
+        </a>
+      </li>
+      <style>@keyframes blink { 50% { opacity: 0; } }</style>
+      <?php endif; ?>
     </ul>
   </nav>
 

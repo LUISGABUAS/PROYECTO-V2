@@ -56,6 +56,13 @@ $fechaHora = date("Y-m-d H:i:s");
 define('BLOQUEAR_STOCK_INSUFICIENTE', false);
 
 // ================================================
+// PROPIETARIO DEL SISTEMA
+// ID del usuario propietario (único que puede registrar la mensualidad).
+// Cambiar al id real en tb_usuario.
+// ================================================
+define('PROPIETARIO_ID', (int)($_ENV['PROPIETARIO_ID'] ?? 1));
+
+// ================================================
 // MIGRACIONES DE BASE DE DATOS
 // ================================================
 require_once __DIR__ . '/database/migrations/add_foto_perfil_column.php';
@@ -70,6 +77,7 @@ require_once __DIR__ . '/database/migrations/add_paqueteria_to_ventas.php';
 require_once __DIR__ . '/database/migrations/create_ventas_guias_table.php';
 require_once __DIR__ . '/database/migrations/add_pago_pendiente_notas_to_ventas.php';
 require_once __DIR__ . '/database/migrations/create_print_queue_table.php';
+require_once __DIR__ . '/database/migrations/create_licencia_table.php';
 
 // ================================================
 // LOGGING CENTRALIZADO
