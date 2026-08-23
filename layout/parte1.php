@@ -370,7 +370,7 @@ $badge_tickets           = $cache['tickets'];
           <?php endif; ?>
 
           <!-- BODEGA -->
-          <?php if(in_array(12, $_SESSION['permisos']) || in_array(13, $_SESSION['permisos']) || in_array(14, $_SESSION['permisos'])): ?>
+          <?php if(in_array(12, $_SESSION['permisos']) || in_array(13, $_SESSION['permisos']) || in_array(14, $_SESSION['permisos']) || in_array(15, $_SESSION['permisos'])): ?>
           <li class="nav-item">
             <a href="#" class="nav-link active">
               <i class="nav-icon fas fa-list"></i>
@@ -393,7 +393,7 @@ $badge_tickets           = $cache['tickets'];
                 </a>
               </li>
               <?php endif; ?>
-              <?php if(in_array(13, $_SESSION['permisos'])): ?>
+              <?php if(in_array(15, $_SESSION['permisos'])): ?>
               <li class="nav-item">
                 <a href="<?php echo $URL;?>/stock/salida.php" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
