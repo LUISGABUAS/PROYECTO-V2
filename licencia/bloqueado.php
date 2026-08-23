@@ -9,6 +9,11 @@ if (!isset($_SESSION['sesion_email'])) {
     header("Location: {$URL}/login/index.php"); exit;
 }
 
+// Si el sistema ya está desbloqueado, redirigir al inicio
+if (!licencia_bloqueada($pdo)) {
+    header("Location: {$URL}/"); exit;
+}
+
 // Cargar datos mínimos del usuario si no están en caché
 if (!isset($_SESSION['id_usuario_sesion'])) {
     $q = $pdo->prepare("SELECT us.id, us.nombres FROM tb_usuario us WHERE us.email = ? LIMIT 1");
@@ -216,5 +221,17 @@ $dias_vencido = (int)$hoy->diff(
     });
   }
   </script>
+
+  <?php if (!$propietario): ?>
+  <script>
+  // Polling cada 15 s: si el sistema se desbloquea, redirigir automáticamente
+  setInterval(function() {
+    fetch('<?= $URL ?>/licencia/check_status.php', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(data => { if (data.desbloqueado) window.location.href = '<?= $URL ?>/'; })
+      .catch(() => {});
+  }, 15000);
+  </script>
+  <?php endif; ?>
 </body>
 </html>
