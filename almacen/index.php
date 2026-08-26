@@ -234,14 +234,13 @@ if (isset($_SESSION['mensaje'])) {
                   <tbody>
                         
                         <?php
-                        $contador = 0;
                         $dinero = "$";
                         foreach ($datos_productos as $dato) {
                           $id_producto = $dato['id_producto'];
                           ?>
 
                         <tr>
-                          <td><?php echo $contador = $contador + 1?></td>
+                          <td><?php echo $id_producto ?></td>
                           <td><?php echo htmlspecialchars($dato['codigo'], ENT_QUOTES, 'UTF-8') ?></td>
                           <td><?php echo htmlspecialchars($dato['categoria'], ENT_QUOTES, 'UTF-8') ?></td>
                           <td><?php echo htmlspecialchars($dato['proveedor'], ENT_QUOTES, 'UTF-8') ?></td>

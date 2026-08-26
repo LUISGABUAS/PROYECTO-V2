@@ -86,7 +86,7 @@ try {
         $_SESSION['mensaje'] = "Producto creado correctamente";
         $_SESSION['icono'] = "success";
         include('../helpers/auditoria.php');
-        registrarAuditoria($pdo, $id_usuario, null, 'CREAR PRODUCTO', 'tb_almacen', $pdo->lastInsertId(), "Producto: $nombre (Código: $codigo)");
+        registrarAuditoria($pdo, $id_usuario, $_SESSION['sesion_nombres'] ?? null, 'CREAR PRODUCTO', 'tb_almacen', $pdo->lastInsertId(), "Producto: $nombre (Código: $codigo)");
         header("Location: " . $URL . "/almacen");
     } else {
         error500('Error ejecutando query de inserción');

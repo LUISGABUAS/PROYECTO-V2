@@ -25,7 +25,7 @@ try {
         $_SESSION['mensaje'] = "Producto eliminado correctamente";
         $_SESSION['icono'] = "success";
         include('../helpers/auditoria.php');
-        registrarAuditoria($pdo, $id_usuario, $_SESSION['nombre_usuario'] ?? null, 'ELIMINAR PRODUCTO', 'tb_almacen', $id_producto, "Producto ID: $id_producto eliminado");
+        registrarAuditoria($pdo, $id_usuario, $_SESSION['sesion_nombres'] ?? null, 'ELIMINAR PRODUCTO', 'tb_almacen', $id_producto, "Producto ID: $id_producto eliminado");
         header("Location: " . $URL . "/almacen/");
     } else {
         error500('Error al eliminar producto');

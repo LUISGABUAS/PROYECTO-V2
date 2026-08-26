@@ -112,7 +112,7 @@ try {
 
     if ($sentencia->execute()) {
         include('../helpers/auditoria.php');
-        registrarAuditoria($pdo, $id_usuario, $_SESSION['nombre_usuario'] ?? null, 'ACTUALIZAR PRODUCTO', 'tb_almacen', $id_producto, "Producto: $nombre (Código: $codigo)");
+        registrarAuditoria($pdo, $id_usuario, $_SESSION['sesion_nombres'] ?? null, 'ACTUALIZAR PRODUCTO', 'tb_almacen', $id_producto, "Producto: $nombre (Código: $codigo)");
         $_SESSION['mensaje'] = "Producto actualizado correctamente";
         $_SESSION['icono'] = "success";
         $fp = (int)($_POST['fp'] ?? 0);
