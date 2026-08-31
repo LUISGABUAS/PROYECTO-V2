@@ -12,8 +12,10 @@ if ($desde && $hasta) {
     $params[':hasta'] = $hasta;
 }
 
-$_col2 = $pdo->query("SHOW COLUMNS FROM stock LIKE 'tipo_especial'")->fetchAll();
-$_sel_especial = !empty($_col2)
+if (!isset($_SESSION['_sc_tipo_especial'])) {
+    $_SESSION['_sc_tipo_especial'] = !empty($pdo->query("SHOW COLUMNS FROM stock LIKE 'tipo_especial'")->fetchAll());
+}
+$_sel_especial = $_SESSION['_sc_tipo_especial']
     ? "s.tipo_especial, s.notas_especial, s.id_venta_origen,"
     : "NULL AS tipo_especial, NULL AS notas_especial, NULL AS id_venta_origen,";
 

@@ -162,10 +162,10 @@ try {
         $subtotal     = $cantidad * $precio;
         $id_descuento = !empty($descuentos[$i]) ? (int)$descuentos[$i] : null;
 
-        static $_tiene_col_descuento = null;
-        if ($_tiene_col_descuento === null) {
-            $_tiene_col_descuento = (bool)$pdo->query("SHOW COLUMNS FROM tb_ventas_detalle LIKE 'id_descuento'")->fetchColumn();
+        if (!isset($_SESSION['_sc_col_descuento'])) {
+            $_SESSION['_sc_col_descuento'] = (bool)$pdo->query("SHOW COLUMNS FROM tb_ventas_detalle LIKE 'id_descuento'")->fetchColumn();
         }
+        $_tiene_col_descuento = $_SESSION['_sc_col_descuento'];
 
         if ($_tiene_col_descuento) {
             $stmt = $pdo->prepare("

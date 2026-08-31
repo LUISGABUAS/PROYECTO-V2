@@ -6,9 +6,10 @@ $proveedores_lista = $pdo->query(
 
 $filtro_proveedor = isset($_GET['proveedor']) && $_GET['proveedor'] !== '' ? (int)$_GET['proveedor'] : null;
 
-// Detectar si la columna tipo_especial ya existe (migración puede no haberse corrido)
-$_col = $pdo->query("SHOW COLUMNS FROM stock LIKE 'tipo_especial'")->fetchAll();
-$_tiene_especial = !empty($_col);
+if (!isset($_SESSION['_sc_tipo_especial'])) {
+    $_SESSION['_sc_tipo_especial'] = !empty($pdo->query("SHOW COLUMNS FROM stock LIKE 'tipo_especial'")->fetchAll());
+}
+$_tiene_especial = $_SESSION['_sc_tipo_especial'];
 
 if ($_tiene_especial) {
     $join_bodega  = "WHERE estado = 'EN BODEGA' AND tipo_especial IS NULL";
@@ -28,8 +29,10 @@ if ($_tiene_especial) {
     $select_especial = "0 AS stock_video, 0 AS stock_flejada,";
 }
 
-// Detectar si tb_descuentos existe
-$_tiene_descuentos = (bool)$pdo->query("SHOW TABLES LIKE 'tb_descuentos'")->fetchColumn();
+if (!isset($_SESSION['_sc_tb_descuentos'])) {
+    $_SESSION['_sc_tb_descuentos'] = (bool)$pdo->query("SHOW TABLES LIKE 'tb_descuentos'")->fetchColumn();
+}
+$_tiene_descuentos = $_SESSION['_sc_tb_descuentos'];
 $join_descuento  = $_tiene_descuentos ? "LEFT JOIN (
     SELECT id_producto, id AS id_descuento, precio_descuento, porcentaje, fecha_fin
     FROM tb_descuentos

@@ -35,8 +35,10 @@ try {
      *    y pertenezca a ESTA venta
      */
 
-    $_colCheck = $pdo->query("SHOW COLUMNS FROM stock LIKE 'tipo_especial'")->fetchAll();
-    $_hasTipoEspecial = count($_colCheck) > 0;
+    if (!isset($_SESSION['_sc_tipo_especial'])) {
+        $_SESSION['_sc_tipo_especial'] = !empty($pdo->query("SHOW COLUMNS FROM stock LIKE 'tipo_especial'")->fetchAll());
+    }
+    $_hasTipoEspecial = $_SESSION['_sc_tipo_especial'];
 
     // ¿Es una paca ya VENDIDA? → ofrecer devolución
     if ($_hasTipoEspecial) {

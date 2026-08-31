@@ -36,8 +36,10 @@ try {
     $id_venta = $vs ? $vs['id_venta'] : null;
 
     // Revertir estado del stock
-    $_colCheck = $pdo->query("SHOW COLUMNS FROM stock LIKE 'tipo_especial'")->fetchAll();
-    $_hasTipoEspecial = count($_colCheck) > 0;
+    if (!isset($_SESSION['_sc_tipo_especial'])) {
+        $_SESSION['_sc_tipo_especial'] = !empty($pdo->query("SHOW COLUMNS FROM stock LIKE 'tipo_especial'")->fetchAll());
+    }
+    $_hasTipoEspecial = $_SESSION['_sc_tipo_especial'];
 
     $tipo_especial = $tipo === 'FLEJADA' ? 'FLEJADA' : null;
     if ($_hasTipoEspecial) {

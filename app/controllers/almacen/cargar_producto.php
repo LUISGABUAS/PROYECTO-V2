@@ -21,7 +21,10 @@ $query_productos->execute();
 $datos_productos = $query_productos->fetchAll(PDO::FETCH_ASSOC);
 
 // Descuento activo del producto
-$_tiene_descuentos = (bool)$pdo->query("SHOW TABLES LIKE 'tb_descuentos'")->fetchColumn();
+if (!isset($_SESSION['_sc_tb_descuentos'])) {
+    $_SESSION['_sc_tb_descuentos'] = (bool)$pdo->query("SHOW TABLES LIKE 'tb_descuentos'")->fetchColumn();
+}
+$_tiene_descuentos = $_SESSION['_sc_tb_descuentos'];
 $descuento_activo = null;
 if ($_tiene_descuentos) {
     $stmt_d = $pdo->prepare("SELECT id, precio_descuento, porcentaje, fecha_inicio, fecha_fin

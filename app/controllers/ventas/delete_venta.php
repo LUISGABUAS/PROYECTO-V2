@@ -60,7 +60,10 @@ try {
     $pdo->prepare("DELETE FROM tb_ventas_comprobantes WHERE id_venta = ?")->execute([$id_venta]);
 
     // Guías (si existe la tabla)
-    $hayGuias = (bool)$pdo->query("SHOW TABLES LIKE 'tb_ventas_guias'")->fetchColumn();
+    if (!isset($_SESSION['_sc_tb_ventas_guias'])) {
+        $_SESSION['_sc_tb_ventas_guias'] = (bool)$pdo->query("SHOW TABLES LIKE 'tb_ventas_guias'")->fetchColumn();
+    }
+    $hayGuias = $_SESSION['_sc_tb_ventas_guias'];
     if ($hayGuias) {
         $pdo->prepare("DELETE FROM tb_ventas_guias WHERE id_venta = ?")->execute([$id_venta]);
     }
