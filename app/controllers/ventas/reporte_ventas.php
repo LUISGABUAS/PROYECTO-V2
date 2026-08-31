@@ -92,11 +92,16 @@ if (in_array(24, $permisos)) {
         v.id_usuario,
         u.nombres AS vendedor,
         COALESCE(SUM(vd.cantidad), 0) as total_pacas,
-        (SELECT COUNT(*) FROM tb_ventas_stock vs WHERE vs.id_venta = v.id_venta) as pacas_escaneadas
+        COALESCE(vs_agg.pacas_escaneadas, 0) as pacas_escaneadas
         FROM tb_ventas v
         JOIN tb_usuario u ON u.id = v.id_usuario
         JOIN clientes c ON v.cliente = c.id_cliente
         LEFT JOIN tb_ventas_detalle vd ON v.id_venta = vd.id_venta
+        LEFT JOIN (
+            SELECT id_venta, COUNT(*) AS pacas_escaneadas
+            FROM tb_ventas_stock
+            GROUP BY id_venta
+        ) vs_agg ON vs_agg.id_venta = v.id_venta
         WHERE v.fecha BETWEEN :desde AND :hasta
         GROUP BY v.id_venta
         ORDER BY v.fecha DESC, v.id_venta DESC
@@ -120,10 +125,15 @@ if (in_array(25, $permisos)) {
         c.nombre_completo AS cliente,
         v.total,
         COALESCE(SUM(vd.cantidad), 0) as total_pacas,
-        (SELECT COUNT(*) FROM tb_ventas_stock vs WHERE vs.id_venta = v.id_venta) as pacas_escaneadas
+        COALESCE(vs_agg.pacas_escaneadas, 0) as pacas_escaneadas
         FROM tb_ventas v
         JOIN clientes c ON v.cliente = c.id_cliente
         LEFT JOIN tb_ventas_detalle vd ON v.id_venta = vd.id_venta
+        LEFT JOIN (
+            SELECT id_venta, COUNT(*) AS pacas_escaneadas
+            FROM tb_ventas_stock
+            GROUP BY id_venta
+        ) vs_agg ON vs_agg.id_venta = v.id_venta
         WHERE v.id_usuario = :usuario
         AND v.fecha BETWEEN :desde AND :hasta
         GROUP BY v.id_venta
