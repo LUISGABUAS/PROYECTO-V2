@@ -54,39 +54,6 @@ try {
     }
 
     /* ===============================
-       3️⃣ DEVOLVER STOCK PENDIENTE (no escaneado aún)
-       — Pacas reservadas pero no salidas (cantidad_entregada = 0)
-    =============================== */
-    $stmt = $pdo->prepare("SELECT id_producto, cantidad, cantidad_entregada
-        FROM tb_ventas_detalle WHERE id_venta = ?");
-    $stmt->execute([$id_venta]);
-    $detalles = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach ($detalles as $d) {
-        $pendiente = max(0, (int)$d['cantidad'] - (int)$d['cantidad_entregada']);
-        if ($pendiente <= 0) continue;
-
-        // Busca pacas VENDIDO que NO estén en tb_ventas_stock (reservadas pero no escaneadas)
-        $stmt2 = $pdo->prepare("SELECT s.id_stock
-            FROM stock s
-            WHERE s.id_producto = ?
-              AND s.estado = 'VENDIDO'
-              AND s.id_stock NOT IN (
-                  SELECT id_stock FROM tb_ventas_stock WHERE id_venta = ?
-              )
-            LIMIT $pendiente");
-        $stmt2->execute([$d['id_producto'], $id_venta]);
-        $stocks_pendientes = $stmt2->fetchAll(PDO::FETCH_COLUMN);
-
-        if (!empty($stocks_pendientes)) {
-            $in = implode(',', array_fill(0, count($stocks_pendientes), '?'));
-            $pdo->prepare("UPDATE stock SET estado = 'EN BODEGA', fecha_salida = NULL
-                WHERE id_stock IN ($in)")
-                ->execute($stocks_pendientes);
-        }
-    }
-
-    /* ===============================
        4️⃣ ELIMINAR REGISTROS RELACIONADOS
     =============================== */
     $pdo->prepare("DELETE FROM tb_ventas_detalle WHERE id_venta = ?")->execute([$id_venta]);
