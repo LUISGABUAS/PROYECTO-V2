@@ -34,9 +34,16 @@ try {
        2️⃣ DEVOLVER PACAS ESCANEADAS (tb_ventas_stock)
        — Regresa a EN BODEGA las pacas que ya habían salido
     =============================== */
-    $stmt = $pdo->prepare("SELECT id_stock FROM tb_ventas_stock WHERE id_venta = ?");
+    $stmt = $pdo->prepare("
+        SELECT s.id_stock, s.codigo_unico, a.nombre AS nombre_producto
+        FROM tb_ventas_stock vs
+        JOIN stock s ON vs.id_stock = s.id_stock
+        JOIN tb_almacen a ON s.id_producto = a.id_producto
+        WHERE vs.id_venta = ?
+    ");
     $stmt->execute([$id_venta]);
-    $stocks_escaneados = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $stocks_con_nombre = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $stocks_escaneados = array_column($stocks_con_nombre, 'id_stock');
 
     if (!empty($stocks_escaneados)) {
         $in = implode(',', array_fill(0, count($stocks_escaneados), '?'));
@@ -78,8 +85,22 @@ try {
     include('../helpers/auditoria.php');
     $id_usuario_sesion     = $_SESSION['id_usuario'] ?? null;
     $nombre_usuario_sesion = $_SESSION['nombre_usuario'] ?? null;
-    registrarAuditoria($pdo, $id_usuario_sesion, $nombre_usuario_sesion, 'ELIMINAR VENTA', 'tb_ventas', $id_venta,
-        "Venta #$id_venta eliminada por cancelación de cliente — stock restaurado");
+
+    if (!empty($stocks_con_nombre)) {
+        $agrupado = [];
+        foreach ($stocks_con_nombre as $s) {
+            $agrupado[$s['nombre_producto']][] = $s['codigo_unico'];
+        }
+        $partes = [];
+        foreach ($agrupado as $nombre => $codigos) {
+            $partes[] = $nombre . ' ×' . count($codigos) . ' (' . implode(', ', $codigos) . ')';
+        }
+        $detalle_audit = "Venta #$id_venta eliminada — pacas regresadas a bodega: " . implode(' | ', $partes);
+    } else {
+        $detalle_audit = "Venta #$id_venta eliminada — sin pacas escaneadas que regresar";
+    }
+
+    registrarAuditoria($pdo, $id_usuario_sesion, $nombre_usuario_sesion, 'ELIMINAR VENTA', 'tb_ventas', $id_venta, $detalle_audit);
 
     $response['success'] = true;
     $response['message'] = 'Venta eliminada y stock restaurado correctamente';
