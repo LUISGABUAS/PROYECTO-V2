@@ -1,10 +1,19 @@
-
+# Dependencias
 /vendor/
+node_modules/
+
+# Variables de entorno (credenciales). Usa .env.example como plantilla.
 .env
-.env.simulation
-.env.production
+.env.*
+!.env.example
+
+# Logs
+*.log
 app/logs/*.jsonl
 app/logs/*.log
+logs/*.log
+
+# Archivos subidos por usuarios
 app/tickets_archivos/*
 !app/tickets_archivos/.gitkeep
 !app/tickets_archivos/.htaccess
@@ -14,3 +23,11 @@ almacen/img_productos/*
 !almacen/img_productos/.gitkeep
 public/uploads/perfiles/*
 !public/uploads/perfiles/.gitkeep
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Configuración local del editor y de Claude Code
+.claude/settings.local.json
+.claude/worktrees/
